@@ -205,3 +205,42 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+
+# ======================
+# Project-specific (COMP0087)
+# ======================
+
+# Datasets (do not commit raw data)
+data/raw/*
+data/processed/*
+
+# Keep README files in data folders
+!data/**/README.md
+
+# Model checkpoints and weights
+checkpoints/
+models/
+*.bin
+*.pt
+*.ckpt
+*.safetensors
+
+# Hugging Face cache
+.cache/
+huggingface/
+
+# Experiment outputs
+results/*
+logs/
+runs/
+wandb/
+
+# Keep README files in results folders
+!results/**/README.md
+
+# Prediction dumps
+*.jsonl
+*.parquet
+*.pkl
+*.pickle
