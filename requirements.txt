@@ -1,1 +1,27 @@
+# Core ML
+torch
+transformers
+datasets
+accelerate
 
+# Parameter-efficient fine-tuning
+peft
+bitsandbytes
+
+# Evaluation & metrics
+scikit-learn
+numpy
+scipy
+
+# Fairness & analysis
+pandas
+matplotlib
+seaborn
+
+# Attribution / explainability
+captum
+shap
+
+# Utilities
+tqdm
+pyyaml
