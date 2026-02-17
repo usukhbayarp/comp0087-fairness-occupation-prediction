@@ -8,11 +8,13 @@ Our primary focus is on comparing models of different capacities—particularly 
 ---
 
 ## Repository Structure
-- src/ # Model training, inference, evaluation, and analysis code
-- data/ # Dataset loading, preprocessing, and masking utilities
-- results/ # Generated tables and figures (not raw experiment dumps)
-- notebooks/ # Exploratory analysis and debugging notebooks
-- scripts/ # Entry-point scripts for experiments
+```
+|-- src/ # Model training, inference, evaluation, and analysis code
+|-- data/ # Dataset loading, preprocessing, and masking utilities
+|-- results/ # Generated tables and figures (not raw experiment dumps)
+|-- notebooks/ # Exploratory analysis and debugging notebooks
+|-- scripts/ # Entry-point scripts for experiments
+```
 
 Each subdirectory contains a `README.md` describing its purpose in more detail.
 
