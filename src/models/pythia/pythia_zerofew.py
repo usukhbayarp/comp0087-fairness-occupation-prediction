@@ -21,8 +21,9 @@ def load_data(data_path):
 def get_candidate_log_likelihood(model, tokenizer, prompt, candidate, device):
     # Tokenize the prompt and candidate separately
     prompt_ids = tokenizer.encode(prompt, return_tensors="pt").to(device)
-    candidate_ids = tokenizer.encode(" " + candidate, return_tensors="pt").to(device)
-    
+    candidate_ids = tokenizer.encode(" " + candidate, return_tensors="pt").to(device) # [batch_size, seq_len]
+    candidate_seq_len = candidate_ids.shape[1]
+
     # Concatenate prompt and candidate tokens
     input_ids = torch.cat([prompt_ids, candidate_ids], dim=1)
     
@@ -33,10 +34,8 @@ def get_candidate_log_likelihood(model, tokenizer, prompt, candidate, device):
 
     # First token of the candidate is predicted by the last token of the prompt
     # Last token of the candidate is predicted by the second to last token overall
-    candidate_seq_len = candidate_ids.shape[1]
     start_idx = input_ids.shape[1] - candidate_seq_len - 1
     end_idx = input_ids.shape[1] - 1
-
 
     # Logits for the candidate tokens
     shift_logits = logits[0, start_idx:end_idx, :].contiguous()

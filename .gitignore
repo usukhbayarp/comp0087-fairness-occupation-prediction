@@ -220,7 +220,6 @@ data/processed/*
 
 # Model checkpoints and weights
 checkpoints/
-models/
 *.bin
 *.pt
 *.ckpt
