@@ -29,7 +29,7 @@ def get_candidate_log_likelihood(model, tokenizer, prompt, candidate, device):
     
     with torch.no_grad():
         outputs = model(input_ids)
-        logits = outputs.logits # logits shape: (1, seq_len, vocab_size)
+        logits = outputs.logits # logits shape: (1, seq_len, vocab_size) because batch size is 1
     
 
     # First token of the candidate is predicted by the last token of the prompt
@@ -52,11 +52,19 @@ def main():
     parser.add_argument("--model_size", type=str, required=True, help="Pythia model size (e.g., 70m, 160m, 410m, 1.4b)")
     parser.add_argument("--regime", type=str, choices=["zeroshot", "fewshot"], required=True, help="Inference regime")
     parser.add_argument("--data_path", type=str, required=True, help="Path to input JSONL data")
-    parser.add_argument("--candidate_labels", type=str, nargs='+', required=True, help="List of candidate occupations")
+    parser.add_argument("--candidate_labels", type=str, nargs='+', required=False, help="List of candidate occupations (if not provided, will look for candidate_labels.txt in data_path dir)")
     parser.add_argument("--output_dir", type=str, default=".", help="Directory to save output JSONL")
     
     args = parser.parse_args()
     
+    if not args.candidate_labels:
+        labels_path = os.path.join(os.path.dirname(args.data_path), "candidate_labels.txt")
+        if os.path.exists(labels_path):
+            with open(labels_path, "r", encoding="utf-8") as f:
+                args.candidate_labels = f.read().strip().split()
+        else:
+            raise ValueError(f"candidate_labels not provided and not found at {labels_path}")
+
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model_name = f"EleutherAI/pythia-{args.model_size}"
     

@@ -3,6 +3,7 @@ torch
 transformers
 datasets
 accelerate
+tensorflow
 
 # Parameter-efficient fine-tuning
 peft
