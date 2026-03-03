@@ -225,6 +225,7 @@ checkpoints/
 *.ckpt
 *.safetensors
 
+
 # Hugging Face cache
 .cache/
 huggingface/
@@ -243,3 +244,10 @@ wandb/
 *.parquet
 *.pkl
 *.pickle
+
+!data/pythia_finetuned/*.jsonl
+!checkpoints/**/*.bin
+!checkpoints/**/*.pt
+!checkpoints/**/*.safetensors
+!checkpoints/**/*.pth
+!checkpoints/**
