@@ -1,0 +1,11 @@
+{
+  "model": "pythia-160m",
+  "regime": "finetuned",
+  "accuracy": 0.3278,
+  "macro_f1": 0.0794,
+  "num_samples": 95468,
+  "gender_accuracy": {
+    "M": 0.3198,
+    "F": 0.337
+  }
+}

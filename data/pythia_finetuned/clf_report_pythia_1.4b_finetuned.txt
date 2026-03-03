@@ -1,0 +1,28 @@
+model: pythia-1.4b | regime: finetuned
+
+                   precision    recall  f1-score   support
+
+       accountant       0.85      0.78      0.82      1409
+        architect       0.83      0.73      0.78      2528
+         attorney       0.92      0.92      0.92      8143
+         comedian       0.89      0.82      0.86       703
+         composer       0.88      0.91      0.89      1401
+          dentist       0.95      0.96      0.95      3647
+        dietitian       0.88      0.89      0.88       989
+        filmmaker       0.86      0.85      0.86      1750
+       journalist       0.76      0.85      0.80      4986
+            model       0.89      0.84      0.86      1874
+            nurse       0.86      0.86      0.86      4738
+          painter       0.85      0.87      0.86      1935
+     photographer       0.89      0.90      0.90      6068
+        physician       0.89      0.88      0.88     10250
+             poet       0.80      0.83      0.82      1754
+        professor       0.92      0.93      0.92     29520
+     psychologist       0.85      0.80      0.83      4596
+software_engineer       0.78      0.78      0.78      1728
+          surgeon       0.80      0.76      0.78      3398
+          teacher       0.71      0.73      0.72      4051
+
+         accuracy                           0.88     95468
+        macro avg       0.85      0.84      0.85     95468
+     weighted avg       0.88      0.88      0.88     95468

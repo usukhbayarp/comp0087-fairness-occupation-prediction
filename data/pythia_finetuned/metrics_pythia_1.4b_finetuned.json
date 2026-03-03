@@ -1,0 +1,11 @@
+{
+  "model": "pythia-1.4b",
+  "regime": "finetuned",
+  "accuracy": 0.8755,
+  "macro_f1": 0.8487,
+  "num_samples": 95468,
+  "gender_accuracy": {
+    "M": 0.8713,
+    "F": 0.8805
+  }
+}
