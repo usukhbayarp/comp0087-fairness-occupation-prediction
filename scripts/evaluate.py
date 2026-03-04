@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import glob
 from sklearn.metrics import f1_score, accuracy_score
-from fairness import compute_fairness_gaps
+from src.evaluation.fairness import compute_fairness_gaps
 
 
 def load_predictions(file_path):

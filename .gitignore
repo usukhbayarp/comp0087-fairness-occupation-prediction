@@ -212,8 +212,7 @@ __marimo__/
 # ======================
 
 # Datasets (do not commit raw data)
-data/raw/*
-data/processed/*
+data/*
 
 # Keep README files in data folders
 !data/**/README.md

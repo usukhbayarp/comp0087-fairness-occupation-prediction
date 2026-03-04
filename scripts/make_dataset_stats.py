@@ -6,7 +6,7 @@ from typing import Dict, Any
 
 import matplotlib.pyplot as plt
 
-from data import load_bios, BiosConfig
+from src.data.preprocessing import load_bios, BiosConfig
 
 
 def _ensure_dir(path: str) -> None:

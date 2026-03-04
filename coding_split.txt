@@ -1,0 +1,189 @@
+Prediction JSONL schema (Must inform the teammates if needs updating):
+{"id": 1, "text": "...", "label_true": "physician", "label_pred": "nurse", "gender": "F", "model": "pythia-410m", "regime": "fewshot", "score": 12.34, "conf": 0.62}
+
+Coding Split (6 Parts)
+Part 1 — Data Pipeline + Preprocessing + Masking Utilities (Person 1)
+Goal: One canonical dataset + shared preprocessing everyone uses.
+Tasks
+Load Bias-in-Bios (HF Datasets)
+
+Standardize fields: id, text, label, gender
+
+Create label vocabulary policy:
+
+either Top-N occupations (recommended for feasibility) or full set
+
+Compute dataset stats:
+
+class imbalance report
+
+gender distribution overall + per occupation
+
+Implement masking utilities:
+
+explicit gender-token masking (he/she/his/her, etc.)
+
+optionally name masking (only if needed)
+
+Deliverables
+data.py with load_bios() and preprocess()
+
+masking.py with mask_gender_terms(text)
+
+dataset_stats.json + small plots/tables
+
+
+Part 2 — Pythia Zero-shot + Few-shot Inference (All Sizes) + Confidence Proxy (Person 2)
+Goal: Teacher’s “before training” comparison across sizes.
+Models (example ladder)
+Pythia-160M
+
+Pythia-410M
+
+Pythia-1.4B (or 1B if compute is tight)
+
+Tasks
+Design prompt templates:
+
+0-shot: predict occupation from candidate list
+
+few-shot: K exemplars (K=4 or 8)
+
+Implement candidate-label scoring:
+
+compute log-likelihood of each candidate label string
+
+prediction = argmax score
+
+confidence proxy = softmax(score) or top-1–top-2 margin
+
+Run inference for each size and regime (0-shot, few-shot)
+
+Save predictions in a shared JSONL format
+
+Deliverables
+prompts.py (templates)
+
+pythia_zerofew.py (runs all sizes)
+
+preds_pythia_{size}_{regime}.jsonl
+
+
+Part 3 — Pythia Fine-tuning (“After Training”) Across Sizes (Person 3)
+Goal: Teacher’s “after training, predict” condition—same family, only size differs.
+Tasks
+Implement supervised fine-tuning for each Pythia size:
+
+input: biography prompt
+
+target: occupation label (restricted to your label set)
+
+Use efficient tuning:
+
+LoRA/QLoRA if needed
+
+Evaluate on test:
+
+Macro-F1, Accuracy
+
+save probabilities/logits if available
+
+Output predictions in the shared JSONL format
+
+Deliverables
+pythia_finetune.py (train)
+
+pythia_eval.py (eval + dump preds)
+
+preds_pythia_{size}_finetuned.jsonl
+
+
+Part 4 — Encoder Baselines: DistilBERT + RoBERTa Fine-tuning (Person 4)
+Goal: Provide a supervised classification baseline that’s easy to interpret.
+Tasks
+Fine-tune DistilBERT and RoBERTa on Bias-in-Bios (same label set)
+
+Evaluate:
+
+Macro-F1 (primary), Accuracy (secondary)
+
+Save predictions and probabilities in the shared JSONL format
+
+Deliverables
+train_encoder.py
+
+eval_encoder.py
+
+preds_distilbert_ft.jsonl, preds_roberta_ft.jsonl
+
+
+Part 5 — Unified Evaluation Harness: Performance + Fairness + Trade-off Plots (Person 5)
+Goal: One evaluator that consumes any preds_*.jsonl and produces tables/figures.
+Tasks
+Implement metrics:
+
+Macro-F1 + Accuracy
+
+Fairness:
+
+Demographic Parity difference
+
+Equalized Odds difference (FPR/FNR gaps)
+
+Define multiclass fairness calculation method (documented):
+
+one-vs-rest per class then macro-average (recommended)
+
+or top-N occupations only (practical)
+
+Generate plots:
+
+fairness vs size (Pythia scaling curves)
+
+Pareto frontier: fairness metric vs Macro-F1
+
+compare regimes: 0-shot vs few-shot vs finetuned
+
+Deliverables
+evaluate.py (single command: input preds → metrics)
+
+fairness.py
+
+plots.py exporting pareto.png, scaling.png
+
+results_table.csv
+
+
+Part 6 — Proxy Bias Auditing + Attribution + Counterfactual Erasure (Person 6)
+Goal: Diagnose why disparities occur (proxy features) and test explanation faithfulness behaviorally.
+Core (Required): Proxy Audit
+Tasks
+For encoder models:
+
+compute attribution scores (Integrated Gradients or gradient×input)
+
+Build Top Proxy Words tables:
+
+aggregate top-K attributed tokens by profession
+
+optionally compare across gender groups
+
+Provide qualitative examples with token highlights
+
+Deliverables
+attribution_encoder.py
+
+proxy_audit.py → proxy_words_by_profession.csv
+
+Advanced (Optional): Counterfactual Faithfulness via Top-K Erasure
+Tasks
+Mask top-K attributed tokens in each example
+
+Measure prediction probability drop:
+
+Faithfulness = P(y|orig) - P(y|masked)
+
+Summarize faithfulness by model (and by group)
+
+Deliverables
+erasure_faithfulness.py → faithfulness_summary.csv

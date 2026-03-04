@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from data import load_bios, BiosConfig
+from src.data.preprocessing import load_bios, BiosConfig
 
 def export_jsonl(output_dir="processed", top_n=20, mask_gender=False):
     os.makedirs(output_dir, exist_ok=True)
