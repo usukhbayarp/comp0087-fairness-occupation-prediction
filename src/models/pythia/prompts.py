@@ -1,12 +1,12 @@
 ZERO_SHOT_PROMPT = """Given the short biography below, predict the occupation of the person.
-Answer with a single specific occupation word (e.g., professor, nurse, physician, journalist, etc.).
+Answer with a single specific occupation word (e.g. professor, physician, attorney, photographer, journalist, nurse, psychologist, teacher, dentist, surgeon, architect, painter, model, poet, filmmaker, software_engineer, accountant, composer, dietitian, comedian etc.).
 
 Biography: {text}
 Occupation:"""
 
 # Example few-shot template
 FEW_SHOT_PROMPT = """Given the short biography below, predict the occupation of the person.
-Answer with a single specific occupation word (e.g. professor, nurse, physician, journalist, etc.).
+Answer with a single specific occupation word (e.g. professor, physician, attorney, photographer, journalist, nurse, psychologist, teacher, dentist, surgeon, architect, painter, model, poet, filmmaker, software_engineer, accountant, composer, dietitian, comedian etc.).
 
 Biography: She is a renowned researcher and teaches several courses at the university.
 Occupation: professor

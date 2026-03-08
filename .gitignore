@@ -237,6 +237,7 @@ wandb/
 
 # Keep README files in results folders
 !results/**/README.md
+!results/pythia/
 
 # Prediction dumps
 *.jsonl
