@@ -4,10 +4,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Any, List
 from collections import Counter
+from pathlib import Path
+import json
 
 from datasets import load_dataset, Dataset, DatasetDict
 
-from masking import mask_gender_terms
+from masking import (
+    mask_gender_terms,
+    mask_titles,
+    mask_gendered_nouns,
+    mask_label_leakage,
+    contains_label_leakage,
+)
 
 
 @dataclass(frozen=True)
@@ -21,10 +29,17 @@ class BiosConfig:
     # Text processing
     lowercase_text: bool = False
     mask_gender: bool = False
+    mask_titles: bool = False
+    mask_gendered_nouns: bool = False
+    mask_label_leakage: bool = False
     mask_token: str = "[MASK]"
+    label_mask_token: str = "[LABEL_MASK]"
 
     # Gender normalization output
     unk_gender: str = "UNK"
+
+    # Optional profession-id -> profession-name mapping JSON path
+    profession_mapping_path: Optional[str] = str(Path(__file__).with_name("profession_mapping.json"))
 
     # If you already KNOW the mapping, you can hard-set it here, e.g. {0:"M",1:"F"}
     # Leave None to auto-infer from observed ids in train split.
@@ -73,6 +88,42 @@ def _to_label_string(raw_val: Any, names: Optional[List[str]]) -> str:
             return str(raw_val)
     return str(raw_val)
 
+
+
+
+def _load_profession_mapping(mapping_path: Optional[str]) -> Dict[str, str]:
+    if not mapping_path:
+        return {}
+    try:
+        path = Path(mapping_path)
+        if not path.exists():
+            return {}
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return {}
+        return {str(k): str(v) for k, v in data.items()}
+    except Exception:
+        return {}
+
+
+def _normalize_profession_name(name: str) -> str:
+    s = str(name).strip()
+    return s.replace("_", " ")
+
+
+def _map_label_value(raw_val: Any, names: Optional[List[str]], profession_mapping: Optional[Dict[str, str]] = None) -> str:
+    label = _to_label_string(raw_val, names)
+    if profession_mapping:
+        mapped = profession_mapping.get(label)
+        if mapped is None:
+            # handle values like 21 / "21" robustly
+            try:
+                mapped = profession_mapping.get(str(int(label)))
+            except Exception:
+                mapped = None
+        if mapped is not None:
+            return _normalize_profession_name(mapped)
+    return _normalize_profession_name(label)
 
 def _infer_gender_id_mapping_from_train(
     train_gender_values: List[Any],
@@ -230,8 +281,10 @@ def load_bios(
         gender_mapping_meta.update(debug)
         gender_mapping_meta["gender_id_mapping"] = gender_id_mapping
 
-    # Build label vocab from TRAIN using string labels
-    train_label_strings = [_to_label_string(x, label_names) for x in raw["train"][label_col]]
+    profession_mapping = _load_profession_mapping(cfg.profession_mapping_path)
+
+    # Build label vocab from TRAIN using profession names (mapped from ids when possible)
+    train_label_strings = [_map_label_value(x, label_names, profession_mapping) for x in raw["train"][label_col]]
     label2id, id2label, label_counts_sorted = build_label_vocab_from_strings(
         train_label_strings=train_label_strings,
         top_n=cfg.top_n,
@@ -240,15 +293,23 @@ def load_bios(
     kept_labels = set(label2id.keys())
 
     def _convert(ex: Dict[str, Any]) -> Dict[str, Any]:
+        # label (profession id -> profession name when mapping is available)
+        label = _map_label_value(ex.get(label_col), label_names, profession_mapping)
+
         # text
         text = "" if ex.get(text_col) is None else str(ex.get(text_col))
+        label_leakage_before_mask = contains_label_leakage(text, label)
+
         if cfg.lowercase_text:
             text = text.lower()
         if cfg.mask_gender:
             text = mask_gender_terms(text, mask_token=cfg.mask_token)
-
-        # label (profession id -> string)
-        label = _to_label_string(ex.get(label_col), label_names)
+        if cfg.mask_titles:
+            text = mask_titles(text, mask_token=cfg.mask_token)
+        if cfg.mask_gendered_nouns:
+            text = mask_gendered_nouns(text, mask_token=cfg.mask_token)
+        if cfg.mask_label_leakage:
+            text = mask_label_leakage(text, label, mask_token=cfg.label_mask_token)
 
         # gender (robust)
         gender = _normalize_gender(
@@ -267,6 +328,7 @@ def load_bios(
             "label": label,
             "gender": gender,
             "label_id": label2id.get(label, -1),
+            "label_leakage": label_leakage_before_mask,
         }
 
     processed = DatasetDict()
@@ -296,9 +358,15 @@ def load_bios(
         "min_count": cfg.min_count,
         "num_labels": len(label2id),
         "labels": [id2label[i] for i in range(len(id2label))],
+        "profession_mapping_path": cfg.profession_mapping_path,
+        "profession_mapping_loaded": bool(profession_mapping),
         "label_counts_train_sorted": label_counts_sorted,
         "mask_gender": cfg.mask_gender,
-        "mask_token": cfg.mask_token if cfg.mask_gender else None,
+        "mask_titles": cfg.mask_titles,
+        "mask_gendered_nouns": cfg.mask_gendered_nouns,
+        "mask_label_leakage": cfg.mask_label_leakage,
+        "mask_token": cfg.mask_token if (cfg.mask_gender or cfg.mask_titles or cfg.mask_gendered_nouns) else None,
+        "label_mask_token": cfg.label_mask_token if cfg.mask_label_leakage else None,
         "lowercase_text": cfg.lowercase_text,
         "gender_normalization": {"M": "male", "F": "female", "UNK": "unknown/other"},
         **gender_mapping_meta,
