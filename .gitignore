@@ -237,7 +237,7 @@ wandb/
 
 # Keep README files in results folders
 !results/**/README.md
-!results/pythia/
+
 
 # Prediction dumps
 *.jsonl
@@ -246,6 +246,7 @@ wandb/
 *.pickle
 
 !data/pythia_finetuned/*.jsonl
+!results/pythia/*.jsonl
 !checkpoints/**/*.bin
 !checkpoints/**/*.pt
 !checkpoints/**/*.safetensors
