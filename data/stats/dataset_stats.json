@@ -23,111 +23,117 @@
     "min_count": 1,
     "num_labels": 20,
     "labels": [
-      "21",
-      "19",
-      "2",
-      "18",
-      "11",
-      "13",
-      "22",
-      "26",
-      "6",
-      "25",
-      "1",
-      "14",
-      "12",
-      "20",
-      "9",
-      "24",
-      "0",
-      "5",
-      "7",
-      "4"
+      "professor",
+      "physician",
+      "attorney",
+      "photographer",
+      "journalist",
+      "nurse",
+      "psychologist",
+      "teacher",
+      "dentist",
+      "surgeon",
+      "architect",
+      "painter",
+      "model",
+      "poet",
+      "filmmaker",
+      "software engineer",
+      "accountant",
+      "composer",
+      "dietitian",
+      "comedian"
     ],
+    "profession_mapping_path": "/Users/yangzhuohan/Desktop/NLP CW updated/profession_mapping.json",
+    "profession_mapping_loaded": true,
     "label_counts_train_sorted": [
       [
-        "21",
+        "professor",
         76748
       ],
       [
-        "19",
+        "physician",
         26648
       ],
       [
-        "2",
+        "attorney",
         21169
       ],
       [
-        "18",
+        "photographer",
         15773
       ],
       [
-        "11",
+        "journalist",
         12960
       ],
       [
-        "13",
+        "nurse",
         12316
       ],
       [
-        "22",
+        "psychologist",
         11945
       ],
       [
-        "26",
+        "teacher",
         10531
       ],
       [
-        "6",
+        "dentist",
         9479
       ],
       [
-        "25",
+        "surgeon",
         8829
       ],
       [
-        "1",
+        "architect",
         6568
       ],
       [
-        "14",
+        "painter",
         5025
       ],
       [
-        "12",
+        "model",
         4867
       ],
       [
-        "20",
+        "poet",
         4558
       ],
       [
-        "9",
+        "filmmaker",
         4545
       ],
       [
-        "24",
+        "software engineer",
         4492
       ],
       [
-        "0",
+        "accountant",
         3660
       ],
       [
-        "5",
+        "composer",
         3637
       ],
       [
-        "7",
+        "dietitian",
         2567
       ],
       [
-        "4",
+        "comedian",
         1824
       ]
     ],
-    "mask_gender": false,
-    "mask_token": null,
+    "mask_gender": true,
+    "mask_titles": true,
+    "mask_gendered_nouns": true,
+    "mask_label_leakage": true,
+    "mask_token": "[MASK]",
+    "label_mask_token": "[LABEL_MASK]",
     "lowercase_text": false,
     "gender_normalization": {
       "M": "male",
@@ -153,27 +159,32 @@
           "F": 114554
         },
         "label_counts": {
-          "21": 76748,
-          "13": 12316,
-          "2": 21169,
-          "11": 12960,
-          "20": 4558,
-          "25": 8829,
-          "26": 10531,
-          "22": 11945,
-          "19": 26648,
-          "14": 5025,
-          "18": 15773,
-          "24": 4492,
-          "5": 3637,
-          "6": 9479,
-          "7": 2567,
-          "0": 3660,
-          "9": 4545,
-          "1": 6568,
-          "12": 4867,
-          "4": 1824
-        }
+          "professor": 76748,
+          "nurse": 12316,
+          "attorney": 21169,
+          "journalist": 12960,
+          "poet": 4558,
+          "surgeon": 8829,
+          "teacher": 10531,
+          "psychologist": 11945,
+          "physician": 26648,
+          "painter": 5025,
+          "photographer": 15773,
+          "software engineer": 4492,
+          "composer": 3637,
+          "dentist": 9479,
+          "dietitian": 2567,
+          "accountant": 3660,
+          "filmmaker": 4545,
+          "architect": 6568,
+          "model": 4867,
+          "comedian": 1824
+        },
+        "label_leakage_counts": {
+          "false": 204081,
+          "true": 44060
+        },
+        "label_leakage_rate": 0.17756033867841267
       },
       "dev": {
         "num_samples": 38198,
@@ -182,27 +193,32 @@
           "F": 17634
         },
         "label_counts": {
-          "21": 11808,
-          "6": 1459,
-          "2": 3258,
-          "7": 396,
-          "18": 2428,
-          "19": 4100,
-          "1": 1012,
-          "26": 1621,
-          "11": 1995,
-          "5": 561,
-          "20": 702,
-          "22": 1839,
-          "4": 282,
-          "13": 1896,
-          "25": 1360,
-          "12": 750,
-          "24": 692,
-          "0": 564,
-          "9": 701,
-          "14": 774
-        }
+          "professor": 11808,
+          "dentist": 1459,
+          "attorney": 3258,
+          "dietitian": 396,
+          "photographer": 2428,
+          "physician": 4100,
+          "architect": 1012,
+          "teacher": 1621,
+          "journalist": 1995,
+          "composer": 561,
+          "poet": 702,
+          "psychologist": 1839,
+          "comedian": 282,
+          "nurse": 1896,
+          "surgeon": 1360,
+          "model": 750,
+          "software engineer": 692,
+          "accountant": 564,
+          "filmmaker": 701,
+          "painter": 774
+        },
+        "label_leakage_counts": {
+          "false": 31424,
+          "true": 6774
+        },
+        "label_leakage_rate": 0.1773391277030211
       },
       "test": {
         "num_samples": 95468,
@@ -211,27 +227,32 @@
           "F": 44074
         },
         "label_counts": {
-          "21": 29520,
-          "5": 1401,
-          "4": 703,
-          "1": 2528,
-          "0": 1409,
-          "2": 8143,
-          "19": 10250,
-          "18": 6068,
-          "22": 4596,
-          "9": 1750,
-          "26": 4051,
-          "6": 3647,
-          "11": 4986,
-          "13": 4738,
-          "24": 1728,
-          "14": 1935,
-          "25": 3398,
-          "12": 1874,
-          "20": 1754,
-          "7": 989
-        }
+          "professor": 29520,
+          "composer": 1401,
+          "comedian": 703,
+          "architect": 2528,
+          "accountant": 1409,
+          "attorney": 8143,
+          "physician": 10250,
+          "photographer": 6068,
+          "psychologist": 4596,
+          "filmmaker": 1750,
+          "teacher": 4051,
+          "dentist": 3647,
+          "journalist": 4986,
+          "nurse": 4738,
+          "software engineer": 1728,
+          "painter": 1935,
+          "surgeon": 3398,
+          "model": 1874,
+          "poet": 1754,
+          "dietitian": 989
+        },
+        "label_leakage_counts": {
+          "true": 16724,
+          "false": 78744
+        },
+        "label_leakage_rate": 0.17517911761008925
       }
     },
     "num_labels": 20,
@@ -245,111 +266,111 @@
       "F": 0.4616520912398149
     },
     "occupation_counts_overall": {
-      "21": 118076,
-      "13": 18950,
-      "2": 32570,
-      "11": 19941,
-      "20": 7014,
-      "25": 13587,
-      "26": 16203,
-      "22": 18380,
-      "19": 40998,
-      "14": 7734,
-      "18": 24269,
-      "24": 6912,
-      "5": 5599,
-      "6": 14585,
-      "7": 3952,
-      "0": 5633,
-      "9": 6996,
-      "1": 10108,
-      "12": 7491,
-      "4": 2809
+      "professor": 118076,
+      "nurse": 18950,
+      "attorney": 32570,
+      "journalist": 19941,
+      "poet": 7014,
+      "surgeon": 13587,
+      "teacher": 16203,
+      "psychologist": 18380,
+      "physician": 40998,
+      "painter": 7734,
+      "photographer": 24269,
+      "software engineer": 6912,
+      "composer": 5599,
+      "dentist": 14585,
+      "dietitian": 3952,
+      "accountant": 5633,
+      "filmmaker": 6996,
+      "architect": 10108,
+      "model": 7491,
+      "comedian": 2809
     },
     "occupation_counts_sorted": [
       [
-        "21",
+        "professor",
         118076
       ],
       [
-        "19",
+        "physician",
         40998
       ],
       [
-        "2",
+        "attorney",
         32570
       ],
       [
-        "18",
+        "photographer",
         24269
       ],
       [
-        "11",
+        "journalist",
         19941
       ],
       [
-        "13",
+        "nurse",
         18950
       ],
       [
-        "22",
+        "psychologist",
         18380
       ],
       [
-        "26",
+        "teacher",
         16203
       ],
       [
-        "6",
+        "dentist",
         14585
       ],
       [
-        "25",
+        "surgeon",
         13587
       ],
       [
-        "1",
+        "architect",
         10108
       ],
       [
-        "14",
+        "painter",
         7734
       ],
       [
-        "12",
+        "model",
         7491
       ],
       [
-        "20",
+        "poet",
         7014
       ],
       [
-        "9",
+        "filmmaker",
         6996
       ],
       [
-        "24",
+        "software engineer",
         6912
       ],
       [
-        "0",
+        "accountant",
         5633
       ],
       [
-        "5",
+        "composer",
         5599
       ],
       [
-        "7",
+        "dietitian",
         3952
       ],
       [
-        "4",
+        "comedian",
         2809
       ]
     ],
     "occupation_gender_breakdown": {
-      "21": {
+      "professor": {
         "counts": {
           "M": 64817,
           "F": 53259
@@ -360,7 +381,7 @@
         },
         "total": 118076
       },
-      "13": {
+      "nurse": {
         "counts": {
           "F": 17215,
           "M": 1735
@@ -371,7 +392,7 @@
         },
         "total": 18950
       },
-      "2": {
+      "attorney": {
         "counts": {
           "F": 12471,
           "M": 20099
@@ -382,7 +403,7 @@
         },
         "total": 32570
       },
-      "11": {
+      "journalist": {
         "counts": {
           "M": 10070,
           "F": 9871
@@ -393,7 +414,7 @@
         },
         "total": 19941
       },
-      "20": {
+      "poet": {
         "counts": {
           "F": 3439,
           "M": 3575
@@ -404,7 +425,7 @@
         },
         "total": 7014
       },
-      "25": {
+      "surgeon": {
         "counts": {
           "M": 11573,
           "F": 2014
@@ -415,7 +436,7 @@
         },
         "total": 13587
       },
-      "26": {
+      "teacher": {
         "counts": {
           "F": 9759,
           "M": 6444
@@ -426,7 +447,7 @@
         },
         "total": 16203
       },
-      "22": {
+      "psychologist": {
         "counts": {
           "F": 11409,
           "M": 6971
@@ -437,7 +458,7 @@
         },
         "total": 18380
       },
-      "19": {
+      "physician": {
         "counts": {
           "M": 20758,
           "F": 20240
@@ -448,7 +469,7 @@
         },
         "total": 40998
       },
-      "14": {
+      "painter": {
         "counts": {
           "M": 4197,
           "F": 3537
@@ -459,7 +480,7 @@
         },
         "total": 7734
       },
-      "18": {
+      "photographer": {
         "counts": {
           "M": 15603,
           "F": 8666
@@ -470,7 +491,7 @@
         },
         "total": 24269
       },
-      "24": {
+      "software engineer": {
         "counts": {
           "M": 5820,
           "F": 1092
@@ -481,7 +502,7 @@
         },
         "total": 6912
       },
-      "5": {
+      "composer": {
         "counts": {
           "M": 4682,
           "F": 917
@@ -492,7 +513,7 @@
         },
         "total": 5599
       },
-      "6": {
+      "dentist": {
         "counts": {
           "M": 9437,
           "F": 5148
@@ -503,7 +524,7 @@
         },
         "total": 14585
       },
-      "7": {
+      "dietitian": {
         "counts": {
           "F": 3669,
           "M": 283
@@ -514,7 +535,7 @@
         },
         "total": 3952
       },
-      "0": {
+      "accountant": {
         "counts": {
           "F": 2067,
           "M": 3566
@@ -525,7 +546,7 @@
         },
         "total": 5633
       },
-      "9": {
+      "filmmaker": {
         "counts": {
           "M": 4691,
           "F": 2305
@@ -536,7 +557,7 @@
         },
         "total": 6996
       },
-      "1": {
+      "architect": {
         "counts": {
           "F": 2393,
           "M": 7715
@@ -547,7 +568,7 @@
         },
         "total": 10108
       },
-      "12": {
+      "model": {
         "counts": {
           "F": 6197,
           "M": 1294
@@ -558,7 +579,7 @@
         },
         "total": 7491
       },
-      "4": {
+      "comedian": {
         "counts": {
           "F": 594,
           "M": 2215
@@ -567,6 +588,173 @@
           "F": 0.2114631541473834,
           "M": 0.7885368458526166
         },
+        "total": 2809
+      }
+    },
+    "label_leakage_counts_overall": {
+      "false": 314249,
+      "true": 67558
+    },
+    "label_leakage_rate_overall": 0.17694280094393242,
+    "occupation_label_leakage_breakdown": {
+      "professor": {
+        "counts": {
+          "false": 102225,
+          "true": 15851
+        },
+        "rate": 0.13424404620752736,
+        "total": 118076
+      },
+      "nurse": {
+        "counts": {
+          "true": 11969,
+          "false": 6981
+        },
+        "rate": 0.6316094986807388,
+        "total": 18950
+      },
+      "attorney": {
+        "counts": {
+          "false": 26548,
+          "true": 6022
+        },
+        "rate": 0.18489407430150445,
+        "total": 32570
+      },
+      "journalist": {
+        "counts": {
+          "false": 16057,
+          "true": 3884
+        },
+        "rate": 0.19477458502582617,
+        "total": 19941
+      },
+      "poet": {
+        "counts": {
+          "false": 6154,
+          "true": 860
+        },
+        "rate": 0.12261191901910465,
+        "total": 7014
+      },
+      "surgeon": {
+        "counts": {
+          "false": 12667,
+          "true": 920
+        },
+        "rate": 0.06771178332229337,
+        "total": 13587
+      },
+      "teacher": {
+        "counts": {
+          "true": 3624,
+          "false": 12579
+        },
+        "rate": 0.2236622847620811,
+        "total": 16203
+      },
+      "psychologist": {
+        "counts": {
+          "false": 13949,
+          "true": 4431
+        },
+        "rate": 0.2410772578890098,
+        "total": 18380
+      },
+      "physician": {
+        "counts": {
+          "false": 37416,
+          "true": 3582
+        },
+        "rate": 0.08737011561539587,
+        "total": 40998
+      },
+      "painter": {
+        "counts": {
+          "false": 6016,
+          "true": 1718
+        },
+        "rate": 0.22213602275665892,
+        "total": 7734
+      },
+      "photographer": {
+        "counts": {
+          "false": 20404,
+          "true": 3865
+        },
+        "rate": 0.15925666488112405,
+        "total": 24269
+      },
+      "software engineer": {
+        "counts": {
+          "false": 5661,
+          "true": 1251
+        },
+        "rate": 0.18098958333333334,
+        "total": 6912
+      },
+      "composer": {
+        "counts": {
+          "false": 4661,
+          "true": 938
+        },
+        "rate": 0.16752991605643866,
+        "total": 5599
+      },
+      "dentist": {
+        "counts": {
+          "false": 11916,
+          "true": 2669
+        },
+        "rate": 0.18299622900239973,
+        "total": 14585
+      },
+      "dietitian": {
+        "counts": {
+          "false": 2911,
+          "true": 1041
+        },
+        "rate": 0.2634109311740891,
+        "total": 3952
+      },
+      "accountant": {
+        "counts": {
+          "false": 5183,
+          "true": 450
+        },
+        "rate": 0.07988638380969289,
+        "total": 5633
+      },
+      "filmmaker": {
+        "counts": {
+          "false": 5635,
+          "true": 1361
+        },
+        "rate": 0.19453973699256719,
+        "total": 6996
+      },
+      "architect": {
+        "counts": {
+          "true": 1331,
+          "false": 8777
+        },
+        "rate": 0.1316778789077958,
+        "total": 10108
+      },
+      "model": {
+        "counts": {
+          "false": 6203,
+          "true": 1288
+        },
+        "rate": 0.17193966092644505,
+        "total": 7491
+      },
+      "comedian": {
+        "counts": {
+          "true": 503,
+          "false": 2306
+        },
+        "rate": 0.17906728373086508,
         "total": 2809
       }
     }
