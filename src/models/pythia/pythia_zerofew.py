@@ -79,6 +79,7 @@ def main():
     parser.add_argument("--sampling_method", type=str, choices=["random", "stratified"], default="stratified", help="Sampling method if num_samples is set")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for sampling")
     parser.add_argument("--max_tokens", type=int, default=256, help="Maximum number of tokens for prompt + candidate")
+    parser.add_argument("--apply_mask", action="store_true", help="Apply masking by using 'masked_text' instead of 'text' if available")
     
     args = parser.parse_args()
     
@@ -141,15 +142,20 @@ def main():
         print(f"Sampled {len(data)} items using {args.sampling_method} sampling.")
     
     os.makedirs(args.output_dir, exist_ok=True)
-    output_filename = os.path.join(args.output_dir, f"preds_pythia_{args.model_size}_{args.regime}.jsonl")
+    mask_str = "_masked" if args.apply_mask else ""
+    output_filename = os.path.join(args.output_dir, f"preds_pythia_{args.model_size}{mask_str}_{args.regime}.jsonl")
     
-    print(f"Running batched inference (batch_size={args.batch_size}) on {len(data)} examples.")
+    print(f"Running batched inference (batch_size={args.batch_size}) on {len(data)} examples. Masked: {args.apply_mask}")
     with open(output_filename, "w", encoding='utf-8') as out_f:
         for i in tqdm(range(0, len(data), args.batch_size)):
             batch_items = data[i:i + args.batch_size]
             prompts = []
             for item in batch_items:
-                text = item.get("masked_text", item.get("text", "")) # checks for masked_text first
+                if args.apply_mask:
+                    text = item.get("masked_text", item.get("text", ""))
+                else:
+                    text = item.get("text", "")
+                    
                 prompt = format_prompt(text, regime=args.regime)
                 prompts.append(prompt)
                 
