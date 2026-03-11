@@ -46,8 +46,12 @@ def main():
     args = parser.parse_args()
 
     #load dataset + shared label mapping
+    # load dataset + shared label mapping
     ds, label2id, id2label, meta = load_bios()
     test = ds["test"]
+
+    with open("data/profession_mapping.json", "r", encoding="utf-8") as f:
+        profession_mapping = json.load(f)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_dir, use_fast=True)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
@@ -61,6 +65,7 @@ def main():
     ids = list(test["id"])
     texts = list(test["text"])
     gold_labels = list(test["label"])
+    gold_label_ids = list(test["label_id"])
     genders = list(test["gender"])
 
 
@@ -109,14 +114,14 @@ def main():
     #save results
     with open(args.out_jsonl, "w", encoding="utf-8") as f:
         for i in range(len(ids)):
-            pred_label = id2label.get(int(pred_ids[i]), "UNK")
+            pred_label = profession_mapping.get(str(int(pred_ids[i])), "UNK")
             conf = float(np.max(probs[i]))
             score = float(np.max(logits[i]))
 
-
             row = {
                 "id": ids[i],
-                "label_true": gold_labels[i],
+                "text": texts[i],
+                "label_true": profession_mapping.get(str(int(gold_label_ids[i])), str(gold_labels[i])),
                 "label_pred": pred_label,
                 "gender": genders[i],
                 "model": args.model_tag,
