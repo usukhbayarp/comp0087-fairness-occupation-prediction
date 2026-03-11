@@ -1,9 +1,9 @@
 import pandas as pd
+import numpy as np
 import json
 import glob
 from sklearn.metrics import f1_score, accuracy_score
 from src.evaluation.fairness import compute_fairness_gaps
-
 
 def load_predictions(file_path):
     data = []
@@ -11,8 +11,6 @@ def load_predictions(file_path):
         for line in f:
             data.append(json.loads(line))
     return pd.DataFrame(data)
-
-
 
 def run_evaluation():
     summary_data = []
@@ -31,10 +29,12 @@ def run_evaluation():
         # fairness metrics
         fairness = compute_fairness_gaps(df)
         
-        # average gaps across occupations 
-        avg_dp = sum([v["Demographic_Parity"] for v in fairness.values()]) / len(fairness)
-        avg_eo = sum([v["Equal_Opportunity"] for v in fairness.values()]) / len(fairness)
+        # average gaps across occupations (using np.nanmean to safely ignore np.nan values)
+        dp_gaps = [v["Demographic_Parity"] for v in fairness.values()]
+        eo_gaps = [v["Equal_Opportunity"] for v in fairness.values()]
         
+        avg_dp = np.nanmean(dp_gaps)
+        avg_eo = np.nanmean(eo_gaps)
         
         summary_data.append({
             "model_name": file.replace("preds_", "").replace(".jsonl", ""),
@@ -58,4 +58,4 @@ def run_evaluation():
     
 if __name__ == "__main__":
     run_evaluation()
-
+    
