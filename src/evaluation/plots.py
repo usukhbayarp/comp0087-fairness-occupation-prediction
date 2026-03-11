@@ -8,7 +8,8 @@ def generate_detailed_plots():
 
     # 1. Pareto Frontier (Performance vs Fairness Trade-off)
     plt.figure(figsize=(10, 6))
-    sns.scatterplot(data=summary_df, x="avg_eo_gap", y="macro_f1", hue="model_name", s=100)
+    # FIXED: Changed x="avg_eo_gap" to x="eo_diff" to match evaluate.py
+    sns.scatterplot(data=summary_df, x="eo_diff", y="macro_f1", hue="model_name", s=100)
     plt.title("Pareto Frontier: Macro-F1 vs. Average Equalized Odds Gap")
     plt.xlabel("Average EO Gap (Lower = Fairer)")
     plt.ylabel("Macro-F1 (Higher = Better)")
@@ -16,8 +17,8 @@ def generate_detailed_plots():
     plt.savefig("pareto_frontier.png")
 
     # 2. Heatmap: Which occupations are most biased per model?
-    # Pivot the detailed data for a heatmap
-    heatmap_data = detailed_df.pivot(index="occupation", columns="model", values="eo_gap")
+    # FIXED: Changed columns="model" to columns="model_name" to match evaluate.py
+    heatmap_data = detailed_df.pivot(index="occupation", columns="model_name", values="eo_gap")
     plt.figure(figsize=(12, 8))
     sns.heatmap(heatmap_data, annot=True, cmap="YlOrRd")
     plt.title("EO Gap Per Occupation Across Models")
