@@ -4,12 +4,12 @@ import pandas as pd
 def compute_group_metrics(df, group_label):
     """
     Variables:
-- df: DataFrame derived from JSONL
-- group_label: "M" or "F" for the demographic group of interest
+    - df: DataFrame derived from JSONL
+    - group_label: "M" or "F" for the demographic group of interest
 
     Output:
-- Computes TPR and selection rate for a specific demographic group, for each occupation.
-- Implementation follows the One-vs-Rest recommendation.
+    - Computes TPR and selection rate for a specific demographic group, for each occupation.
+    - Implementation follows the One-vs-Rest recommendation.
     """
     results = {}
     occupations = df['label_true'].unique()
@@ -19,26 +19,25 @@ def compute_group_metrics(df, group_label):
     
     for occ in occupations:
         # selection rate for Demographic Parity
-        selection_rate = (group_df['label_pred'] == occ).mean()
+        selection_rate = (group_df['label_pred'] == occ).mean() if len(group_df) > 0 else np.nan
         
         # true positive rate for Equalized Odds
         actual_occ = group_df[group_df['label_true'] == occ]
-        tpr = (actual_occ['label_pred'] == occ).mean() if len(actual_occ) > 0 else 0
+        # Return np.nan instead of 0 to avoid fake gaps when a group is missing from an occupation
+        tpr = (actual_occ['label_pred'] == occ).mean() if len(actual_occ) > 0 else np.nan
         
         # store results for the occupation
         results[occ] = {"selection_rate": selection_rate, "tpr": tpr}
     
     return results
 
-
-
 def compute_fairness_gaps(df):
     """
     Variables:
-- df: DataFrame derived from JSONL
+    - df: DataFrame derived from JSONL
 
     Output:
-- DP Difference and EO Difference per occupation.
+    - DP Difference and EO Difference per occupation.
     """
     m_metrics = compute_group_metrics(df, "M")
     f_metrics = compute_group_metrics(df, "F")
@@ -51,4 +50,3 @@ def compute_fairness_gaps(df):
         gaps[occ] = {"Demographic_Parity": dp_gap, "Equal_Opportunity": eo_gap}
         
     return gaps
-
