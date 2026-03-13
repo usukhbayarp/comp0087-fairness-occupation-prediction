@@ -21,9 +21,19 @@ Based on our coding split tasks, the repository is organized (or should be organ
 |-- notebooks/                     # Exploratory analysis and debugging notebooks
 |
 |-- results/                       # Experiment predictions, tables, and figures
-|   |-- predictions/               # JSONL files for predictions (Parts 2-4)
-|   |-- tables/                    # results_table.csv, proxy_words_by_profession.csv (Parts 5-6)
-|   |-- figures/                   # p   areto.png, scaling.png (Part 5)
+|   |-- predictions/               # JSONL files for encoder and masked/unmasked predictions (Part 4)
+|   |-- pythia/                    # Zero-shot and few-shot Pythia predictions (Part 2)
+|   |-- pythia_finetuned/          # Fine-tuned Pythia predictions (masked and unmasked) (Part 3)
+|   |-- tables/                    # CSV results: summary_results.csv, detailed_fairness.csv, proxy_words_by_profession.csv (Parts 5-6)
+|   |-- figures/                   # Visualizations (Part 5)
+|       |-- Correlation Plots/     # Sub-folders for bias analysis
+|           |-- Amplification/     # Gender Ratio vs. EO Gap correlation plots
+|           |-- Delta/             # Mitigation success (Unmasked EO - Masked EO) plots
+|       |-- job_bias_comparison.png
+|       |-- pareto_frontier.png
+|       |-- scaling_performance.png
+|       |-- scaling_fairness.png
+|       |-- scaling_fairness_breakdown.png
 |
 |-- scripts/                       # Entry-point scripts for running pipelines
 |   |-- evaluate.py                # Single command evaluation harness (Part 5)
