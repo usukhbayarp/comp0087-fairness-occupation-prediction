@@ -39,7 +39,9 @@ class BiosConfig:
     unk_gender: str = "UNK"
 
     # Optional profession-id -> profession-name mapping JSON path
-    profession_mapping_path: Optional[str] = str(Path(__file__).with_name("profession_mapping.json"))
+    #profession_mapping_path: Optional[str] = str(Path(__file__).with_name("profession_mapping.json"))
+    profession_mapping_path: Optional[str] = str(
+        Path(__file__).resolve().parents[2] / "data" / "profession_mapping.json")
 
     # If you already KNOW the mapping, you can hard-set it here, e.g. {0:"M",1:"F"}
     # Leave None to auto-infer from observed ids in train split.

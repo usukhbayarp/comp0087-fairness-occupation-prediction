@@ -46,12 +46,14 @@ def main():
     args = parser.parse_args()
 
     #load dataset + shared label mapping
-    # load dataset + shared label mapping
     ds, label2id, id2label, meta = load_bios()
     test = ds["test"]
 
-    with open("data/profession_mapping.json", "r", encoding="utf-8") as f:
-        profession_mapping = json.load(f)
+    label_list = [id2label[i] for i in range(len(id2label))]
+    if any(str(label).isdigit() for label in label_list):
+        raise ValueError("load_bios() returned numeric labels instead of profession names.")
+    # with open("data/profession_mapping.json", "r", encoding="utf-8") as f:
+    #     profession_mapping = json.load(f)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model_dir, use_fast=True)
     model = AutoModelForSequenceClassification.from_pretrained(args.model_dir)
@@ -70,7 +72,7 @@ def main():
 
 
     #convert gold string labels to numeric class ids
-    gold_ids = np.array([label2id.get(l, -1) for l in gold_labels], dtype=int)
+    gold_ids = np.array(gold_label_ids, dtype=int)
 
     #store logits for each batch, then concatenate at the end
     all_logits: List[np.ndarray] = []
@@ -114,14 +116,14 @@ def main():
     #save results
     with open(args.out_jsonl, "w", encoding="utf-8") as f:
         for i in range(len(ids)):
-            pred_label = profession_mapping.get(str(int(pred_ids[i])), "UNK")
+            pred_label = id2label.get(int(pred_ids[i]), "UNK")
             conf = float(np.max(probs[i]))
             score = float(np.max(logits[i]))
 
             row = {
                 "id": ids[i],
                 "text": texts[i],
-                "label_true": profession_mapping.get(str(int(gold_label_ids[i])), str(gold_labels[i])),
+                "label_true": gold_labels[i],
                 "label_pred": pred_label,
                 "gender": genders[i],
                 "model": args.model_tag,

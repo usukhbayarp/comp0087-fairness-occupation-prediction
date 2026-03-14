@@ -40,6 +40,14 @@ def tokenize_batch(examples, tokenizer, max_length):
         max_length=max_length,
     )
 
+def validate_label_mapping(label2id, id2label):
+    labels = [id2label[i] for i in range(len(id2label))]
+
+    if any(str(label).isdigit() for label in labels):
+        raise ValueError("Label mapping is numeric, expected profession names.")
+
+    if len(set(labels)) != len(labels):
+        raise ValueError("Duplicate labels found in id2label mapping.")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -66,9 +74,10 @@ def main():
 
     #load dataset + label vocab
     ds, label2id, id2label, meta = load_bios()
-
+    validate_label_mapping(label2id, id2label)
     #makes an ordered list of labels by id
     label_list = [id2label[i] for i in range(len(id2label))]
+
 
     #downloads/loads the tokenizer that matches the chosen model
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, use_fast=True)
