@@ -252,3 +252,5 @@ wandb/
 !checkpoints/**/*.safetensors
 !checkpoints/**/*.pth
 !checkpoints/**
+
+.DS_Store
