@@ -68,12 +68,27 @@ def main():
     #seed
     parser.add_argument("--seed", type=int, default=42)
 
+    #masked or unmasked data pipeline
+    parser.add_argument("--data_regime", type=str, default="unmasked",
+                        choices=["masked", "unmasked"])
+
     args = parser.parse_args()
 
     set_seed(args.seed)
 
+
     #load dataset + label vocab
-    ds, label2id, id2label, meta = load_bios()
+    if args.data_regime == "masked":
+        from src.data.data import BiosConfig
+        cfg = BiosConfig(
+            mask_gender=True,
+            mask_titles=True,
+            mask_gendered_nouns=True,
+            mask_label_leakage=True,
+        )
+        ds, label2id, id2label, meta = load_bios(cfg=cfg)
+    else:
+        ds, label2id, id2label, meta = load_bios()
     validate_label_mapping(label2id, id2label)
     #makes an ordered list of labels by id
     label_list = [id2label[i] for i in range(len(id2label))]
@@ -112,7 +127,7 @@ def main():
     data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
 
     run_name = args.model_name.replace("/", "_")
-    out_dir = os.path.join(args.output_dir, run_name)
+    out_dir = os.path.join(args.output_dir, f"{run_name}-{args.data_regime}")
 
     #handles compatibility between different transformers versions (some use evaluation_strategy, some use eval_strategy
     eval_kw = "evaluation_strategy"

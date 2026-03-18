@@ -37,8 +37,14 @@ def main():
     #out dir for predictions
     parser.add_argument("--out_jsonl", type=str, required=True)
 
+    #masked or unmasked data pipeline
+    parser.add_argument("--data_regime", type=str, default="unmasked",
+                        choices=["masked", "unmasked"])
+    parser.add_argument("--ids_jsonl", type=str, default="results/pythia/preds_pythia_1.4b_fewshot.jsonl",
+                        help="only examples whose ids appear in this file are kept.")
     #max tokens per input
     parser.add_argument("--max_length", type=int, default=256)
+
 
     #batch size per cpu/gpu device
     parser.add_argument("--batch_size", type=int, default=32)
@@ -46,12 +52,38 @@ def main():
     args = parser.parse_args()
 
     #load dataset + shared label mapping
-    ds, label2id, id2label, meta = load_bios()
+    if args.data_regime == "masked":
+        from src.data.data import BiosConfig
+        cfg = BiosConfig(
+            mask_gender=True,
+            mask_titles=True,
+            mask_gendered_nouns=True,
+            mask_label_leakage=True,
+        )
+        ds, label2id, id2label, meta = load_bios(cfg=cfg)
+    else:
+        ds, label2id, id2label, meta = load_bios()
     test = ds["test"]
 
     label_list = [id2label[i] for i in range(len(id2label))]
     if any(str(label).isdigit() for label in label_list):
         raise ValueError("load_bios() returned numeric labels instead of profession names.")
+
+    if args.ids_jsonl is not None:
+        ordered_ids = []
+        with open(args.ids_jsonl, "r", encoding="utf-8") as f:
+            for line in f:
+                row = json.loads(line)
+                ordered_ids.append(int(row["id"]))
+
+        selected_ids = set(ordered_ids)
+        test = test.filter(lambda ex: int(ex["id"]) in selected_ids)
+
+        #reorder the filtered test set to match the exact id order in the reference jsonl
+        id_to_idx = {int(example_id): idx for idx, example_id in enumerate(test["id"])}
+        test = test.select([id_to_idx[i] for i in ordered_ids if i in id_to_idx])
+
+        #print(f"test set to {len(test)} rows using ids from: {args.ids_jsonl}")
     # with open("data/profession_mapping.json", "r", encoding="utf-8") as f:
     #     profession_mapping = json.load(f)
 
@@ -69,7 +101,8 @@ def main():
     gold_labels = list(test["label"])
     gold_label_ids = list(test["label_id"])
     genders = list(test["gender"])
-
+    if args.ids_jsonl is not None and len(ids) != 3000:
+        print(f"Warning: expected 3000 rows after filtering, got {len(ids)}")
 
     #convert gold string labels to numeric class ids
     gold_ids = np.array(gold_label_ids, dtype=int)
