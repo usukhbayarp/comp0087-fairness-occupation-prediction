@@ -1,9 +1,7 @@
 """
-Part 3 — pythia_eval.py
-Evaluate a fine-tuned Pythia LoRA checkpoint on the test split and dump
-predictions in the shared JSONL schema.
+Evaluate a fine-tuned Pythia checkpoint on the test split
 
-Reads:
+Inputs:
     <data_dir>/test.jsonl          ← from Part 1
     <checkpoint_dir>/label_meta.json  ← saved by pythia_finetune.py
 
@@ -12,8 +10,7 @@ Output schema:
      "gender":"F", "model":"pythia-410m", "regime":"finetuned",
      "score":-0.47, "conf":0.62}
 
-Colab usage
------------
+Usage
 !python pythia_eval.py \
     --model_size 410m \
     --checkpoint_dir ./checkpoints/pythia-410m/best \
@@ -36,10 +33,7 @@ from sklearn.metrics import accuracy_score, f1_score, classification_report
 from tqdm import tqdm
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 1.  Helpers
-# ─────────────────────────────────────────────────────────────────────────────
-
+# load data
 def load_jsonl(path: str) -> List[dict]:
     records = []
     with open(path, "r", encoding="utf-8") as f:
@@ -67,14 +61,10 @@ def load_label_meta(checkpoint_dir: str):
     return label2id, id2label
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 2.  Dataset
-# ─────────────────────────────────────────────────────────────────────────────
 
 class TestBiosDataset(Dataset):
     """
-    Tokenised test set that also stores metadata (id, text, gender, label_true)
-    needed to build the JSONL prediction records.
+    Tokenised test set
     """
 
     def __init__(
@@ -84,8 +74,8 @@ class TestBiosDataset(Dataset):
         label2id: Dict[str, int],
         max_length: int = 256,
     ):
-        self.meta:  List[dict] = []   # raw metadata per example
-        self.items: List[dict] = []   # tokenised tensors + label
+        self.meta:  List[dict] = []   
+        self.items: List[dict] = []   
 
         skipped = 0
         for idx, r in enumerate(records):
@@ -122,10 +112,11 @@ class TestBiosDataset(Dataset):
         }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3.  Load fine-tuned model
-# ─────────────────────────────────────────────────────────────────────────────
 
+""" 
+    load finetuned model
+    2 situations: LoRA or fully finetuned model checkpoint
+"""
 def load_finetuned_model(checkpoint_dir: str, label2id: Dict, id2label: Dict,
                          device: torch.device):
     """Load checkpoint saved by pythia_finetune.py (LoRA, QLoRA, or full fine-tune)."""
@@ -172,10 +163,7 @@ def load_finetuned_model(checkpoint_dir: str, label2id: Dict, id2label: Dict,
     return model, tokenizer
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 4.  Inference
-# ─────────────────────────────────────────────────────────────────────────────
-
+# Inference
 def run_inference(
     model,
     tokenizer,
@@ -216,7 +204,7 @@ def run_inference(
     ):
         meta     = dataset.meta[i]
         top_prob = float(probs[pred_id])
-        score    = float(np.log(top_prob + 1e-12))   # log-probability as score
+        score    = float(np.log(top_prob + 1e-12))   # we use log-probability as score
 
         records.append({
             "id":         meta["id"],
@@ -233,10 +221,7 @@ def run_inference(
     return records
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 5.  Metrics
-# ─────────────────────────────────────────────────────────────────────────────
-
+# compute metrics
 def compute_and_print_metrics(records: List[dict], label_names: List[str]):
     y_true = [r["label_true"] for r in records]
     y_pred = [r["label_pred"] for r in records]
@@ -276,40 +261,35 @@ def compute_and_print_metrics(records: List[dict], label_names: List[str]):
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 6.  Main
-# ─────────────────────────────────────────────────────────────────────────────
 
 def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[setup] device={device}")
 
-    # ── Label metadata ────────────────────────────────────────────────────────
+    # Label metadata
     label2id, id2label = load_label_meta(args.checkpoint_dir)
     label_names        = [id2label[i] for i in range(len(id2label))]
 
-    # ── Model ─────────────────────────────────────────────────────────────────
+    # Model
     model, tokenizer = load_finetuned_model(
         args.checkpoint_dir, label2id, id2label, device
     )
 
-    # ── Test data (pre-processed JSONL from Part 1) ───────────────────────────
+    # Test data
     print("[data] Loading test.jsonl ...")
     test_records = load_jsonl(os.path.join(args.data_dir, "test.jsonl"))
     test_ds      = TestBiosDataset(test_records, tokenizer, label2id, args.max_length)
     print(f"  Test examples (after label filtering): {len(test_ds):,}")
 
-    # ── Inference ─────────────────────────────────────────────────────────────
+    # Inference
     predictions = run_inference(
         model, tokenizer, test_ds, id2label, device,
         batch_size=args.batch_size,
         model_size=args.model_size,
     )
 
-    # ── Metrics ───────────────────────────────────────────────────────────────
+    # Metrics
     metrics = compute_and_print_metrics(predictions, label_names)
-
-    # ── Save outputs ──────────────────────────────────────────────────────────
     os.makedirs(args.output_dir, exist_ok=True)
     size = args.model_size
 
@@ -335,9 +315,6 @@ def main(args):
     print(f"[save] Clf report   → {report_path}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 7.  CLI
-# ─────────────────────────────────────────────────────────────────────────────
 
 def parse_args():
     p = argparse.ArgumentParser(

@@ -1,27 +1,21 @@
 """
-Part 3 — pythia_finetune.py
-Supervised fine-tuning of Pythia (LoRA / QLoRA) for occupation classification.
+Finetuning Pythia
 
 Reads the pre-processed JSONL files produced by Part 1's export_dataset_jsonl.py:
     <data_dir>/train.jsonl
     <data_dir>/dev.jsonl
 
-Each JSONL line schema (from Part 1):
-    {"id": 0, "text": "...", "label": "professor", "gender": "M"}
-
-Colab usage
------------
-# 1. Install dependencies
+Dependencies:
 !pip install -q transformers==4.40.0 peft==0.10.0 accelerate bitsandbytes scikit-learn tqdm
 
-# 2. Run (example for pythia-410m)
+Run (example for pythia-410m)
 !python pythia_finetune.py \
     --model_size 410m \
     --data_dir ./processed \
     --output_dir ./checkpoints
 
 Supported sizes: 70m | 160m | 410m | 1b | 1.4b | 2.8b
-Add --use_4bit for QLoRA (recommended for 1.4b+ on Colab T4)
+Add --use_4bit for QLoRA
 """
 
 import argparse
@@ -49,11 +43,7 @@ from peft import (
 )
 from sklearn.metrics import accuracy_score, f1_score
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 1.  Helpers
-# ─────────────────────────────────────────────────────────────────────────────
-
+# fix seed to make experiment reproducible
 def set_seed(seed: int = 42) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -81,16 +71,13 @@ def build_label_vocab(train_records: List[dict]):
     return label2id, id2label
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 2.  PyTorch Dataset
-# ─────────────────────────────────────────────────────────────────────────────
-
 class BiosDataset(Dataset):
     """
     Tokenised dataset backed by a list of Part-1 JSONL records.
     Records whose label is absent from label2id are silently skipped.
     """
 
+    # Tokenization of the text
     def __init__(
         self,
         records: List[dict],
@@ -124,6 +111,7 @@ class BiosDataset(Dataset):
         return len(self.items)
 
     def __getitem__(self, idx):
+        # Transfer to Pytorch Tensor for a certain sample
         item = self.items[idx]
         return {
             "input_ids":      torch.tensor(item["input_ids"]),
@@ -132,10 +120,7 @@ class BiosDataset(Dataset):
         }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3.  Model builder (LoRA / QLoRA)
-# ─────────────────────────────────────────────────────────────────────────────
-
+# Build model
 def build_lora_model(
     model_name: str,
     num_labels: int,
@@ -155,27 +140,18 @@ def build_lora_model(
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16,
         )
-        # Bind all layers to GPU 0 explicitly; avoids the dispatch_model→.to()
-        # path in accelerate that raises ValueError for quantized models.
-        # torch_dtype must NOT be passed alongside quantization_config.
         load_kwargs["device_map"] = {"": 0}
 
+    # load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token  # Pythia uses EOS as pad
+        tokenizer.pad_token = tokenizer.eos_token  
 
     if use_4bit and not full_finetune:
-        # transformers==4.40.0 internally calls dispatch_model for quantized
-        # models, which then calls model.to(device) — forbidden for 4-bit models.
-        # Temporarily replace dispatch_model with a version that skips .to()
-        # for already-quantized models, then restore the original.
         import transformers.modeling_utils as _tmu
         _orig_dispatch = _tmu.dispatch_model
 
         def _dispatch_skip_quantized(model, *args, **kwargs):
-            # bitsandbytes already placed the model on GPU during from_pretrained;
-            # dispatch_model would call model.to(device) which is forbidden for
-            # quantized models. Safe to skip entirely for the 4-bit loading path.
             return model
 
         _tmu.dispatch_model = _dispatch_skip_quantized
@@ -223,10 +199,7 @@ def build_lora_model(
     return model, tokenizer
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 4.  Metrics callback
-# ─────────────────────────────────────────────────────────────────────────────
-
+# Metrics
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=-1)
@@ -235,15 +208,11 @@ def compute_metrics(eval_pred):
         "macro_f1": round(float(f1_score(labels, preds, average="macro", zero_division=0)), 4),
     }
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 5.  Training
-# ─────────────────────────────────────────────────────────────────────────────
-
+# Training
 def train(args):
     set_seed(args.seed)
 
-    # ── Load pre-processed JSONL from Part 1 ──────────────────────────────────
+    # Load pre-processed JSONL from Part 1
     print("[data] Loading pre-processed JSONL ...")
     train_records = load_jsonl(os.path.join(args.data_dir, "train.jsonl"))
     dev_records   = load_jsonl(os.path.join(args.data_dir, "dev.jsonl"))
@@ -253,12 +222,11 @@ def train(args):
         train_records = train_records[: args.max_train_samples]
         print(f"  Capped to {len(train_records):,} training samples.")
 
-    # ── Label vocabulary (derived from training labels) ───────────────────────
+    # Label vocabulary (derived from training labels)
     label2id, id2label = build_label_vocab(train_records)
     num_labels = len(label2id)
     print(f"[data] {num_labels} labels: {list(label2id.keys())}")
 
-    # ── Model ─────────────────────────────────────────────────────────────────
     model_name = f"EleutherAI/pythia-{args.model_size}"
     use_4bit   = args.use_4bit and torch.cuda.is_available()
     model, tokenizer = build_lora_model(
@@ -266,23 +234,20 @@ def train(args):
         use_4bit=use_4bit, full_finetune=args.full_finetune,
     )
 
-    # ── Tokenise ──────────────────────────────────────────────────────────────
+    # Tokenize
     print("[data] Tokenising ...")
     train_ds = BiosDataset(train_records, tokenizer, label2id, args.max_length)
     dev_ds   = BiosDataset(dev_records,   tokenizer, label2id, args.max_length)
     print(f"  train={len(train_ds):,}  dev={len(dev_ds):,}")
 
     collator = DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8)
-
-    # ── Training arguments ────────────────────────────────────────────────────
     out_dir = os.path.join(args.output_dir, f"pythia-{args.model_size}")
     os.makedirs(out_dir, exist_ok=True)
 
+    # Parameters to fit high-end GPUs such as H100 (on colab)
     is_cuda = torch.cuda.is_available()
     fp16 = False
-    bf16 = is_cuda and torch.cuda.is_bf16_supported()  # H100 natively supports BF16
-
-    # H100: enable TF32 for matrix multiplications (~1.5x speedup vs FP32)
+    bf16 = is_cuda and torch.cuda.is_bf16_supported()
     if is_cuda:
         torch.backends.cuda.matmul.allow_tf32 = True
         torch.backends.cudnn.allow_tf32 = True
@@ -303,14 +268,14 @@ def train(args):
         metric_for_best_model="macro_f1",
         greater_is_better=True,
         fp16=fp16,
-        bf16=bf16,                    # BF16: faster & more stable than FP16 on H100
+        bf16=bf16,                    # BF16: faster and more stable than FP16 on H100
         logging_steps=200,
         report_to="none",
         seed=args.seed,
-        dataloader_num_workers=4,     # H100 nodes have many CPU cores
-        dataloader_pin_memory=True,   # faster CPU->GPU transfer
-        group_by_length=True,         # batch similar-length seqs -> less padding waste
-        torch_compile=True,           # ~20-30% speedup via torch.compile on H100
+        dataloader_num_workers=4,     
+        dataloader_pin_memory=True,   
+        group_by_length=True,        
+        torch_compile=True,          
     )
 
     trainer = Trainer(
@@ -324,11 +289,11 @@ def train(args):
         callbacks=[EarlyStoppingCallback(early_stopping_patience=2)],
     )
 
-    # ── Train ─────────────────────────────────────────────────────────────────
+    # train
     print(f"\n[train] Fine-tuning pythia-{args.model_size} ...")
     trainer.train()
 
-    # ── Save best checkpoint + label metadata ─────────────────────────────────
+    # Save best checkpoint + label metadata
     best_dir = os.path.join(out_dir, "best")
     model.save_pretrained(best_dir)
     tokenizer.save_pretrained(best_dir)
@@ -350,9 +315,6 @@ def train(args):
           f"macro_f1={dev_results.get('eval_macro_f1'):.4f}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 6.  CLI
-# ─────────────────────────────────────────────────────────────────────────────
 
 def parse_args():
     p = argparse.ArgumentParser(
