@@ -97,6 +97,32 @@ pythia_eval.py (eval + dump preds)
 
 preds_pythia_{size}_finetuned.jsonl
 
+Report:
+For Part 3, I built a fine-tuning and evaluation pipeline for the Pythia model family. The task is to predict the occupation label from a biography prompt, while comparing models of different sizes within the same family.
+
+I implemented `pythia_finetune.py`to train Pythia models on the processed `train.jsonl` and `dev.jsonl` files. The script uses sequence classification, builds the label mapping from the training set, and supports efficient tuning with LoRA by default, with optional QLoRA and full fine-tuning. Training uses the HuggingFace `Trainer`, and the best model is selected using dev-set macro-F1.
+
+I also implemented `pythia_eval.py` to evaluate the fine-tuned checkpoints on `test.jsonl`. It computes Accuracy and Macro-F1, saves predictions in the shared JSONL format, and includes confidence information for each sample through `conf` and `score`.
+
+In addition, I organized the prediction outputs in `results/pythia_finetuned`, including both masked and unmasked settings, plus extracted 3,000-sample files aligned with the team's shared ID order.
+
+Below is the prediction results:
+| Model       | Condition | Accuracy | Macro-F1 |
+| ----------- | --------- | -------: | -------: |
+| Pythia-160m | Unmasked  |   0.0822 |   0.0200 |
+| Pythia-160m | Masked    |   0.1239 |   0.0228 |
+| Pythia-410m | Unmasked  |   0.5793 |   0.3204 |
+| Pythia-410m | Masked    |   0.5753 |   0.3277 |
+| Pythia-1.4b | Unmasked  |   0.8762 |   0.8490 |
+| Pythia-1.4b | Masked    |   0.8752 |   0.8473 |
+
+The results show a clear scaling effect: larger Pythia models perform much better after fine-tuning.
+
+The 160m model performs very poorly, so fine-tuning is not enough to make this small model solve the task well. The 410m model improves a lot and reaches moderate performance, but it is still much weaker than the 1.4b model. The 1.4b model is clearly the best result in this part, with both high Accuracy and high Macro-F1.
+
+The difference between masked and unmasked inputs is small for the 410m and 1.4b models. This suggests that these larger models can still use other information in the biography even after explicit gender words are removed. For the 160m model, masked results are slightly better, but its overall performance is too low for this difference to be very meaningful.
+
+Overall, the main conclusion is that within the same Pythia family, increasing model size leads to much better fine-tuned occupation prediction performance. Among the models tested here, Pythia-1.4b is the strongest and most stable.
 
 Part 4 — Encoder Baselines: DistilBERT + RoBERTa Fine-tuning (Person 4)
 Goal: Provide a supervised classification baseline that’s easy to interpret.
