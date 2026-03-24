@@ -7,6 +7,19 @@ from sklearn.metrics import f1_score, accuracy_score
 from src.evaluation.fairness import compute_fairness_gaps
 
 def load_predictions(file_path):
+    """
+    Load predictions from a JSONL file.
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the JSONL file.
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame containing the predictions.
+    """
     data = []
     with open(file_path, 'r') as f:
         for line in f:
@@ -15,9 +28,9 @@ def load_predictions(file_path):
     return pd.DataFrame(data)
 
 def _load_canonical_ids(roots):
-    """Return the canonical set of 3 000 sample IDs that every Pythia
+    """Return the canonical set of 3 000 sample IDs that every
     prediction file shares.  These IDs are used to filter larger files
-    (e.g. encoder predictions with 95 k rows) so that every model is
+    (e.g. encoder predictions with > 3000 rows) so that every model is
     evaluated on the exact same subset.
 
     Parameters
@@ -37,6 +50,13 @@ def _load_canonical_ids(roots):
     )
 
 def run_evaluation():
+    """
+    Run evaluation on all prediction files.
+
+    Two CSV files are produced:
+    - summary_results.csv: summary metrics for each model
+    - detailed_fairness.csv: per-occupation fairness metrics for each model
+    """
     summary_data = []
     detailed_data = []
     
@@ -48,12 +68,13 @@ def run_evaluation():
     )
     assert pred_files, "No prediction JSONL files found under results/."
     
-    # Canonical ID set: the 3 000 sample IDs present in every Pythia file.
+    # Canonical ID set: the 3 000 sample IDs present in every prediction file.
     # All prediction files are filtered to exactly these IDs so that
     # performance and fairness metrics are comparable across models.
-    canonical_ids = _load_canonical_ids(["results/pythia", "results/pythia_finetuned"])
+    canonical_ids = _load_canonical_ids(["results/pythia", "results/pythia_finetuned", "results/predictions"])
     
     for file in pred_files:
+        # load predictions for the given model
         df = load_predictions(file)
         
         # Keep only the canonical 3 000 IDs and verify none are missing.
@@ -64,15 +85,17 @@ def run_evaluation():
             f"canonical IDs (first 5: {sorted(missing)[:5]})"
         )
 
-        # performance metrics
+        # performance metrics for the given model
         macro_f1 = f1_score(df['label_true'], df['label_pred'], average='macro')
         accuracy = accuracy_score(df['label_true'], df['label_pred'])
         
-        # fairness metrics — dict mapping each occupation to its
+        # fairness metrics 
+        # fairness variable is a dict mapping each occupation to its
         # per-occupation gaps: {occ: {"Demographic_Parity", "EO_TPR_Gap", "EO_FPR_Gap"}}
         fairness = compute_fairness_gaps(df)
         
         # average gaps across occupations
+        # for the given model will return the DP, TPR, FPR, and EO gaps for each occupation
         dp_gaps  = [v["Demographic_Parity"] for v in fairness.values()]
         tpr_gaps = [v["EO_TPR_Gap"] for v in fairness.values()]
         fpr_gaps = [v["EO_FPR_Gap"] for v in fairness.values()]
