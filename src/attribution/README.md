@@ -173,6 +173,8 @@ The same checkpoint should be used consistently across:
 
 ## Step 1 — Attribution
 
+### DistilBERT unmasked
+
 ```bash
 python scripts/run_attribution_encoder.py \
   --input_jsonl results/predictions/distilbert_unmasked.jsonl \
@@ -184,7 +186,7 @@ python scripts/run_attribution_encoder.py \
   --top_k 5
 ```
 
-Repeat for masked model:
+### DistilBERT masked
 
 ```bash
 python scripts/run_attribution_encoder.py \
@@ -197,11 +199,7 @@ python scripts/run_attribution_encoder.py \
   --top_k 5
 ```
 
-### Running with different encoder models
-
-The same pipeline can be applied to other encoder models such as RoBERTa by changing the input files and checkpoint paths.
-
-Example (RoBERTa):
+### RoBERTa unmasked
 
 ```bash
 python scripts/run_attribution_encoder.py \
@@ -214,7 +212,7 @@ python scripts/run_attribution_encoder.py \
   --top_k 5
 ```
 
-Repeat for the masked model:
+### RoBERTa masked
 
 ```bash
 python scripts/run_attribution_encoder.py \
@@ -229,65 +227,160 @@ python scripts/run_attribution_encoder.py \
 
 ## Step 2 — Proxy Aggregation
 
+### DistilBERT unmasked
+
 ```bash
 python scripts/run_proxy_audit.py \
   --input_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
-  --output_csv results/proxy/unmasked_profession.csv \
-  --output_gender_csv results/proxy/unmasked_profession_gender.csv
+  --output_csv results/proxy/distilbert_unmasked_profession.csv \
+  --output_gender_csv results/proxy/distilbert_unmasked_profession_gender.csv \
+  --top_n_print 10 \
+  --min_token_len 3 \
+  --min_count 1 \
+  --min_doc_freq 1
 ```
 
-Repeat for masked model:
+### DistilBERT masked
+
 ```bash
 python scripts/run_proxy_audit.py \
   --input_jsonl results/attribution/distilbert_masked_attr.jsonl \
-  --output_csv results/proxy/masked_profession.csv \
-  --output_gender_csv results/proxy/masked_profession_gender.csv
+  --output_csv results/proxy/distilbert_masked_profession.csv \
+  --output_gender_csv results/proxy/distilbert_masked_profession_gender.csv \
+  --top_n_print 10 \
+  --min_token_len 3 \
+  --min_count 1 \
+  --min_doc_freq 1
+```
+
+### RoBERTa unmasked
+
+```bash
+python scripts/run_proxy_audit.py \
+  --input_jsonl results/attribution/roberta_unmasked_attr.jsonl \
+  --output_csv results/proxy/roberta_unmasked_profession.csv \
+  --output_gender_csv results/proxy/roberta_unmasked_profession_gender.csv \
+  --top_n_print 10 \
+  --min_token_len 3 \
+  --min_count 1 \
+  --min_doc_freq 1
+```
+
+### RoBERTa masked
+
+```bash
+python scripts/run_proxy_audit.py \
+  --input_jsonl results/attribution/roberta_masked_attr.jsonl \
+  --output_csv results/proxy/roberta_masked_profession.csv \
+  --output_gender_csv results/proxy/roberta_masked_profession_gender.csv \
+  --top_n_print 10 \
+  --min_token_len 3 \
+  --min_count 1 \
+  --min_doc_freq 1
 ```
 
 ## Step 3 — Masked vs Unmasked Comparison
 
+### DistilBERT
+
 ```bash
 python scripts/compare_masked_unmasked_proxies.py \
-  --masked_csv results/proxy/masked_profession.csv \
-  --unmasked_csv results/proxy/unmasked_profession.csv \
-  --out_summary_csv results/compare/summary.csv \
-  --out_token_shift_csv results/compare/token_shift.csv \
-  --out_gender_token_csv results/compare/gender_tokens.csv \
-  --masked_gender_csv results/proxy/masked_profession_gender.csv \
-  --unmasked_gender_csv results/proxy/unmasked_profession_gender.csv \
-  --out_gender_conditioned_summary_csv results/compare/gender_summary.csv
+  --masked_csv results/proxy/distilbert_masked_profession.csv \
+  --unmasked_csv results/proxy/distilbert_unmasked_profession.csv \
+  --out_summary_csv results/compare/distilbert_summary.csv \
+  --out_token_shift_csv results/compare/distilbert_token_shift.csv \
+  --out_gender_token_csv results/compare/distilbert_gender_tokens.csv \
+  --masked_gender_csv results/proxy/distilbert_masked_profession_gender.csv \
+  --unmasked_gender_csv results/proxy/distilbert_unmasked_profession_gender.csv \
+  --out_gender_conditioned_summary_csv results/compare/distilbert_gender_summary.csv \
+  --top_n 10
+```
+
+### RoBERTa
+
+```bash
+python scripts/compare_masked_unmasked_proxies.py \
+  --masked_csv results/proxy/roberta_masked_profession.csv \
+  --unmasked_csv results/proxy/roberta_unmasked_profession.csv \
+  --out_summary_csv results/compare/roberta_summary.csv \
+  --out_token_shift_csv results/compare/roberta_token_shift.csv \
+  --out_gender_token_csv results/compare/roberta_gender_tokens.csv \
+  --masked_gender_csv results/proxy/roberta_masked_profession_gender.csv \
+  --unmasked_gender_csv results/proxy/roberta_unmasked_profession_gender.csv \
+  --out_gender_conditioned_summary_csv results/compare/roberta_gender_summary.csv \
+  --top_n 10
 ```
 
 ## Step 4 — Summarization
 
+### DistilBERT
+
 ```bash
 python scripts/summarize_proxy_results.py \
   --model_name distilbert \
-  --summary_csv results/compare/summary.csv \
-  --token_shift_csv results/compare/token_shift.csv \
-  --profession_gender_summary_csv results/compare/gender_summary.csv \
-  --gender_tokens_csv results/compare/gender_tokens.csv \
-  --out_dir results/compare/final
+  --summary_csv results/compare/distilbert_summary.csv \
+  --token_shift_csv results/compare/distilbert_token_shift.csv \
+  --profession_gender_summary_csv results/compare/distilbert_gender_summary.csv \
+  --gender_tokens_csv results/compare/distilbert_gender_tokens.csv \
+  --out_dir results/compare/distilbert_final
+```
+
+### RoBERTa
+
+```bash
+python scripts/summarize_proxy_results.py \
+  --model_name roberta \
+  --summary_csv results/compare/roberta_summary.csv \
+  --token_shift_csv results/compare/roberta_token_shift.csv \
+  --profession_gender_summary_csv results/compare/roberta_gender_summary.csv \
+  --gender_tokens_csv results/compare/roberta_gender_tokens.csv \
+  --out_dir results/compare/roberta_final
 ```
 
 ## Step 5 — Erasure Faithfulness
+
+### DistilBERT unmasked
 
 ```bash
 python scripts/erasure_faithfulness.py \
   --input_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
   --model_path checkpoints/distilbert_unmasked \
-  --output_csv results/faithfulness/unmasked.csv \
-  --top_k_erase 5
+  --output_csv results/faithfulness/distilbert_unmasked.csv \
+  --top_k_erase 5 \
+  --max_length 256
 ```
 
-Repeat for masked model.
+### DistilBERT masked
 
 ```bash
 python scripts/erasure_faithfulness.py \
   --input_jsonl results/attribution/distilbert_masked_attr.jsonl \
   --model_path checkpoints/distilbert_masked \
-  --output_csv results/faithfulness/masked.csv \
-  --top_k_erase 5
+  --output_csv results/faithfulness/distilbert_masked.csv \
+  --top_k_erase 5 \
+  --max_length 256
+```
+
+### RoBERTa unmasked
+
+```bash
+python scripts/erasure_faithfulness.py \
+  --input_jsonl results/attribution/roberta_unmasked_attr.jsonl \
+  --model_path checkpoints/roberta_unmasked \
+  --output_csv results/faithfulness/roberta_unmasked.csv \
+  --top_k_erase 5 \
+  --max_length 256
+```
+
+### RoBERTa masked
+
+```bash
+python scripts/erasure_faithfulness.py \
+  --input_jsonl results/attribution/roberta_masked_attr.jsonl \
+  --model_path checkpoints/roberta_masked \
+  --output_csv results/faithfulness/roberta_masked.csv \
+  --top_k_erase 5 \
+  --max_length 256
 ```
 
 ## Reproducibility Notes
