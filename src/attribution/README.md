@@ -175,7 +175,7 @@ The same checkpoint should be used consistently across:
 
 ```bash
 python scripts/run_attribution_encoder.py \
-  --input_jsonl results/preds/distilbert_unmasked.jsonl \
+  --input_jsonl results/predictions/distilbert_unmasked.jsonl \
   --model_path checkpoints/distilbert_unmasked \
   --output_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
   --limit 3000 \
@@ -188,7 +188,7 @@ Repeat for masked model:
 
 ```bash
 python scripts/run_attribution_encoder.py \
-  --input_jsonl results/preds/distilbert_masked.jsonl \
+  --input_jsonl results/predictions/distilbert_masked.jsonl \
   --model_path checkpoints/distilbert_masked \
   --output_jsonl results/attribution/distilbert_masked_attr.jsonl \
   --limit 3000 \
@@ -205,7 +205,7 @@ Example (RoBERTa):
 
 ```bash
 python scripts/run_attribution_encoder.py \
-  --input_jsonl results/preds/roberta_unmasked.jsonl \
+  --input_jsonl results/predictions/roberta_unmasked.jsonl \
   --model_path checkpoints/roberta_unmasked \
   --output_jsonl results/attribution/roberta_unmasked_attr.jsonl \
   --limit 3000 \
@@ -218,7 +218,7 @@ Repeat for the masked model:
 
 ```bash
 python scripts/run_attribution_encoder.py \
-  --input_jsonl results/preds/roberta_masked.jsonl \
+  --input_jsonl results/predictions/roberta_masked.jsonl \
   --model_path checkpoints/roberta_masked \
   --output_jsonl results/attribution/roberta_masked_attr.jsonl \
   --limit 3000 \
