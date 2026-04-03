@@ -65,6 +65,30 @@ def get_class_prob(
     return float(probs[0, class_idx].item())
 
 
+def validate_rows(rows: List[Dict[str, Any]], required: set[str]) -> None:
+    """
+    Validate all rows before running the experiment so that malformed records
+    fail early with a clear message rather than crashing mid-run.
+    """
+    for i, row in enumerate(rows):
+        missing = required - set(row.keys())
+        if missing:
+            raise ValueError(
+                f"Row {i} missing fields: {sorted(missing)}. "
+                "Make sure you are using attribution JSONL output, "
+                "not the raw prediction JSONL."
+            )
+
+        if not isinstance(row.get("top_tokens"), list):
+            raise ValueError(
+                f"Row {i} has invalid 'top_tokens' type: {type(row.get('top_tokens')).__name__}. "
+                "Expected a list of token dictionaries."
+            )
+
+        if row.get("text") is None:
+            raise ValueError(f"Row {i} has null text.")
+
+
 # ── main function ─────────────────────────────────────────────────────────────
 
 def run_erasure_faithfulness(
@@ -99,28 +123,24 @@ def run_erasure_faithfulness(
     rows = load_jsonl(input_jsonl)
     print(f"[INFO] Loaded {len(rows)} examples from {input_jsonl}")
 
-    # ── validate required fields ───────────────────────────────────────────
+    if not rows:
+        raise ValueError(f"No rows found in input JSONL: {input_jsonl}")
+
+    # ── validate required fields across the full file ──────────────────────
     required = {"id", "text", "top_tokens", "pred_class_idx_fresh", "pred_prob_fresh"}
-    for i, row in enumerate(rows[:3]):
-        missing = required - set(row.keys())
-        if missing:
-            raise ValueError(
-                f"Row {i} missing fields: {missing}. "
-                "Make sure you are using attribution JSONL output, "
-                "not the raw prediction JSONL."
-            )
+    validate_rows(rows, required)
 
     # ── run erasure ────────────────────────────────────────────────────────
     results = []
 
     for i, row in enumerate(rows, start=1):
-        original_text      = row["text"]
-        top_tokens         = row.get("top_tokens", [])
-        pred_class_idx     = int(row["pred_class_idx_fresh"])
+        original_text = row["text"]
+        top_tokens = row.get("top_tokens", [])
+        pred_class_idx = int(row["pred_class_idx_fresh"])
         pred_prob_original = float(row["pred_prob_fresh"])
-        profession         = row.get("label_pred_stored", row.get("label_pred", None))
-        gender             = row.get("gender", None)
-        example_id         = row.get("id", i)
+        profession = row.get("label_pred_stored", row.get("label_pred", None))
+        gender = row.get("gender", None)
+        example_id = row.get("id", i)
 
         # Take top-K tokens for erasure
         tokens_to_erase = [
@@ -140,16 +160,16 @@ def run_erasure_faithfulness(
         faithfulness = pred_prob_original - pred_prob_erased
 
         results.append({
-            "id":                  example_id,
-            "profession":          profession,
-            "gender":              gender,
-            "pred_class_idx":      pred_class_idx,
-            "pred_label":          id2label.get(pred_class_idx, str(pred_class_idx)),
-            "pred_prob_original":  round(pred_prob_original, 4),
-            "pred_prob_erased":    round(pred_prob_erased, 4),
-            "faithfulness":        round(faithfulness, 4),
-            "tokens_erased":       ", ".join(tokens_to_erase),
-            "n_tokens_erased":     len(tokens_to_erase),
+            "id": example_id,
+            "profession": profession,
+            "gender": gender,
+            "pred_class_idx": pred_class_idx,
+            "pred_label": id2label.get(pred_class_idx, str(pred_class_idx)),
+            "pred_prob_original": round(pred_prob_original, 4),
+            "pred_prob_erased": round(pred_prob_erased, 4),
+            "faithfulness": round(faithfulness, 4),
+            "tokens_erased": ", ".join(tokens_to_erase),
+            "n_tokens_erased": len(tokens_to_erase),
         })
 
         if i % 100 == 0 or i == len(rows):
