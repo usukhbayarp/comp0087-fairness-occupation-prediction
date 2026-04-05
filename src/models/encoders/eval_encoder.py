@@ -54,11 +54,13 @@ def main():
     #load dataset + shared label mapping
     if args.data_regime == "masked":
         from src.data.data import BiosConfig
+        mask_token = "<mask>" if "roberta" in args.model_dir.lower() else "[MASK]"
         cfg = BiosConfig(
             mask_gender=True,
             mask_titles=True,
             mask_gendered_nouns=True,
             mask_label_leakage=False,
+            mask_token=mask_token,
         )
         ds, label2id, id2label, meta = load_bios(cfg=cfg)
     else:

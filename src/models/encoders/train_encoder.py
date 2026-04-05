@@ -80,11 +80,13 @@ def main():
     #load dataset + label vocab
     if args.data_regime == "masked":
         from src.data.data import BiosConfig
+        mask_token = "<mask>" if args.model_name == "roberta-base" else "[MASK]"
         cfg = BiosConfig(
             mask_gender=True,
             mask_titles=True,
             mask_gendered_nouns=True,
             mask_label_leakage=False,
+            mask_token=mask_token,
         )
         ds, label2id, id2label, meta = load_bios(cfg=cfg)
     else:
