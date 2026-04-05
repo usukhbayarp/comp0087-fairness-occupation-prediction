@@ -4,6 +4,10 @@ This part trains and evaluates encoder-based sequence classification models (Dis
 
 The encoder approach differs from the prompt-based Pythia experiments: here we update model weights using supervised learning.
 
+Two data regimes are supported:
+- unmasked: original biographies
+- masked: gender and label-leakage masking applied via load_bios(cfg)
+
 **Inputs**
 
 This code assumes the project uses the unified dataset schema from data.py (shared across all experiments):
@@ -30,6 +34,8 @@ File: src/models/encoders/train_encoder.py
 
 Loads the dataset with load_bios()
 
+Uses --data_regime to select either the unmasked dataset or the masked dataset.
+
 Tokenizes biographies into transformer inputs (input_ids, attention_mask)
 
 Loads a pretrained encoder (distilbert-base-uncased or roberta-base)
@@ -52,7 +58,12 @@ model weights + config
 
 tokenizer files
 
-Saved under checkpoints/
+one folder per model/regime:
+
+- checkpoints/distilbert_unmasked
+- checkpoints/distilbert_masked
+- checkpoints/roberta_unmasked
+- checkpoints/roberta_masked
 
 Note: Model checkpoints are not included in the repository due to their large size.
 They can be reproduced by running train_encoder.py.
@@ -63,7 +74,7 @@ File: src/models/encoders/eval_encoder.py
 
 **What it does**
 
-Loads the finetuned model checkpoint (from train_encoder.py)
+Loads the finetuned model checkpoint for the selected model/regime (from train_encoder.py)
 
 Runs inference on the test split
 
@@ -91,13 +102,18 @@ model: model tag (distilbert-ft, roberta-ft)
 
 regime: finetuned
 
-score: scalar confidence proxy 
+score: maximum logit value
 
 conf: probability of predicted class (max softmax prob)
 
 **Outputs**
 
-JSONL predictions written to results/predictions
+JSONL predictions written to results/predictions/:
+
+- distilbert_unmasked.jsonl
+- distilbert_masked.jsonl
+- roberta_unmasked.jsonl
+- roberta_masked.jsonl
 
 **How to run**
 
@@ -107,22 +123,45 @@ JSONL predictions written to results/predictions
 
 2) Train encoder models
 
-    python -m src.models.encoders.train_encoder --model_name distilbert-base-uncased
+    python -m src.models.encoders.train_encoder --model_name distilbert-base-uncased --data_regime unmasked
 
-    python -m src.models.encoders.train_encoder --model_name roberta-base
+    python -m src.models.encoders.train_encoder --model_name distilbert-base-uncased --data_regime masked
 
-3) Evaluate distilbert encoder
+    python -m src.models.encoders.train_encoder --model_name roberta-base --data_regime unmasked
+
+    python -m src.models.encoders.train_encoder --model_name roberta-base --data_regime masked
+
+3) Evaluate distilbert encoder (unmasked)
 
     python -m src.models.encoders.eval_encoder \
-    --model_dir checkpoints/distilbert-base-uncased \
+    --model_dir checkpoints/distilbert_unmasked \
     --model_tag distilbert-ft \
-    --out_jsonl results/predictions/preds_distilbert_ft.jsonl
+    --data_regime unmasked \
+    --out_jsonl results/predictions/distilbert_unmasked.jsonl
 
-4) Evaluate roberta encoder
+4) Evaluate distilbert encoder (masked)
+
     python -m src.models.encoders.eval_encoder \
-    --model_dir checkpoints/roberta-base \
+    --model_dir checkpoints/distilbert_masked \
+    --model_tag distilbert-ft \
+    --data_regime masked \
+    --out_jsonl results/predictions/distilbert_masked.jsonl
+
+5) Evaluate roberta encoder (unmasked)
+
+    python -m src.models.encoders.eval_encoder \
+    --model_dir checkpoints/roberta_unmasked \
     --model_tag roberta-ft \
-    --out_jsonl results/predictions/preds_roberta_ft.jsonl
+    --data_regime unmasked \
+    --out_jsonl results/predictions/roberta_unmasked.jsonl
+
+6) Evaluate roberta encoder (masked)
+
+    python -m src.models.encoders.eval_encoder \
+    --model_dir checkpoints/roberta_masked \
+    --model_tag roberta-ft \
+    --data_regime masked \
+    --out_jsonl results/predictions/roberta_masked.jsonl
 
 
 
