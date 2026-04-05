@@ -84,7 +84,7 @@ def main():
             mask_gender=True,
             mask_titles=True,
             mask_gendered_nouns=True,
-            mask_label_leakage=True,
+            mask_label_leakage=False,
         )
         ds, label2id, id2label, meta = load_bios(cfg=cfg)
     else:
