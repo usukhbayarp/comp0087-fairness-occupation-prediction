@@ -1,16 +1,17 @@
 """
 Finetuning Pythia
 
-Reads the pre-processed JSONL files produced by Part 1's export_dataset_jsonl.py:
+Reads the pre-processed JSONL files produced by export_finetune.py:
     <data_dir>/train.jsonl
     <data_dir>/dev.jsonl
 
 Dependencies:
 !pip install -q transformers==4.40.0 peft==0.10.0 accelerate bitsandbytes scikit-learn tqdm
 
-Run (example for pythia-410m)
+Run (example for pythia-160m)
 !python pythia_finetune.py \
-    --model_size 410m \
+    --model_size 160m \
+    --train_batch_size 16 \
     --data_dir ./processed \
     --output_dir ./checkpoints
 
@@ -22,6 +23,7 @@ import argparse
 import json
 import os
 import random
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
@@ -43,6 +45,18 @@ from peft import (
 )
 from sklearn.metrics import accuracy_score, f1_score
 
+EXPORT_SCRIPT = "src/models/pythia/export_finetune.py"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+
+def resolve_data_dir(data_dir: str) -> str:
+    data_path = Path(data_dir)
+    if data_path.is_absolute():
+        return str(data_path)
+    if data_dir == "processed":
+        return str(PROJECT_ROOT / "data" / "processed")
+    return str(PROJECT_ROOT / data_path)
+
 # fix seed to make experiment reproducible
 def set_seed(seed: int = 42) -> None:
     random.seed(seed)
@@ -53,6 +67,11 @@ def set_seed(seed: int = 42) -> None:
 
 
 def load_jsonl(path: str) -> List[dict]:
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Missing required dataset file: {path}. "
+            f"Generate the fine-tuning JSONL files with `{EXPORT_SCRIPT}` first."
+        )
     records = []
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
@@ -73,7 +92,7 @@ def build_label_vocab(train_records: List[dict]):
 
 class BiosDataset(Dataset):
     """
-    Tokenised dataset backed by a list of Part-1 JSONL records.
+    Tokenised dataset backed by a list of JSONL records exported by export_finetune.py.
     Records whose label is absent from label2id are silently skipped.
     """
 
@@ -211,11 +230,13 @@ def compute_metrics(eval_pred):
 # Training
 def train(args):
     set_seed(args.seed)
+    resolved_data_dir = resolve_data_dir(args.data_dir)
 
-    # Load pre-processed JSONL from Part 1
+    # Load pre-processed JSONL exported by export_finetune.py
     print("[data] Loading pre-processed JSONL ...")
-    train_records = load_jsonl(os.path.join(args.data_dir, "train.jsonl"))
-    dev_records   = load_jsonl(os.path.join(args.data_dir, "dev.jsonl"))
+    print(f"  Using data_dir={resolved_data_dir}")
+    train_records = load_jsonl(os.path.join(resolved_data_dir, "train.jsonl"))
+    dev_records   = load_jsonl(os.path.join(resolved_data_dir, "dev.jsonl"))
 
     if args.max_train_samples:
         random.shuffle(train_records)
@@ -318,12 +339,12 @@ def train(args):
 
 def parse_args():
     p = argparse.ArgumentParser(
-        description="Part 3: Fine-tune Pythia (LoRA) using pre-processed JSONL from Part 1"
+        description="Part 3: Fine-tune Pythia (LoRA) using pre-processed JSONL from export_finetune.py"
     )
     p.add_argument("--model_size",        type=str,   default="410m",
                    help="Pythia size: 70m | 160m | 410m | 1b | 1.4b | 2.8b")
     p.add_argument("--data_dir",          type=str,   required=True,
-                   help="Folder with train.jsonl & dev.jsonl (Part 1 output)")
+                   help="Folder with train.jsonl & dev.jsonl exported by src/models/pythia/export_finetune.py")
     p.add_argument("--output_dir",        type=str,   default="./checkpoints")
     p.add_argument("--num_epochs",        type=int,   default=3)
     p.add_argument("--train_batch_size",  type=int,   default=16)

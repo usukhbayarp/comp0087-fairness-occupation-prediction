@@ -2,7 +2,7 @@
 Evaluate a fine-tuned Pythia checkpoint on the test split
 
 Inputs:
-    <data_dir>/test.jsonl          ← from Part 1
+    <data_dir>/test.jsonl          ← from export_finetune.py
     <checkpoint_dir>/label_meta.json  ← saved by pythia_finetune.py
 
 Output schema:
@@ -21,6 +21,7 @@ Usage
 import argparse
 import json
 import os
+from pathlib import Path
 from typing import Dict, List
 
 import numpy as np
@@ -32,9 +33,33 @@ from peft import PeftModel, PeftConfig
 from sklearn.metrics import accuracy_score, f1_score, classification_report
 from tqdm import tqdm
 
+EXPORT_SCRIPT = "src/models/pythia/export_finetune.py"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+
+def resolve_data_dir(data_dir: str) -> str:
+    data_path = Path(data_dir)
+    if data_path.is_absolute():
+        return str(data_path)
+    if data_dir == "processed":
+        return str(PROJECT_ROOT / "data" / "processed")
+    return str(PROJECT_ROOT / data_path)
+
+
+def resolve_checkpoint_dir(checkpoint_dir: str) -> str:
+    checkpoint_path = Path(checkpoint_dir)
+    if checkpoint_path.is_absolute():
+        return str(checkpoint_path)
+    return str(PROJECT_ROOT / checkpoint_path)
+
 
 # load data
 def load_jsonl(path: str) -> List[dict]:
+    if not os.path.exists(path):
+        raise FileNotFoundError(
+            f"Missing required dataset file: {path}. "
+            f"Generate the evaluation JSONL files with `{EXPORT_SCRIPT}` first."
+        )
     records = []
     with open(path, "r", encoding="utf-8") as f:
         for line in f:
@@ -265,19 +290,23 @@ def compute_and_print_metrics(records: List[dict], label_names: List[str]):
 def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[setup] device={device}")
+    resolved_checkpoint_dir = resolve_checkpoint_dir(args.checkpoint_dir)
+    resolved_data_dir = resolve_data_dir(args.data_dir)
+    print(f"[setup] checkpoint_dir={resolved_checkpoint_dir}")
+    print(f"[setup] data_dir={resolved_data_dir}")
 
     # Label metadata
-    label2id, id2label = load_label_meta(args.checkpoint_dir)
+    label2id, id2label = load_label_meta(resolved_checkpoint_dir)
     label_names        = [id2label[i] for i in range(len(id2label))]
 
     # Model
     model, tokenizer = load_finetuned_model(
-        args.checkpoint_dir, label2id, id2label, device
+        resolved_checkpoint_dir, label2id, id2label, device
     )
 
     # Test data
-    print("[data] Loading test.jsonl ...")
-    test_records = load_jsonl(os.path.join(args.data_dir, "test.jsonl"))
+    print("[data] Loading test.jsonl exported by export_finetune.py ...")
+    test_records = load_jsonl(os.path.join(resolved_data_dir, "test.jsonl"))
     test_ds      = TestBiosDataset(test_records, tokenizer, label2id, args.max_length)
     print(f"  Test examples (after label filtering): {len(test_ds):,}")
 
@@ -318,14 +347,14 @@ def main(args):
 
 def parse_args():
     p = argparse.ArgumentParser(
-        description="Part 3: Evaluate fine-tuned Pythia on pre-processed test JSONL"
+        description="Part 3: Evaluate fine-tuned Pythia on pre-processed test JSONL from export_finetune.py"
     )
     p.add_argument("--model_size",      type=str, required=True,
                    help="Pythia size string used for output filenames, e.g. 410m")
     p.add_argument("--checkpoint_dir",  type=str, required=True,
                    help="Path to the 'best/' dir saved by pythia_finetune.py")
     p.add_argument("--data_dir",        type=str, required=True,
-                   help="Folder containing test.jsonl (Part 1 output)")
+                   help="Folder containing test.jsonl exported by src/models/pythia/export_finetune.py")
     p.add_argument("--output_dir",      type=str, default="./results")
     p.add_argument("--batch_size",      type=int, default=32)
     p.add_argument("--max_length",      type=int, default=256)
