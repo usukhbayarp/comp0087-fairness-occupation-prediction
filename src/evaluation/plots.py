@@ -9,6 +9,12 @@ from matplotlib.patheffects import withStroke
 # Set the style and color palette for all matplotlib/seaborn plots
 plt.style.use('ggplot')
 sns.set_palette("Set1")
+# Make all axis labels bold across every figure globally
+plt.rcParams.update({
+    'axes.labelweight': 'bold',
+    'font.weight': 'bold',
+})
+
 
 def parse_model_info(name):
     """Parse a model filename into structured metadata for plotting.
@@ -34,7 +40,7 @@ def parse_model_info(name):
     size_str = size_match.group(1) if size_match else 'Other'
     
     # Determine if the model was trained on dataset with masking applied
-    condition = 'Masked' if 'masked' in name_lower else 'Unmasked'
+    condition = 'Unmasked' if 'unmasked' in name_lower else ('Masked' if 'masked' in name_lower else 'Unmasked')
     
     # Determine the evaluation/training methodology used
     if 'zeroshot' in name_lower: method = 'Zero-shot'
@@ -47,8 +53,8 @@ def parse_model_info(name):
     
     # Override generic labels for specific known baseline/fine-tuned architectures
     if 'qlora' in name_lower: short_label = f"{size_str} QLoRA (U)"
-    if 'roberta' in name_lower: short_label = "RoBERTa FT"
-    if 'distilbert' in name_lower: short_label = "DistilBERT FT"
+    if 'roberta' in name_lower: short_label = f"RoBERTa FT {'(M)' if condition == 'Masked' else '(U)'}"
+    if 'distilbert' in name_lower: short_label = f"DistilBERT FT {'(M)' if condition == 'Masked' else '(U)'}"
     
     # Convert size string to a numerical value (in millions) for scaling plots
     size_num = 0
@@ -76,29 +82,32 @@ def plot_pareto(df):
     # Dictionary mapping model labels to specific (x, y) offset coordinates 
     # for text annotations to prevent label overlapping on the plot.
     MANUAL_OFFSETS = {
-        '1.4b QLoRA (U)': (50, 40), '1.4b Fine-tuned (M)': (-100, 10), '1.4b Fine-tuned (U)': (0, 30),
-        'RoBERTa FT': (-30, -80), 'DistilBERT FT': (70, 50), '410m Fine-tuned (M)': (-80, -30),
-        '410m Fine-tuned (U)': (0, 20), '160m Fine-tuned (U)': (60, 20), '160m Fine-tuned (M)': (0, 40),
-        '1.4b Zero-shot (U)': (70, 30), '1.4b Zero-shot (M)': (-70, -30), '1.4b Few-shot (U)': (-80, 40),
-        '1.4b Few-shot (M)': (0, 60), '410m Zero-shot (U)': (80, 0), '410m Zero-shot (M)': (-80, 0),
-        '410m Few-shot (U)': (-30, 50), '410m Few-shot (M)': (60, -50), '160m Zero-shot (U)': (60, 40),
-        '160m Zero-shot (M)': (50, -40), '160m Few-shot (U)': (-60, -50), '160m Few-shot (M)': (-60, 50),
+        '1.4b QLoRA (U)': (50, 40), '1.4b Fine-tuned (M)': (-80, 10), '1.4b Fine-tuned (U)': (0, 30),
+        'RoBERTa FT (U)': (-70, -50), 'RoBERTa FT (M)': (-50, -80), 'DistilBERT FT (U)': (100, 0), 'DistilBERT FT (M)': (100, -30), '410m Fine-tuned (M)': (-80, -30),
+        '410m Fine-tuned (U)': (-30, 30), '160m Fine-tuned (U)': (80, 0), '160m Fine-tuned (M)': (0, 40),
+        '1.4b Zero-shot (U)': (70, 30), '1.4b Zero-shot (M)': (-40, -40), '1.4b Few-shot (U)': (-80, 40),
+        '1.4b Few-shot (M)': (20, 70), '410m Zero-shot (U)': (80, 0), '410m Zero-shot (M)': (-80, 0),
+        '410m Few-shot (U)': (-30, 50), '410m Few-shot (M)': (60, -50), '160m Zero-shot (U)': (60, 30),
+        '160m Zero-shot (M)': (80, -40), '160m Few-shot (U)': (-60, -50), '160m Few-shot (M)': (-80, 5),
     }
 
     # Annotate each point with its short label, using arrows pointing to the data point
-    for i, row in df.iterrows():
-        ax.annotate(row['Label'], xy=(row['eo_diff'], row['macro_f1']), 
-                    xytext=MANUAL_OFFSETS.get(row['Label'], (25, 25)),
-                    textcoords='offset points', ha='center', va='center', fontsize=10,
-                    bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.9),
-                    arrowprops=dict(arrowstyle="-", color="gray", lw=1.0, alpha=0.6),
-                    path_effects=[withStroke(linewidth=2, foreground="w")])
+    #for i, row in df.iterrows():
+     #   ax.annotate(row['Label'], xy=(row['eo_diff'], row['macro_f1']), 
+      #              xytext=MANUAL_OFFSETS.get(row['Label'], (25, 25)),
+       #             textcoords='offset points', ha='center', va='center', fontsize=20, weight='bold',
+        #            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.9),
+         #           arrowprops=dict(arrowstyle="-", color="gray", lw=2.0, alpha=0.9),
+          #          path_effects=[withStroke(linewidth=3, foreground="w")])
 
-    # Configure axes, title, and legend
-    ax.set_title("Pareto Frontier: Macro-F1 vs. Equalized Odds Gap", fontsize=18, fontweight='bold', pad=20)
-    ax.set_xlabel("Average Equalized Odds Gap (Lower = Fairer)")
-    ax.set_ylabel("Macro-F1 Score (Higher = Better)")
-    ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left')
+    # Set both title and labels to fontsize 24
+    ax.set_title("Pareto Frontier: Macro-F1 vs. EO Gap", fontsize=24, fontweight='bold', pad=20)
+    ax.set_xlabel("Avg EO Gap", fontsize=20)
+    ax.set_ylabel("Macro-F1 Score", fontsize=20)
+    ax.tick_params(axis='both', labelsize=22)
+
+    if ax.get_legend() is not None:
+        ax.get_legend().remove()
     
     plt.tight_layout()
     plt.savefig('results/figures/pareto_frontier.png', dpi=300)
@@ -148,13 +157,14 @@ def plot_job_bias(detailed_df):
             data=plot_df, y='occupation', x=gap_col, hue='Condition',
             palette={'Unmasked': '#F8766D', 'Masked': '#00BFC4'}, ax=ax,
         )
-        ax.set_title(title, fontsize=13, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight='bold')
         ax.set_xlabel('Gap')
     
-    fig.suptitle("Occupation-Specific Bias: Pythia 1.4B Fine-tuned", fontsize=15, fontweight='bold')
+    fig.suptitle("Occupation-Specific Bias: Pythia 1.4B Fine-tuned", fontsize=20, fontweight='bold')
     plt.tight_layout()
     plt.savefig('results/figures/job_bias_comparison.png', dpi=300)
     plt.close()
+
 
 def plot_scaling(df):
     """Plot scaling laws: model size vs. performance and fairness.
@@ -171,35 +181,45 @@ def plot_scaling(df):
     scaling_df = df[df['Size_Num'] > 0].sort_values('Size_Num')
     
     # --- Performance Scaling Plot ---
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(16, 12))
     sns.lineplot(data=scaling_df, x="Size_Num", y='macro_f1', hue="Method", style="Condition", markers=True, markersize=10)
     plt.xscale('log')  # Log scale since parameter counts vary exponentially
-    plt.title("Performance Scaling Law", fontweight='bold')
-    plt.ylabel("Macro-F1 Score")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    plt.title("Performance Scaling Law", fontsize=24, fontweight='bold', pad=20)
+    plt.xlabel("Model Parameters", fontsize=20)
+    plt.ylabel("Macro-F1 Score", fontsize=20)
+    plt.tick_params(axis='both', labelsize=22)
+    if plt.gca().get_legend() is not None:
+        plt.gca().get_legend().remove()
     plt.tight_layout()
     plt.savefig('results/figures/scaling_performance.png', dpi=300)
     plt.close()
-    
+
     # --- Fairness Scaling Plot (Combined EO gap) ---
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(16, 12))
     sns.lineplot(data=scaling_df, x="Size_Num", y='eo_diff', hue="Method", style="Condition", markers=True, markersize=10)
     plt.xscale('log')
-    plt.title("Fairness Scaling Law (Equalized Odds Gap)", fontweight='bold')
-    plt.ylabel("Average EO Gap (max of TPR/FPR)")
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.title("Fairness Scaling Law, EO Gap", fontsize=24, fontweight='bold', pad=20)
+    plt.xlabel("Model Parameters", fontsize=20)
+    plt.ylabel("Avg EO Gap", fontsize=20)
+    plt.tick_params(axis='both', labelsize=22)
+    if plt.gca().get_legend() is not None:
+        plt.gca().get_legend().remove()
     plt.tight_layout()
     plt.savefig('results/figures/scaling_fairness.png', dpi=300)
     plt.close()
     
     # --- Breakdown: TPR gap and FPR gap scaling ---
-    fig, axes = plt.subplots(1, 2, figsize=(18, 6), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(32, 12), sharey=True)
     for ax, col, label in zip(axes, ['avg_tpr_gap', 'avg_fpr_gap'], ['TPR Gap', 'FPR Gap']):
         sns.lineplot(data=scaling_df, x="Size_Num", y=col, hue="Method", style="Condition", markers=True, markersize=10, ax=ax)
         ax.set_xscale('log')
-        ax.set_title(f"Scaling: {label}", fontweight='bold')
-        ax.set_ylabel(label)
-        ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        ax.set_title(f"Scaling: {label}", fontsize=24, fontweight='bold', pad=20)
+        ax.set_xlabel("Model Parameters", fontsize=20)
+        ax.set_ylabel(label, fontsize=20)
+        ax.tick_params(axis='both', labelsize=22)
+        if ax.get_legend() is not None:
+            ax.get_legend().remove()
     plt.tight_layout()
     plt.savefig('results/figures/scaling_fairness_breakdown.png', dpi=300)
     plt.close()
@@ -250,7 +270,8 @@ def plot_all_correlations(summary_df, detailed_df, gender_df):
         plt.title(f"Bias Amplification: Gender Ratio vs. EO Gap ({clean_id})", fontweight='bold')
         plt.xlabel("Percentage of Women in Profession (Training Data)")
         plt.ylabel("Equalized Odds Gap")
-        plt.legend()
+        if plt.gca().get_legend() is not None:
+            plt.gca().get_legend().remove()
         plt.savefig(f'results/figures/Correlation Plots/Amplification/{clean_id}.png', dpi=300)
         plt.close()
 
@@ -266,7 +287,7 @@ def plot_all_correlations(summary_df, detailed_df, gender_df):
         # Shows names for large improvements/degradations or heavily skewed jobs
         for i, row in df_delta.iterrows():
             if abs(row['eo_improvement']) > 0.015 or row['F_frac'] > 0.8 or row['F_frac'] < 0.2:
-                plt.text(row['F_frac']+0.005, row['eo_improvement'], row['occupation'], fontsize=9)
+                plt.text(row['F_frac']+0.005, row['eo_improvement'], row['occupation'], fontsize=12, weight='bold')
                 
         plt.axhline(0, color='black', lw=1, ls='--')  # Baseline of zero improvement
         plt.title(f"Mitigation Success: {clean_id}", fontweight='bold')
