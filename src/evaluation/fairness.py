@@ -65,3 +65,4 @@ def compute_fairness_gaps(df):
         }
         
     return gaps
+
