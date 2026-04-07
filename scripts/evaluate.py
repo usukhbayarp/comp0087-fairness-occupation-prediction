@@ -85,6 +85,12 @@ def run_evaluation():
             f"canonical IDs (first 5: {sorted(missing)[:5]})"
         )
 
+        # Normalize occupation names: encoder models (RoBERTa, DistilBERT) use
+        # spaces (e.g. "software engineer") while Pythia uses underscores.
+        # Standardize to underscores for consistency across all models.
+        df['label_true'] = df['label_true'].str.replace(' ', '_')
+        df['label_pred'] = df['label_pred'].str.replace(' ', '_')
+
         # performance metrics for the given model
         macro_f1 = f1_score(df['label_true'], df['label_pred'], average='macro')
         accuracy = accuracy_score(df['label_true'], df['label_pred'])
