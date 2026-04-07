@@ -44,7 +44,7 @@
       "dietitian",
       "comedian"
     ],
-    "profession_mapping_path": "/Users/yangzhuohan/Desktop/NLP CW updated/profession_mapping.json",
+    "profession_mapping_path": "C:\\Users\\Giuli\\Desktop\\Github\\comp0087-fairness-occupation-prediction\\data\\profession_mapping.json",
     "profession_mapping_loaded": true,
     "label_counts_train_sorted": [
       [

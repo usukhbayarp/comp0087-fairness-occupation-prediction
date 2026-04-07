@@ -1,12 +1,14 @@
 # make_dataset_stats.py
 import json
 import os
+import sys
 from collections import Counter, defaultdict
 from typing import Dict, Any
 
 import matplotlib.pyplot as plt
 
-from data import load_bios, BiosConfig
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src.data.data import load_bios, BiosConfig
 
 
 def _ensure_dir(path: str) -> None:
@@ -168,7 +170,7 @@ def plot_basic(stats: Dict[str, Any], out_dir: str, top_k: int = 20) -> None:
 
 
 def main():
-    out_dir = "outputs"
+    out_dir = os.path.join("data", "stats")
     _ensure_dir(out_dir)
 
     # You can edit these defaults:

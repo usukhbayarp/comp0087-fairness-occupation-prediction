@@ -9,7 +9,7 @@ import json
 
 from datasets import load_dataset, Dataset, DatasetDict
 
-from masking import (
+from src.data.masking import (
     mask_gender_terms,
     mask_titles,
     mask_gendered_nouns,

@@ -84,3 +84,20 @@ If you are using a Mac with Apple Silicon (M1/M2/M3 chips), PyTorch provides Met
 ```bash
 pip install torch torchvision torchaudio
 ```
+
+## Execution Guide
+
+### Part 1: Data Pipeline
+To export the dataset to JSONL format and compute statistics, run:
+```bash
+python scripts/export_dataset_jsonl.py
+python scripts/make_dataset_stats.py
+```
+This will produce outputs in `data/processed` and `data/stats`.
+
+### Part 2: Pythia Zero-shot / Few-shot Inference
+To generate predictions for Pythia evaluating on the text prompts, run:
+```bash
+bash scripts/run_pythia_zerofew.sh
+```
+The results will be securely serialized to `results/pythia`.

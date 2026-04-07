@@ -1,9 +1,11 @@
 import os
 import json
 import argparse
-from src.data.preprocessing import load_bios, BiosConfig
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from src.data.data import load_bios, BiosConfig
 
-def export_jsonl(output_dir="processed", top_n=20, mask_gender=False):
+def export_jsonl(output_dir=os.path.join("data", "processed"), top_n=20, mask_gender=False):
     os.makedirs(output_dir, exist_ok=True)
     
     # Optional parameters can be found in data.py, and use example can be found in make_dataset_stats.py
@@ -20,7 +22,7 @@ def export_jsonl(output_dir="processed", top_n=20, mask_gender=False):
         return
         
     # Load profession mapping
-    mapping_path = os.path.join(os.path.dirname(__file__), "profession_mapping.json")
+    mapping_path = os.path.join(os.path.dirname(__file__), "..", "data", "profession_mapping.json")
     with open(mapping_path, "r", encoding="utf-8") as fm:
         profession_mapping = json.load(fm)
 
@@ -49,7 +51,7 @@ def export_jsonl(output_dir="processed", top_n=20, mask_gender=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export HuggingFace DatasetDict to JSONL for Part 2 scripts.")
-    parser.add_argument("--output_dir", type=str, default="processed", help="Directory to save JSONL files")
+    parser.add_argument("--output_dir", type=str, default=os.path.join("data", "processed"), help="Directory to save JSONL files")
     parser.add_argument("--top_n", type=int, default=20, help="Number of top occupations to retain")
     parser.add_argument("--mask_gender", action="store_true", help="Whether to apply gender masking to text")
     
