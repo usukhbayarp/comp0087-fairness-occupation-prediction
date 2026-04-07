@@ -79,24 +79,13 @@ fairness on Bias-in-Bios;
 both task performance and fairness metrics.
 
 \paragraph{Key Findings.}
-(1)~Fine-tuned models substantially outperform zero- and few-shot
-baselines in both performance and fairness, consistent with the
-expected gap between in-context learning and supervised adaptation
-\citep{bommasani2021opportunities}.
-(2)~Larger models are not inherently fairer: zero-shot bias
-\emph{increases} with scale, with the EO gap growing from
-${\sim}0.09$ at 160M to ${\sim}0.21$ at 1.4B parameters.
-(3)~Gender-token masking reduces bias inconsistently and produces
-backfire effects for some professions, consistent with
-\citet{romanov-etal-2019-whats}.
-(4)~Explicit gender tokens are not the primary drivers of bias:
-they carry attribution weights 61--289$\times$ smaller than dominant
-profession tokens \citep{de-arteaga-etal-2019-bias}, while indirect
-contextual signals carry the latent gender signal.
-(5)~\textit{Novel on this dataset}: proxy stability is
-model-dependent---the same profession can be stable under one encoder
-and unstable under another, though whether this reflects architecture,
-pre-training, or scale cannot be determined from this comparison alone.
+Critically, zero-shot bias \emph{increases} with Pythia scale (EO gap
+${\sim}0.09$ at 160M to ${\sim}0.21$ at 1.4B), gender tokens carry
+weights 61--289$\times$ smaller than dominant profession tokens
+\citep{de-arteaga-etal-2019-bias}, and---novel on this dataset---proxy
+stability is model-dependent: the same profession can be stable under
+one encoder and unstable under another.
+Full findings are reported in §\ref{sec:fairness} and §6.3.
 We do not claim these findings generalise beyond the Bias-in-Bios setting.
 
 % ── 2. RELATED WORK ─────────────────────────────────────────────
@@ -138,15 +127,14 @@ gender signals are removed.
 \section{Dataset and Preprocessing}
 
 \subsection{Bias-in-Bios}
-We use the Bias-in-Bios dataset \citep{de-arteaga-etal-2019-bias}, accessed
-via HuggingFace Datasets (\texttt{LabHC/bias\_in\_bios}). Bias-in-Bios has become a standard benchmark in the NLP fairness community for studying occupational gender stereotypes \citep{de-arteaga-etal-2019-bias, romanov-etal-2019-whats}. Each example contains a biography (\texttt{hard\_text}), an integer profession label, and a binary gender attribute (0\,$\to$\,M,
-1\,$\to$\,F, provided by the dataset and inferred from 
-pronoun usage in the biography text by the original authors).
-We restrict to the \textbf{top 20 most frequent occupations} computed
-from the training split, filtering out all other examples.
-The task is to predict a biography's occupation label---one of these
-20 classes---from its free-text content alone; gender is used only
-as a post-hoc evaluation attribute and never as a model input.
+We use the Bias-in-Bios dataset \citep{de-arteaga-etal-2019-bias}
+(\texttt{LabHC/bias\_in\_bios}), a standard NLP fairness benchmark.
+Each example is a biography (\texttt{hard\_text}) with an integer
+profession label and a binary gender attribute (inferred from pronoun
+usage by the original authors; 0\,$\to$\,M, 1\,$\to$\,F).
+We restrict to the \textbf{top 20 most frequent occupations} from the
+training split. The task is to predict occupation from biography text
+alone; gender is a post-hoc evaluation attribute only.
 
 \begin{table}[h]
 \centering\small
@@ -210,78 +198,48 @@ Distribution is consistent across all splits.}
 
 \subsection{Evaluation Subset}
 All models are evaluated on a canonical \textbf{3,000-sample test
-subset}, stratified by profession proportionally to each profession's
-frequency in the full test set, and sampled from the 95,468-example
-test split. A shared canonical ID list ensures comparability across
-all models and regimes.
-
-The 3,000-sample subset was chosen to balance statistical
-representativeness against two computational constraints: (1) the
-latency of zero-shot and few-shot inference over the full 95K test
-split, and (2) the cost of running Integrated Gradients attribution
-across four conditions (two encoder models $\times$ two masking
-conditions), each requiring a separate forward pass per example. Per-profession sample sizes range
-from 932 (professor) to 27 (comedian); results for low-frequency
-professions should be interpreted with caution given the small
-sample sizes.
+subset}, stratified proportionally by profession from the 95,468-example
+test split; a shared ID list ensures cross-model comparability.
+Per-profession sizes range from 932 (professor) to 27 (comedian);
+results for low-frequency professions should be interpreted with caution.
 
 \subsection{Gender Masking}
-Two conditions: \textbf{Unmasked} (original text) and
-\textbf{Masked} (explicit gender tokens replaced with
-\texttt{[MASK]} for DistilBERT and \texttt{<mask>} for RoBERTa,
-matching each model's native mask token), applied via exact
-case-insensitive word-boundary regex matching
-(\texttt{\textbackslash b...\textbackslash b}).
-Three categories of tokens are masked:
-(1)~\textbf{Pronouns and possessives}: \emph{he, she, his, her, him,
-hers, himself, herself};
-(2)~\textbf{Titles and honorifics}: \emph{mr, mr., mister, mrs, mrs.,
-miss, ms, ms., madam, madame, ma'am, sir, lady, lord, dame};
-(3)~\textbf{Gendered nouns} (35 terms including \emph{father, mother,
-husband, wife, son, daughter, brother, sister, actor, actress,
-businessman, businesswoman, waiter, waitress}, and others).
-Masking is disabled by default and enabled per experiment.
-Name masking was not applied for two reasons: (1) any general-purpose
-name-masking rule introduces uncontrolled noise through false positives
-and false negatives; and (2) names carry biographical content beyond
-gender---masking them would conflate the removal of gender signals with
-a broader loss of biographical information, undermining the internal
-validity of the masked/unmasked comparison.
+Two conditions: \textbf{Unmasked} (original text) and \textbf{Masked}
+(gender tokens replaced with the model's native mask token---\texttt{[MASK]}
+for DistilBERT, \texttt{<mask>} for RoBERTa---via case-insensitive
+word-boundary regex). Three token categories are masked: pronouns and
+possessives (\emph{he, she, his, her}, etc.), titles and honorifics
+(\emph{mr, mrs, ms, sir, lady}, etc.), and 35 gendered nouns
+(\emph{father, mother, husband, wife, actor, actress}, etc.).
+Name masking was not applied: general name rules introduce uncontrolled
+false positives, and names carry biographical content beyond gender that
+would conflate gender-signal removal with loss of biographical information.
 
 % ── 4. METHODS ──────────────────────────────────────────────────
 \section{Methods}
 
 \subsection{Pythia: Zero-shot and Few-shot}
-We evaluate Pythia \citep{biderman2023pythia} at 160M, 410M, and 1.4B parameters under two inference regimes: zero-shot and few-shot, with and without gender masking applied to the input biography.
-
-\medskip
-
-\noindent
-\textbf{Zero-shot}: biography + candidate list, no examples.
-\textbf{Few-shot}: $K=4$ exemplars pairs prepended to prompt.
-
-\medskip
-
-Since Pythia is a causal language model rather than a classifier, occupation prediction is framed as a \textit{candidate scoring} problem. Each candidate label $c_k \in \mathcal{C}$ is scored by its joint log-probability conditioned on the prompt $p$:
+We evaluate Pythia \citep{biderman2023pythia} at 160M, 410M, and 1.4B
+parameters under zero-shot (biography + candidate list) and few-shot
+($K\!=\!4$ exemplar pairs) regimes, with and without gender masking.
+As a causal language model, Pythia scores each candidate label $c_k$
+by its joint log-probability given prompt $p$:
 \begin{equation} \log P(c_k \mid p) = \sum_{t=1}^{|c_k|} \log P\!\left(c_k^{(t)} \mid p, c_k^{(1)}, \ldots, c_k^{(t-1)}\right) \end{equation}
-The predicted label is $\hat{y} = \arg\max_{c_k \in \mathcal{C}} \log P(c_k \mid p)$. A softmax-normalised confidence score over candidates is also recorded as a calibration proxy. All predictions are saved in a shared JSONL format.
+The predicted label is $\hat{y} = \arg\max_{c_k} \log P(c_k \mid p)$.
 
 \subsection{Pythia: Supervised Fine-tuning}
-Pythia is treated as a sequence classifier with a classification head over the final hidden state. Training uses the HuggingFace Trainer, with the best checkpoint selected by dev Macro-F1. By default, unless full fine-tuning is explicitly enabled, LoRA \citep{hu2022lora} is applied to the attention \texttt{query\_key\_value} projections in every transformer layer, with rank $r=16$, $\alpha=32$, and dropout $0.1$. The default setup uses a learning rate of $2\times10^{-5}$, batch size $16$, $3$ epochs, linear decay with warmup ratio $0.06$, weight decay $0.01$, and maximum sequence length $256$. For larger models such as Pythia-1.4B, optional 4-bit quantisation (QLoRA) can be used to reduce memory requirements.
+Pythia is fine-tuned as a sequence classifier (linear head over the
+final hidden state) using LoRA \citep{hu2022lora} on attention
+projections ($r\!=\!16$, $\alpha\!=\!32$, dropout 0.1), lr
+$2\!\times\!10^{-5}$, batch 16, 3 epochs, max length 256; best
+checkpoint selected by dev Macro-F1. QLoRA (4-bit) is used for 1.4B.
 
 \subsection{Encoder Baselines: DistilBERT and RoBERTa}
-To provide supervised baselines from a distinct architectural
-family, DistilBERT \citep{sanh2019distilbert} (66M parameters) and RoBERTa-base \citep{liu2019roberta} (125M parameters) are fine-tuned as sequence classi-
-fiers with a linear classification head over the encoder
-representation. Inputs are tokenised
-with the model specific tokeniser and truncated to a maximum length
-of 256 tokens. Training is performed for 3 epochs with a learning
-rate of $2\times10^{-5}$ and batch size 16 (evaluation batch size 32).
-Dynamic padding is applied and the best checkpoint is selected based
-on Macro-F1, accounting for class imbalance. The same
-pipeline is used for both masked and unmasked conditions with a shared
-label mapping. Evaluation is performed on the shared 3,000-example test
-subset, ensuring direct comparability with the generative models.
+DistilBERT \citep{sanh2019distilbert} (66M) and RoBERTa-base
+\citep{liu2019roberta} (125M) are fine-tuned as sequence classifiers
+with a linear head, lr $2\!\times\!10^{-5}$, batch 16, 3 epochs,
+max length 256, best checkpoint by Macro-F1. The same pipeline runs
+for both masked and unmasked conditions with a shared label mapping.
 
 %\subsection{Fairness Evaluation}
 %Metrics: Macro-F1, Accuracy, Demographic Parity (DP) gap, and
@@ -370,21 +328,12 @@ $\mathcal{T}_\text{u}$ are the sets of tokens shared, masked-only,
 and unmasked-only respectively among the top-10.
 Gender-conditioned proxy tables are produced identically, stratified
 by profession and gender field.
-$K_2 > K_1$ is appropriate because aggregation across many examples
-yields a richer profession-level vocabulary than any single example
-produces; $K_1$ limits per-example computation while $K_2$ captures
-the most salient profession-level features.
-
 \textbf{Faithfulness validation.}
-To assess whether the identified proxy tokens are functionally important
-for the prediction rather than merely correlated with it, we perform a
-top-$K$ erasure faithfulness test: the top-5 attributed tokens are
-masked in each example's text and the model is re-run to measure the
-probability drop for the predicted class:
+The top-5 attributed tokens are erased from each example's text and
+the model is re-run to measure the probability drop:
 \begin{equation}
   \text{Faith}(x) = P(y \mid x) - P(y \mid x_{\text{erased}})
 \end{equation}
-A high faithfulness score indicates the attributed tokens are functionally important for the prediction.
 
 % ── 5. EXPERIMENTAL SETUP ───────────────────────────────────────
 \section{Experimental Setup}
@@ -409,7 +358,7 @@ RoBERTa     & Enc. & Fine-tuned           & M, U \\
 \label{tab:configs}
 \end{table}
 
-Table~\ref{tab:configs} summarises all evaluated configurations. All models are assessed on the shared 3,000-example test subset described in §\ref{sec:evaluation}, ensuring direct comparability across architectures and regimes.
+Table~\ref{tab:configs} summarises all evaluated configurations.
 
 % ── 6. RESULTS ──────────────────────────────────────────────────
 \section{Results and Discussion}
@@ -456,25 +405,13 @@ Pythia-1.4B few-shot    & M & 0.558 & 0.577 \\
 \caption{Task performance. U=unmasked; M=masked.}
 \end{table}
 
-Fine-tuning yields a steep scaling benefit: Pythia-1.4B fine-tuned
-achieves Macro-F1 of 0.849, matching encoder baselines (RoBERTa 0.851,
-DistilBERT 0.843), while Pythia-160M remains effectively non-functional
-after fine-tuning (F1\,$\approx$\,0.02, likely due to label-space
-collapse under LoRA at insufficient model capacity).
-
-Zero-shot performance scales with model size, improving from a macro-F1 of 0.23 (160M) to 0.57 (1.4B), where it plateaus. Masked variants at the same scale yield practically identical scores, suggesting masking has a negligible impact on predictive performance. Few-shot prompting is detrimental at smaller scales as the 160M and 410M models both perform worse under few-shot conditions (e.g., 410M drops from 0.557 to 0.391), indicating they lack the capacity to leverage in-context examples. At 1.4B, few-shot performance recovers to near zero-shot levels (0.578 vs. 0.567), implying a minimum capacity threshold must be met before few-shot prompting is beneficial.
-
-Encoder models provide a strong supervised baseline across both
-conditions. RoBERTa outperforms DistilBERT, achieving higher Macro-F1
-(0.851 vs.\ 0.843) and accuracy, consistent with its larger capacity
-and stronger pretraining. Unlike Pythia, encoder performance remains
-stable, indicating that fine-tuned encoders effectively capture
-task specific signals without requiring large scale scaling.
-
-Masking has negligible impact on encoder performance, with
-small changes observed for both DistilBERT
-(0.843\,$\to$\,0.844) and RoBERTa (0.851\,$\to$\,0.851), while Pythia-1.4B is essentially unaffected
-(0.849\,$\to$\,0.847). We next examine whether these performance differences translate to fairness disparities across gender groups.
+Pythia-1.4B fine-tuned reaches F1\,=\,0.849, matching encoder
+baselines (RoBERTa 0.851, DistilBERT 0.843); Pythia-160M fine-tuned
+fails (F1\,$\approx$\,0.02), likely due to label-space collapse under
+LoRA at insufficient capacity. Zero-shot F1 scales from 0.23 (160M)
+to 0.57 (1.4B); few-shot hurts at smaller scales (410M: 0.557→0.391)
+but recovers at 1.4B (0.578), suggesting a minimum capacity threshold.
+Masking has negligible impact on task performance across all models.
 
 \subsection{Fairness Results}
 \label{sec:fairness}
@@ -527,29 +464,17 @@ Pythia-160m 0s          & M & 0.092 & 0.027 & 0.092 & 0.024 \\
 \label{fig:scaling_fairness}
 \end{figure}
 
-\textbf{Fine-tuning substantially improves fairness.}
 Fine-tuned models achieve markedly lower EO gaps than zero-shot
-counterparts.
-
-\textbf{Zero-shot bias increases with scale.}
-EO gap increases from $\sim$0.09 (Pythia-160M) to $\sim$0.21
-(Pythia-1.4B) in the zero-shot regime---larger models amplify
-stereotypical associations without task-specific supervision.
-
-\textbf{Masking provides inconsistent improvement.}
-For Pythia-1.4B fine-tuned, masking reduces the aggregate EO gap
-from 0.086 to 0.080, and encoder reductions are larger
-(RoBERTa: 0.082$\to$0.063; DistilBERT: 0.088$\to$0.071).
-The effect is non-uniform at the profession level: within Pythia-1.4B
-fine-tuned, masking reduces bias for \emph{nurse}, \emph{surgeon},
-and \emph{model}, but increases it for \emph{teacher}, \emph{poet},
-and \emph{painter} (backfire effect). Pythia-410M fine-tuned shows
-aggregate backfire (0.085$\to$0.088), consistent with implicit
-proxy signals surviving the removal of explicit gender tokens.
-
-\textbf{TPR gap dominates FPR gap} across all models, as the EO column is equal to the TPR column. This indicates that the primary fairness issue lies in differential true positive rates across gender groups.
-To understand why these disparities persist even under masking,
-we turn to token-level attribution analysis.
+counterparts; zero-shot EO grows from $\sim$0.09 (160M) to $\sim$0.21
+(1.4B), amplifying stereotypes without supervision.
+Masking reduces aggregate EO for encoders (RoBERTa: 0.082$\to$0.063;
+DistilBERT: 0.088$\to$0.071) but is non-uniform at profession level:
+Pythia-1.4B FT sees backfire for \emph{teacher}, \emph{poet}, and
+\emph{painter}, while Pythia-410M FT shows aggregate backfire
+(0.085$\to$0.088). TPR gap equals EO gap across all models, indicating
+that differential true positive rates are the primary fairness issue.
+To understand why disparities persist under masking, we turn to
+token-level attribution analysis.
 
 \subsection{Proxy Bias Analysis}
 
@@ -654,6 +579,85 @@ Section~\ref{sec:fairness}, where \emph{nurse} shows one of the
 largest EO gap reductions under masking---suggesting that professions
 with unstable proxy representations are precisely those where masking
 provides the most benefit.
+
+\subsubsection*{Qualitative Illustrations}
+
+The following three examples from the DistilBERT unmasked condition
+provide concrete illustration of the aggregate patterns reported above.
+
+\medskip
+\noindent\textbf{Example~1: Gender asymmetry in attributed tokens
+(nurse, unmasked).}
+Both biographies are correctly predicted as \emph{nurse}.
+
+\begin{center}\small
+\begin{tabular}{p{0.44\linewidth}p{0.44\linewidth}}
+\toprule
+\textbf{Male biography excerpt} & \textbf{Female biography excerpt} \\
+\midrule
+\textit{``He holds a Masters of \textbf{Nursing} Degree and has
+served in the Australian Defense force in various roles for over
+32 years. He has \textbf{presented} in this field for over
+20 years\ldots''} &
+\textit{``Her \textbf{scope} of practice encompasses \textbf{health}
+promotion, disease prevention, diagnosis and management of common and
+complex \textbf{health} care problems\ldots throughout the
+\textbf{aging} process\ldots''} \\
+\midrule
+Top tokens: \emph{nursing} (3.18), \emph{masters} (0.61),
+\emph{presented} (0.59), \emph{australian} (0.44) &
+Top tokens: \emph{scope} (0.74), \emph{health} (0.66),
+\emph{aging} (0.61), \emph{practice} (0.55), \emph{her} (0.49) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The male prediction anchors on explicit credentials (\emph{nursing},
+\emph{masters}); the female prediction distributes across social-care
+context words (\emph{scope}, \emph{aging})---consistent with the
+nurse$|$M faithfulness asymmetry (0.756 vs.\ 0.354).
+
+\medskip
+\noindent\textbf{Example~2: Prediction flip after masking (backfire).}
+
+\begin{quote}\small
+\textit{``\textbf{[MASK]} is a parent of a child with autism, and is
+dedicated to providing professional assistance to other parents\ldots
+\textbf{[MASK]} can be reached at (408) 843-7997, and is available for
+paid phone consultation\ldots''}
+\end{quote}
+
+\noindent True label: \emph{psychologist}.
+Unmasked prediction: \emph{psychologist}~\checkmark\ ---
+top tokens: \emph{parent} (1.15), \emph{autism} (0.81),
+\emph{child} (0.39), \emph{professional} (0.33).
+Masked prediction: \emph{attorney}~$\times$ ---
+top tokens: \emph{408} (0.63), \emph{autism} (0.34),
+\emph{reached} (0.33), \emph{parents} (0.28).
+
+After masking \emph{He}, the parent/child anchor loses salience;
+the phone number and ``consultation'' framing pattern-match
+\emph{attorney}, producing an error rather than a fairness gain.
+
+\medskip
+\noindent\textbf{Example~3 (mini): Indirect proxy tokens
+driving a physician prediction.}
+
+\begin{quote}\small
+\textit{``Ms.\ Croteau \textbf{practices} \textbf{medicine} in
+New Britain, CT and specializes in Allergy \& Immunology.
+Ms.\ Croteau is affiliated with \textbf{Hospital} of Central
+Connecticut.''}
+\end{quote}
+
+\noindent Predicted: \emph{physician}~\checkmark\ ---
+top tokens: \emph{medicine} (1.13), \emph{practices} (0.96),
+\emph{hospital} (0.52).
+No gender tokens appear in the top~5.
+Clinical role words alone drive the prediction,
+consistent with the interpretation that indirect contextual
+signals, not explicit gender markers, carry the primary
+predictive load.
 
 \subsubsection*{Faithfulness Validation}
 
