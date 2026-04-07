@@ -24,21 +24,16 @@ There are a couple of requirements that can make your life easier:
     * Example: without cuda (it took me 16s/datapoint and I had to run over 38k datapoints... so I just gave up and installed cuda) and with cuda (it took me 2s/datapoint) 
 * If not installed already, install venv (with the required dependencies)
 
-# Running Inference Script (./pythia_zerofew.py)
+# Running Single Inference Script (./pythia_zerofew.py)
 **Run from root**:
 ```bash
 {./venv/Scripts/python.exe or python} src/models/pythia/pythia_zerofew.py --model_size {160m/410m/1.4b} --regime {zeroshot/fewshot} --data_path {data/processed/*.jsonl} --output_dir {results/pythia}
 
 ```
-**Note**: in data/processed there are 3 files: train.jsonl, dev.jsonl, test.jsonl. You can use any of them as input data.
+**Note**: in data/processed there are 3 files: train.jsonl, dev.jsonl, test.jsonl
 
-
-## Example of running the script for all models and regimes
-**Run from root**:
+**Note**: There is already a script in ./scripts/run_pythia_zerofew.sh that runs the script for all models and regimes. You can use it to run the script for all models and regimes with 
 ```bash
-for model_size in 160m 410m 1.4b; do
-    for regime in zeroshot fewshot; do
-        {./venv/Scripts/python.exe or just python} src/models/pythia/pythia_zerofew.py --model_size $model_size --regime $regime --data_path data/processed/dev.jsonl --output_dir results/pythia
-    done
-done
+bash ./scripts/run_pythia_zerofew.sh
 ```
+More detail can be found in [README](../../../README.md) at **Execution Guide**
