@@ -171,12 +171,22 @@ The same checkpoint should be used consistently across:
 
 # How to Run (from Project Root)
 
+> **Important:** All scripts must be run as Python modules from the project root, not as direct script paths.
+>
+> ```bash
+> # ❌ Do NOT run — causes ModuleNotFoundError: No module named 'src'
+> python scripts/run_attribution_encoder.py
+>
+> # ✅ Correct usage
+> python -m scripts.run_attribution_encoder ...
+> ```
+
 ## Step 1 — Attribution
 
 ### DistilBERT unmasked
 
 ```bash
-python scripts/run_attribution_encoder.py \
+python -m scripts.run_attribution_encoder \
   --input_jsonl results/predictions/distilbert_unmasked.jsonl \
   --model_path checkpoints/distilbert_unmasked \
   --output_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
@@ -189,7 +199,7 @@ python scripts/run_attribution_encoder.py \
 ### DistilBERT masked
 
 ```bash
-python scripts/run_attribution_encoder.py \
+python -m scripts.run_attribution_encoder \
   --input_jsonl results/predictions/distilbert_masked.jsonl \
   --model_path checkpoints/distilbert_masked \
   --output_jsonl results/attribution/distilbert_masked_attr.jsonl \
@@ -202,7 +212,7 @@ python scripts/run_attribution_encoder.py \
 ### RoBERTa unmasked
 
 ```bash
-python scripts/run_attribution_encoder.py \
+python -m scripts.run_attribution_encoder \
   --input_jsonl results/predictions/roberta_unmasked.jsonl \
   --model_path checkpoints/roberta_unmasked \
   --output_jsonl results/attribution/roberta_unmasked_attr.jsonl \
@@ -215,7 +225,7 @@ python scripts/run_attribution_encoder.py \
 ### RoBERTa masked
 
 ```bash
-python scripts/run_attribution_encoder.py \
+python -m scripts.run_attribution_encoder \
   --input_jsonl results/predictions/roberta_masked.jsonl \
   --model_path checkpoints/roberta_masked \
   --output_jsonl results/attribution/roberta_masked_attr.jsonl \
@@ -230,7 +240,7 @@ python scripts/run_attribution_encoder.py \
 ### DistilBERT unmasked
 
 ```bash
-python scripts/run_proxy_audit.py \
+python -m scripts.run_proxy_audit \
   --input_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
   --output_csv results/proxy/distilbert_unmasked_profession.csv \
   --output_gender_csv results/proxy/distilbert_unmasked_profession_gender.csv \
@@ -243,7 +253,7 @@ python scripts/run_proxy_audit.py \
 ### DistilBERT masked
 
 ```bash
-python scripts/run_proxy_audit.py \
+python -m scripts.run_proxy_audit \
   --input_jsonl results/attribution/distilbert_masked_attr.jsonl \
   --output_csv results/proxy/distilbert_masked_profession.csv \
   --output_gender_csv results/proxy/distilbert_masked_profession_gender.csv \
@@ -256,7 +266,7 @@ python scripts/run_proxy_audit.py \
 ### RoBERTa unmasked
 
 ```bash
-python scripts/run_proxy_audit.py \
+python -m scripts.run_proxy_audit \
   --input_jsonl results/attribution/roberta_unmasked_attr.jsonl \
   --output_csv results/proxy/roberta_unmasked_profession.csv \
   --output_gender_csv results/proxy/roberta_unmasked_profession_gender.csv \
@@ -269,7 +279,7 @@ python scripts/run_proxy_audit.py \
 ### RoBERTa masked
 
 ```bash
-python scripts/run_proxy_audit.py \
+python -m scripts.run_proxy_audit \
   --input_jsonl results/attribution/roberta_masked_attr.jsonl \
   --output_csv results/proxy/roberta_masked_profession.csv \
   --output_gender_csv results/proxy/roberta_masked_profession_gender.csv \
@@ -284,7 +294,7 @@ python scripts/run_proxy_audit.py \
 ### DistilBERT
 
 ```bash
-python scripts/compare_masked_unmasked_proxies.py \
+python -m scripts.compare_masked_unmasked_proxies \
   --masked_csv results/proxy/distilbert_masked_profession.csv \
   --unmasked_csv results/proxy/distilbert_unmasked_profession.csv \
   --out_summary_csv results/compare/distilbert_summary.csv \
@@ -299,7 +309,7 @@ python scripts/compare_masked_unmasked_proxies.py \
 ### RoBERTa
 
 ```bash
-python scripts/compare_masked_unmasked_proxies.py \
+python -m scripts.compare_masked_unmasked_proxies \
   --masked_csv results/proxy/roberta_masked_profession.csv \
   --unmasked_csv results/proxy/roberta_unmasked_profession.csv \
   --out_summary_csv results/compare/roberta_summary.csv \
@@ -316,7 +326,7 @@ python scripts/compare_masked_unmasked_proxies.py \
 ### DistilBERT
 
 ```bash
-python scripts/summarize_proxy_results.py \
+python -m scripts.summarize_proxy_results \
   --model_name distilbert \
   --summary_csv results/compare/distilbert_summary.csv \
   --token_shift_csv results/compare/distilbert_token_shift.csv \
@@ -328,7 +338,7 @@ python scripts/summarize_proxy_results.py \
 ### RoBERTa
 
 ```bash
-python scripts/summarize_proxy_results.py \
+python -m scripts.summarize_proxy_results \
   --model_name roberta \
   --summary_csv results/compare/roberta_summary.csv \
   --token_shift_csv results/compare/roberta_token_shift.csv \
@@ -342,7 +352,7 @@ python scripts/summarize_proxy_results.py \
 ### DistilBERT unmasked
 
 ```bash
-python scripts/erasure_faithfulness.py \
+python -m scripts.erasure_faithfulness \
   --input_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
   --model_path checkpoints/distilbert_unmasked \
   --output_csv results/faithfulness/distilbert_unmasked.csv \
@@ -353,7 +363,7 @@ python scripts/erasure_faithfulness.py \
 ### DistilBERT masked
 
 ```bash
-python scripts/erasure_faithfulness.py \
+python -m scripts.erasure_faithfulness \
   --input_jsonl results/attribution/distilbert_masked_attr.jsonl \
   --model_path checkpoints/distilbert_masked \
   --output_csv results/faithfulness/distilbert_masked.csv \
@@ -364,7 +374,7 @@ python scripts/erasure_faithfulness.py \
 ### RoBERTa unmasked
 
 ```bash
-python scripts/erasure_faithfulness.py \
+python -m scripts.erasure_faithfulness \
   --input_jsonl results/attribution/roberta_unmasked_attr.jsonl \
   --model_path checkpoints/roberta_unmasked \
   --output_csv results/faithfulness/roberta_unmasked.csv \
@@ -375,7 +385,7 @@ python scripts/erasure_faithfulness.py \
 ### RoBERTa masked
 
 ```bash
-python scripts/erasure_faithfulness.py \
+python -m scripts.erasure_faithfulness \
   --input_jsonl results/attribution/roberta_masked_attr.jsonl \
   --model_path checkpoints/roberta_masked \
   --output_csv results/faithfulness/roberta_masked.csv \

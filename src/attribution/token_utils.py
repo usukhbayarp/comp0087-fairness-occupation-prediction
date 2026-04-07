@@ -11,29 +11,31 @@ SPECIAL_TOKENS = {
 
 def merge_subwords(tokens: List[str], scores: List[float]) -> List[Dict[str, Any]]:
     """
-    Merge BERT-style ## pieces and RoBERTa-style Ġ-started wordpieces.
+    Merge BERT-style ## pieces and RoBERTa/SentencePiece-style wordpieces.
 
-    Returns a list of:
-      {
-        "token": merged_word,
-        "score": merged_score,
-        "positions": [original_token_positions]
-      }
-
-    Notes
-    -----
-    - BERT continuation pieces start with "##"
-    - RoBERTa/GPT-2 style new words often start with "Ġ"
-    - RoBERTa continuation pieces may have no prefix at all, e.g.:
-        ["Ġpro", "gramming"] -> "programming"
-      so plain tokens without a word-start marker should be merged into the
-      current token when one is already open.
+    Rules:
+    - BERT/DistilBERT:
+        - plain tokens start new words
+        - ## continues previous word
+    - RoBERTa/GPT2:
+        - Ġ marks a new word
+        - plain tokens without Ġ are continuations of the current word
+    - SentencePiece:
+        - ▁ marks a new word
+        - plain tokens without ▁ are continuations of the current word
     """
     merged: List[Dict[str, Any]] = []
 
     current_token = ""
     current_score = 0.0
     current_positions: List[int] = []
+
+    # Detect tokenizer family heuristically from the token stream
+    has_g_marker = any(tok.startswith("Ġ") for tok in tokens)
+    has_sp_marker = any(tok.startswith("▁") for tok in tokens)
+
+    # If we see Ġ or ▁ anywhere, plain non-prefixed tokens are treated as continuations.
+    roberta_like = has_g_marker or has_sp_marker
 
     def flush() -> None:
         nonlocal current_token, current_score, current_positions
@@ -52,14 +54,14 @@ def merge_subwords(tokens: List[str], scores: List[float]) -> List[Dict[str, Any
             flush()
             continue
 
-        # RoBERTa / GPT-2 style explicit new-word marker
+        # RoBERTa / GPT-2 explicit new-word marker
         if tok.startswith("Ġ"):
             flush()
             current_token = tok[1:]
             current_score = score
             current_positions = [i]
 
-        # SentencePiece-style explicit new-word marker (safe extra support)
+        # SentencePiece explicit new-word marker
         elif tok.startswith("▁"):
             flush()
             current_token = tok[1:]
@@ -79,13 +81,19 @@ def merge_subwords(tokens: List[str], scores: List[float]) -> List[Dict[str, Any
                 current_positions = [i]
 
         else:
-            # RoBERTa continuation piece or fallback token.
-            # If a token is already open, merge into it; otherwise start a new one.
-            if current_token:
-                current_token += tok
-                current_score += score
-                current_positions.append(i)
+            if roberta_like:
+                # In RoBERTa-like tokenization, plain tokens are continuations
+                if current_token:
+                    current_token += tok
+                    current_score += score
+                    current_positions.append(i)
+                else:
+                    current_token = tok
+                    current_score = score
+                    current_positions = [i]
             else:
+                # In BERT-like tokenization, plain tokens start new words
+                flush()
                 current_token = tok
                 current_score = score
                 current_positions = [i]
