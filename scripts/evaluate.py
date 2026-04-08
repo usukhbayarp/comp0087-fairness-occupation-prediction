@@ -66,6 +66,10 @@ def run_evaluation():
         + glob.glob("results/pythia/**/*.jsonl", recursive=True)
         + glob.glob("results/pythia_finetuned/**/*.jsonl", recursive=True)
     )
+    
+    # Ignore files that have '_extract' in their path
+    pred_files = [f for f in pred_files if '_extract' not in f]
+    
     assert pred_files, "No prediction JSONL files found under results/."
     
     # Canonical ID set: the 3 000 sample IDs present in every prediction file.
@@ -112,7 +116,15 @@ def run_evaluation():
         eo_diff      = max(avg_tpr_gap, avg_fpr_gap)  # standard EO difference
         
         # Extract clean model name from the file path
-        model_name = os.path.basename(file).replace("preds_", "").replace(".jsonl", "")
+        raw_name = os.path.basename(file).replace("preds_", "").replace(".jsonl", "")
+        
+        # Clearly dictate whether it is masked or unmasked for the tables
+        if 'unmasked' in raw_name.lower():
+            model_name = f"{raw_name} (Unmasked)"
+        elif 'masked' in raw_name.lower():
+            model_name = f"{raw_name} (Masked)"
+        else:
+            model_name = f"{raw_name} (Unmasked)"
         
         summary_data.append({
             "model_name":   model_name,
