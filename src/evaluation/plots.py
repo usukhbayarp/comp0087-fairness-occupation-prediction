@@ -49,12 +49,12 @@ def parse_model_info(name):
     else: method = 'Baseline'
         
     # Construct a concise label for plot annotations
-    short_label = f"{size_str} {method} {'(M)' if condition == 'Masked' else '(U)'}"
+    short_label = f"{size_str} {method} {'(Masked)' if condition == 'Masked' else '(Unmasked)'}"
     
     # Override generic labels for specific known baseline/fine-tuned architectures
-    if 'qlora' in name_lower: short_label = f"{size_str} QLoRA (U)"
-    if 'roberta' in name_lower: short_label = f"RoBERTa FT {'(M)' if condition == 'Masked' else '(U)'}"
-    if 'distilbert' in name_lower: short_label = f"DistilBERT FT {'(M)' if condition == 'Masked' else '(U)'}"
+    if 'qlora' in name_lower: short_label = f"{size_str} QLoRA (Unmasked)"
+    if 'roberta' in name_lower: short_label = f"RoBERTa FT {'(Masked)' if condition == 'Masked' else '(Unmasked)'}"
+    if 'distilbert' in name_lower: short_label = f"DistilBERT FT {'(Masked)' if condition == 'Masked' else '(Unmasked)'}"
     
     # Convert size string to a numerical value (in millions) for scaling plots
     size_num = 0
@@ -124,8 +124,8 @@ def plot_job_bias(detailed_df):
         detailed_df (pd.DataFrame): DataFrame containing per-occupation fairness metrics.
     """
     # Define the models to compare (unmasked baseline vs masked intervention)
-    target_u = "pythia_1.4b_finetuned"
-    target_m = "pythia_1.4b_masked_full"               
+    target_u = "pythia_1.4b_finetuned (Unmasked)"
+    target_m = "pythia_1.4b_masked_full (Masked)"               
     df_job = detailed_df[detailed_df['model_name'].isin([target_u, target_m])].copy()
     
     # Label conditions based on model name
@@ -242,10 +242,12 @@ def plot_all_correlations(summary_df, detailed_df, gender_df):
     pairs = []
     
     # Automatically identify pairs of models: (Unmasked, Masked equivalent)
-    for u in [m for m in all_models if 'masked' not in m.lower()]:
-        # Search for a matching counterpart that has 'masked' in the name
-        m_cand = next((m for m in all_models if 'masked' in m.lower() and 
-                       os.path.basename(m).replace('masked_', '').replace('_masked', '') == os.path.basename(u)), None)
+    for u in [m for m in all_models if '(Unmasked)' in m]:
+        # Search for a matching counterpart that has '(Masked)' in the name
+        # We strip the '(Unmasked)' and '(Masked)' to compare baseline string identity.
+        u_base = os.path.basename(u).replace(' (Unmasked)', '')
+        m_cand = next((m for m in all_models if '(Masked)' in m and 
+                       os.path.basename(m).replace(' (Masked)', '').replace('masked_', '').replace('_masked', '') == u_base), None)
         if m_cand: 
             pairs.append((u, m_cand))
 
