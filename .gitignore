@@ -230,23 +230,24 @@ checkpoints/
 huggingface/
 
 # Experiment outputs
-results/*
 logs/
 runs/
 wandb/
 
-# Keep README files in results folders
-!results/**/README.md
+# Large result folders — too big for GitHub
+results/pythia_finetuned/
+results/attribution/
 
-
-# Prediction dumps
-*.jsonl
+# Prediction dumps (large / raw)
 *.parquet
 *.pkl
 *.pickle
 
-!data/pythia_finetuned/*.jsonl
-!results/pythia/*.jsonl
+# Keep all results CSVs, figures, tables, and small prediction files
+# results/faithfulness/, results/proxy/, results/compare/, results/tables/,
+# results/figures/, results/predictions/, results/pythia/ are all committed.
+
+# Checkpoints
 !checkpoints/**/*.bin
 !checkpoints/**/*.pt
 !checkpoints/**/*.safetensors

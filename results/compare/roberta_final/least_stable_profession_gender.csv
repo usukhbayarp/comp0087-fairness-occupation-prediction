@@ -1,0 +1,11 @@
+profession,gender,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens,shared_ratio
+dietitian,M,1,9,8,nutrition,"biotech, clients, energy, expert, genetics, lifestyles, people, specializes, tilly","addressing, diabetes, fibromyalgia, holistic, knowledge, loss, nutritional, weight",0.05555555555555555
+comedian,F,4,6,6,"comedian, laughter, show, stand-up","audience, comedy, contagious, contains, nominated, tells","award, guest, mtv's, resume, twitter, voicing",0.25
+model,M,4,6,6,"fashion, model, modeling, modelling","cherries, commercials, models, photographers, professional, smiles","career, diligently, lakers, loves, performed, websites",0.25
+comedian,M,5,5,5,"comedians, comedic, comedy, joke, jokes","audiences, bajwa, humor, punjabi-language, show","best, circuit, fringe, stand, stunt",0.3333333333333333
+dentist,M,5,5,5,"clinic, dental, dentist, dentistry, patients","doctor, hospital, insurance, licence, lybrate.com","cross/blue, dentists, include, practices, practicing",0.3333333333333333
+software engineer,F,5,5,5,"css, engineer, javascript, sdks, systems","android, kafka, software, team, web","engineering, engineers, ibm, node.js, writes",0.3333333333333333
+composer,F,6,4,4,"compositions, music, musical, performed, scores, textures","albums, orchestra, solo, sounds","coreenâģļs, electronic, plunderphonics, works",0.42857142857142855
+dentist,F,6,4,4,"appointment, clinic, dental, dentistry, online, practice","dentists, doctor, hospital, licence","cross/blue, dmd, maxillofacial, practices",0.42857142857142855
+journalist,M,6,4,4,"covered, journalism, journalist, journalists, news, reporter","magazine, market, radio, writing","editor-in-chief/publisher, guardian, reported, times",0.42857142857142855
+nurse,M,6,4,4,"healthcare, marilyn, nurse, nurses, nursing, practitioner","dea, hospital, patients, professionals","affiliates, emergency, health, medical",0.42857142857142855

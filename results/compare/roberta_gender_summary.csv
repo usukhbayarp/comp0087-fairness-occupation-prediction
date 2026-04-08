@@ -1,0 +1,41 @@
+profession,gender,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens
+accountant,F,7,3,3,"accountant, accounting, financial, payments, receivables, tax, treasurer","accounts, corporation, finance","clients, cpas, management"
+accountant,M,9,1,1,"accountancy, accountants, accounting, accounts, business, cfo, finance, financial, firm",reporting,practice
+architect,F,7,3,3,"architect, architects, architectural, architecture, building, design, techniques","construction, designing, passive","end-to-end, london, sap"
+architect,M,8,2,2,"architect, architects, architectural, architecture, building, construction, design, designing","buildings, java","designed, practice"
+attorney,F,9,1,1,"attorney, clients, court, juris, law, legal, litigation, practice, represents",attorneys,representing
+attorney,M,8,2,2,"attorney, clients, counsel, law, legal, litigation, practice, represented","bar, cases","court, representing"
+comedian,F,4,6,6,"comedian, laughter, show, stand-up","audience, comedy, contagious, contains, nominated, tells","award, guest, mtv's, resume, twitter, voicing"
+comedian,M,5,5,5,"comedians, comedic, comedy, joke, jokes","audiences, bajwa, humor, punjabi-language, show","best, circuit, fringe, stand, stunt"
+composer,F,6,4,4,"compositions, music, musical, performed, scores, textures","albums, orchestra, solo, sounds","coreenâģļs, electronic, plunderphonics, works"
+composer,M,7,3,3,"composing, composition, compositions, music, musical, orchestra, score","ensemble, films, musicians","short, tuscany, valentine"
+dentist,F,6,4,4,"appointment, clinic, dental, dentistry, online, practice","dentists, doctor, hospital, licence","cross/blue, dmd, maxillofacial, practices"
+dentist,M,5,5,5,"clinic, dental, dentist, dentistry, patients","doctor, hospital, insurance, licence, lybrate.com","cross/blue, dentists, include, practices, practicing"
+dietitian,F,7,3,3,"diet, dietitian, dietitians, nutrition, nutritional, patients, professional","appointment, food, metabolic","clients, experience, registered"
+dietitian,M,1,9,8,nutrition,"biotech, clients, energy, expert, genetics, lifestyles, people, specializes, tilly","addressing, diabetes, fibromyalgia, holistic, knowledge, loss, nutritional, weight"
+filmmaker,F,8,2,2,"directed, directing, documentaries, documentary, feature, film, filmmaking, films","festival, filmmaker","forthcoming, projects"
+filmmaker,M,8,2,2,"directed, documentary, feature, film, filmmaker, filmmaking, films, videos","andrew_kukura@outlook.com, cinema","festival, production"
+journalist,F,7,3,3,"journalism, journalist, journalists, media, news, reporting, times","editor, outlets, writing","cover, newspapers, reported"
+journalist,M,6,4,4,"covered, journalism, journalist, journalists, news, reporter","magazine, market, radio, writing","editor-in-chief/publisher, guardian, reported, times"
+model,F,7,3,3,"born, fashion, model, modeling, playboy, ranked, section","gallery, modelling, models","currently, freeones, listed"
+model,M,4,6,6,"fashion, model, modeling, modelling","cherries, commercials, models, photographers, professional, smiles","career, diligently, lakers, loves, performed, websites"
+nurse,F,7,3,3,"health, hospital, medical, nurse, nursing, patients, practitioner","appointment, call, clinical","graduated, interview, professional"
+nurse,M,6,4,4,"healthcare, marilyn, nurse, nurses, nursing, practitioner","dea, hospital, patients, professionals","affiliates, emergency, health, medical"
+painter,F,7,3,3,"art, artistic, exhibited, paint, painting, paintings, work","colors, depicted, paintâńing","paints, stroke, studio"
+painter,M,7,3,3,"art, artist, gallery, paint, painting, paintings, studio","cartoonist.âģŀ, represented, strokes","drawing, exhibited, studio-based"
+photographer,F,8,2,2,"photo, photographer, photographic, photographing, photographs, photography, samanthafortenberryphotography.com, work","images, portraits","photojournalism, subjects"
+photographer,M,8,2,2,"images, photograph, photographer, photographic, photographs, photography, portraits, shoots","camera, shoot","capture, work"
+physician,F,6,4,4,"medical, medicine, npi, physician, practices, specializes","hospital, patients, spanish, speaks","affiliated, credentials, practice, residency"
+physician,M,8,2,2,"credentials, medical, medicine, patients, physician, practices, professional, residency","health, spanish","affiliated, clinical"
+poet,F,7,3,3,"letters, poems, poetry, review, words, work, writing","creative, issues, journal","full-length, penmanship, write"
+poet,M,7,3,3,"lyricism, poem, poems, poetry, published, work, writing","poets, review, translated","collection, french, lyrics"
+professor,F,9,1,1,"interests, ph.d, phd, professor, research, studies, teaches, teaching, university",focuses,doctorate
+professor,M,10,0,0,"faculty, interests, ph.d, phd, professor, research, studies, teaches, teaching, university",,
+psychologist,F,8,2,2,"appointment, clinical, counseling, counselling, psychologist, psychology, psychotherapy, therapy","psychological, specialists","experiences, www.bikepsych.com"
+psychologist,M,8,2,2,"appointment, clinical, counseling, psychological, psychologist, psychology, research, therapy","counsel, specialists","experiences, ph.d"
+software engineer,F,5,5,5,"css, engineer, javascript, sdks, systems","android, kafka, software, team, web","engineering, engineers, ibm, node.js, writes"
+software engineer,M,7,3,3,"applications, code, computer, development, engineering, programming, software","currently, devops, java/c/c","building, php, websphere"
+surgeon,F,7,3,3,"medicine, practice, professor, surgeon, surgeries, surgery, surgical","medical, neurosurgery, surgeons","knee, pinson's, specializes"
+surgeon,M,9,1,1,"hospital, medical, medicine, neurosurgery, practice, surgeon, surgeries, surgery, surgical",surgeons,practices
+teacher,F,10,0,0,"classes, education, school, schools, students, taught, teacher, teachers, teaches, teaching",,
+teacher,M,8,2,2,"curriculum, school, students, taught, teacher, teachers, teaches, teaching","education, schools","classes, men"

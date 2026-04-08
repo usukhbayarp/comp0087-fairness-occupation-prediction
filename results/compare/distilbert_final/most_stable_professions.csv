@@ -1,0 +1,11 @@
+profession,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens,shared_ratio
+model,9,1,1,"born, fashion, freeones, gallery, model, modeling, modelling, playboy, runway",ranked,photoshoots,0.8181818181818182
+professor,9,1,1,"faculty, focuses, interests, phd, professor, research, studies, teaches, university",teaching,received,0.8181818181818182
+psychologist,9,1,1,"clinical, counselling, depression, psychological, psychologist, psychology, psychotherapy, therapists, therapy",doctors,experiences,0.8181818181818182
+teacher,9,1,1,"classroom, education, school, schools, students, teacher, teachers, teaches, teaching",taught,classes,0.8181818181818182
+attorney,8,2,2,"attorney, clients, counsel, law, legal, litigation, practice, represents","bar, firm","juris, matters",0.6666666666666666
+dietitian,8,2,2,"diet, dietetic, dietitian, diets, digestive, nutrition, nutritional, registered","doctors, food","dietitians, experiences",0.6666666666666666
+filmmaker,8,2,2,"directed, documentary, feature, film, filmmaker, filmmaking, films, short","cinematographer, screened","festival, production",0.6666666666666666
+journalist,8,2,2,"articles, editor, journalism, journalist, journalists, news, reported, reporting","media, reporter","publications, writing",0.6666666666666666
+painter,8,2,2,"art, artist, gallery, paint, painting, paintings, studio, work","drawing, works","exhibited, oil",0.6666666666666666
+photographer,8,2,2,"images, photo, photographer, photographic, photographing, photographs, photography, photos","camera, work","photograph, shoots",0.6666666666666666

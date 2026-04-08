@@ -1,0 +1,11 @@
+profession,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens,shared_ratio
+accountant,6,4,4,"accountant, accountants, accounting, accounts, finance, financial","auditing, business, kpmg, treasurer","accountancy, families, tax, while",0.42857142857142855
+architect,6,4,4,"architect, architects, architectural, architecture, design, technical","building, buildings, firms, microsoft","construction, ellenzweig, firm, sustainable",0.42857142857142855
+nurse,6,4,4,"experiences, honors, nurse, nurses, nursing, practitioner","especially, hospital, hospitals, medical","degree, experience, graduated, medicine",0.42857142857142855
+comedian,7,3,3,"comedian, comedians, comedy, jokes, performed, resonates, stand","fool, season, television","april, mtv, seasonal",0.5384615384615384
+composer,7,3,3,"composer, composing, composition, compositions, music, musical, scores","electronic, orchestral, score","composed, film, scored",0.5384615384615384
+dentist,7,3,3,"dental, dentist, dentistry, dentists, licence, patients, specialties","indian, oral, years","bds, clinic, practising",0.5384615384615384
+poet,7,3,3,"english, lyricism, mfa, poem, poems, poetry, writing","poet, published, review","creative, poets, professor",0.5384615384615384
+attorney,8,2,2,"attorney, clients, counsel, law, legal, litigation, practice, represents","bar, firm","juris, matters",0.6666666666666666
+dietitian,8,2,2,"diet, dietetic, dietitian, diets, digestive, nutrition, nutritional, registered","doctors, food","dietitians, experiences",0.6666666666666666
+filmmaker,8,2,2,"directed, documentary, feature, film, filmmaker, filmmaking, films, short","cinematographer, screened","festival, production",0.6666666666666666

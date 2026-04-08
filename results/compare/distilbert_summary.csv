@@ -1,0 +1,21 @@
+profession,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens
+accountant,6,4,4,"accountant, accountants, accounting, accounts, finance, financial","auditing, business, kpmg, treasurer","accountancy, families, tax, while"
+architect,6,4,4,"architect, architects, architectural, architecture, design, technical","building, buildings, firms, microsoft","construction, ellenzweig, firm, sustainable"
+attorney,8,2,2,"attorney, clients, counsel, law, legal, litigation, practice, represents","bar, firm","juris, matters"
+comedian,7,3,3,"comedian, comedians, comedy, jokes, performed, resonates, stand","fool, season, television","april, mtv, seasonal"
+composer,7,3,3,"composer, composing, composition, compositions, music, musical, scores","electronic, orchestral, score","composed, film, scored"
+dentist,7,3,3,"dental, dentist, dentistry, dentists, licence, patients, specialties","indian, oral, years","bds, clinic, practising"
+dietitian,8,2,2,"diet, dietetic, dietitian, diets, digestive, nutrition, nutritional, registered","doctors, food","dietitians, experiences"
+filmmaker,8,2,2,"directed, documentary, feature, film, filmmaker, filmmaking, films, short","cinematographer, screened","festival, production"
+journalist,8,2,2,"articles, editor, journalism, journalist, journalists, news, reported, reporting","media, reporter","publications, writing"
+model,9,1,1,"born, fashion, freeones, gallery, model, modeling, modelling, playboy, runway",ranked,photoshoots
+nurse,6,4,4,"experiences, honors, nurse, nurses, nursing, practitioner","especially, hospital, hospitals, medical","degree, experience, graduated, medicine"
+painter,8,2,2,"art, artist, gallery, paint, painting, paintings, studio, work","drawing, works","exhibited, oil"
+photographer,8,2,2,"images, photo, photographer, photographic, photographing, photographs, photography, photos","camera, work","photograph, shoots"
+physician,8,2,2,"graduate, hospital, medical, medicine, physician, practice, practices, specializes","affiliated, attended","professional, school"
+poet,7,3,3,"english, lyricism, mfa, poem, poems, poetry, writing","poet, published, review","creative, poets, professor"
+professor,9,1,1,"faculty, focuses, interests, phd, professor, research, studies, teaches, university",teaching,received
+psychologist,9,1,1,"clinical, counselling, depression, psychological, psychologist, psychology, psychotherapy, therapists, therapy",doctors,experiences
+software engineer,8,2,2,"architecture, code, development, engineering, ibm, intel, javascript, software","computer, programming","developer, electrical"
+surgeon,8,2,2,"hospital, medical, medicine, orthopaedic, practice, practices, surgeon, surgery","neurosurgery, surgical","surgeons, surgeries"
+teacher,9,1,1,"classroom, education, school, schools, students, teacher, teachers, teaches, teaching",taught,classes

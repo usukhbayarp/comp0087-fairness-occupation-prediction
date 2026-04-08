@@ -1,0 +1,105 @@
+Model: roberta
+
+=== Most stable professions (masked vs unmasked) ===
+professor: shared=10, masked_only=0, unmasked_only=0, shared_ratio=1.00
+accountant: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+architect: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+attorney: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+psychologist: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+teacher: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+journalist: shared=8, masked_only=2, unmasked_only=2, shared_ratio=0.67
+photographer: shared=8, masked_only=2, unmasked_only=2, shared_ratio=0.67
+poet: shared=8, masked_only=2, unmasked_only=2, shared_ratio=0.67
+surgeon: shared=8, masked_only=2, unmasked_only=2, shared_ratio=0.67
+
+=== Least stable professions (masked vs unmasked) ===
+comedian: shared=5, masked_only=5, unmasked_only=5, shared_ratio=0.33
+dentist: shared=5, masked_only=5, unmasked_only=5, shared_ratio=0.33
+composer: shared=6, masked_only=4, unmasked_only=4, shared_ratio=0.43
+model: shared=6, masked_only=4, unmasked_only=4, shared_ratio=0.43
+software engineer: shared=6, masked_only=4, unmasked_only=4, shared_ratio=0.43
+dietitian: shared=7, masked_only=3, unmasked_only=3, shared_ratio=0.54
+filmmaker: shared=7, masked_only=3, unmasked_only=3, shared_ratio=0.54
+nurse: shared=7, masked_only=3, unmasked_only=3, shared_ratio=0.54
+painter: shared=7, masked_only=3, unmasked_only=3, shared_ratio=0.54
+physician: shared=7, masked_only=3, unmasked_only=3, shared_ratio=0.54
+
+=== Strongest token increases after masking ===
+professor | university: unmasked=105.029, masked=302.846, diff=197.817
+professor | research: unmasked=333.323, masked=514.198, diff=180.875
+physician | medicine: unmasked=166.640, masked=292.246, diff=125.606
+photographer | photography: unmasked=126.002, masked=239.559, diff=113.557
+professor | interests: unmasked=48.420, masked=95.442, diff=47.022
+physician | practices: unmasked=179.336, masked=224.642, diff=45.306
+surgeon | surgery: unmasked=51.061, masked=95.646, diff=44.584
+attorney | law: unmasked=143.610, masked=182.205, diff=38.595
+physician | specializes: unmasked=0.000, masked=38.290, diff=38.290
+professor | teaching: unmasked=40.566, masked=77.846, diff=37.280
+
+=== Strongest token decreases after masking ===
+professor | ph.d: unmasked=170.484, masked=91.706, diff=-78.778
+physician | affiliated: unmasked=68.779, masked=0.000, diff=-68.779
+composer | short: unmasked=25.485, masked=0.000, diff=-25.485
+professor | phd: unmasked=119.195, masked=94.085, diff=-25.110
+nurse | graduated: unmasked=24.914, masked=0.000, diff=-24.914
+physician | credentials: unmasked=23.877, masked=0.000, diff=-23.877
+dentist | practices: unmasked=19.631, masked=0.000, diff=-19.631
+physician | practice: unmasked=19.616, masked=0.000, diff=-19.616
+attorney | legal: unmasked=49.470, masked=31.692, diff=-17.778
+dietitian | dietitian: unmasked=27.808, masked=14.472, diff=-13.336
+
+=== Professions with largest overall token shift ===
+professor: total_abs_shift=640.843
+physician: total_abs_shift=432.914
+photographer: total_abs_shift=250.010
+dentist: total_abs_shift=135.127
+attorney: total_abs_shift=133.939
+nurse: total_abs_shift=123.898
+composer: total_abs_shift=104.280
+surgeon: total_abs_shift=101.819
+teacher: total_abs_shift=86.394
+painter: total_abs_shift=82.006
+
+=== Most stable profession+gender groups ===
+professor | M: shared=10, masked_only=0, unmasked_only=0, shared_ratio=1.00
+teacher | F: shared=10, masked_only=0, unmasked_only=0, shared_ratio=1.00
+accountant | M: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+attorney | F: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+professor | F: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+surgeon | M: shared=9, masked_only=1, unmasked_only=1, shared_ratio=0.82
+architect | M: shared=8, masked_only=2, unmasked_only=2, shared_ratio=0.67
+attorney | M: shared=8, masked_only=2, unmasked_only=2, shared_ratio=0.67
+filmmaker | F: shared=8, masked_only=2, unmasked_only=2, shared_ratio=0.67
+filmmaker | M: shared=8, masked_only=2, unmasked_only=2, shared_ratio=0.67
+
+=== Least stable profession+gender groups ===
+dietitian | M: shared=1, masked_only=9, unmasked_only=8, shared_ratio=0.06
+comedian | F: shared=4, masked_only=6, unmasked_only=6, shared_ratio=0.25
+model | M: shared=4, masked_only=6, unmasked_only=6, shared_ratio=0.25
+comedian | M: shared=5, masked_only=5, unmasked_only=5, shared_ratio=0.33
+dentist | M: shared=5, masked_only=5, unmasked_only=5, shared_ratio=0.33
+software engineer | F: shared=5, masked_only=5, unmasked_only=5, shared_ratio=0.33
+composer | F: shared=6, masked_only=4, unmasked_only=4, shared_ratio=0.43
+dentist | F: shared=6, masked_only=4, unmasked_only=4, shared_ratio=0.43
+journalist | M: shared=6, masked_only=4, unmasked_only=4, shared_ratio=0.43
+nurse | M: shared=6, masked_only=4, unmasked_only=4, shared_ratio=0.43
+
+=== Explicit gender-token comparison ===
+titles | mrs: unmasked=2.107, masked=0.000, diff=-2.107
+all_gender_tokens | mrs: unmasked=2.107, masked=0.000, diff=-2.107
+gendered_nouns | sister: unmasked=1.126, masked=0.000, diff=-1.126
+all_gender_tokens | sister: unmasked=1.126, masked=0.000, diff=-1.126
+gendered_nouns | husband: unmasked=0.972, masked=0.000, diff=-0.972
+all_gender_tokens | husband: unmasked=0.972, masked=0.000, diff=-0.972
+gendered_nouns | wife: unmasked=0.777, masked=0.000, diff=-0.777
+all_gender_tokens | wife: unmasked=0.777, masked=0.000, diff=-0.777
+gendered_nouns | father: unmasked=0.646, masked=0.000, diff=-0.646
+all_gender_tokens | father: unmasked=0.646, masked=0.000, diff=-0.646
+gendered_nouns | mom: unmasked=0.641, masked=0.000, diff=-0.641
+all_gender_tokens | mom: unmasked=0.641, masked=0.000, diff=-0.641
+gendered_nouns | daughter: unmasked=0.553, masked=0.000, diff=-0.553
+all_gender_tokens | daughter: unmasked=0.553, masked=0.000, diff=-0.553
+gendered_nouns | mother: unmasked=0.419, masked=0.000, diff=-0.419
+all_gender_tokens | mother: unmasked=0.419, masked=0.000, diff=-0.419
+gendered_nouns | son: unmasked=0.320, masked=0.000, diff=-0.320
+all_gender_tokens | son: unmasked=0.320, masked=0.000, diff=-0.320

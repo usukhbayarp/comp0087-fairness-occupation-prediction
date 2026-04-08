@@ -1,0 +1,11 @@
+profession,gender,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens,shared_ratio
+attorney,M,10,0,0,"attorney, bar, clients, counsel, firm, law, legal, litigation, matters, practice",,,1.0
+filmmaker,M,9,1,1,"cinematographer, directed, documentary, feature, film, filmmaker, filmmaking, films, short",screened,production,0.8181818181818182
+journalist,F,9,1,1,"articles, editor, journalism, journalist, news, publications, reported, reporting, writing",media,journalists,0.8181818181818182
+photographer,F,9,1,1,"art, photo, photographer, photographic, photographing, photographs, photography, photos, shooting",work,photojournalism,0.8181818181818182
+photographer,M,9,1,1,"camera, images, photograph, photographer, photographic, photographs, photography, photos, shoots",work,photographers,0.8181818181818182
+professor,F,9,1,1,"doctorate, focuses, interests, phd, professor, research, studies, teaches, university",faculty,author,0.8181818181818182
+surgeon,M,9,1,1,"hospital, medical, medicine, neurosurgery, orthopaedic, practice, practices, surgeon, surgery",surgical,surgeries,0.8181818181818182
+teacher,F,9,1,1,"classroom, education, schools, student, students, taught, teacher, teachers, teaching",school,educators,0.8181818181818182
+comedian,F,8,2,2,"adam, animated, comedian, comedy, local, mtv, stand, violence","nussbaum, voicing","festivals, girl",0.6666666666666666
+dentist,F,8,2,2,"associated, clinic, dental, dentistry, dentists, denture, licence, maxillofacial","oral, patient","bds, dentist",0.6666666666666666

@@ -1,0 +1,41 @@
+profession,gender,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens
+accountant,F,6,4,4,"accountant, accounting, accounts, families, financial, tax","receivables, treasurer, wisconsin, years","aged, businesses, cpas, works"
+accountant,M,6,4,4,"accountancy, accountants, accounting, finance, financial, kpmg","cfo, company, degree, pricewaterhousecoopers","accounts, firm, taxes, while"
+architect,F,5,5,5,"architect, architects, architectural, architecture, design","board, building, buildings, progressive, techniques","business, construction, information, sustainable, symantec"
+architect,M,6,4,4,"architect, architects, architectural, architecture, design, technical","building, buildings, firms, microsoft","construction, ellenzweig, firm, solutions"
+attorney,F,7,3,3,"attorney, clients, juris, law, legal, litigation, represents","firm, focuses, practice","cases, counsel, matters"
+attorney,M,10,0,0,"attorney, bar, clients, counsel, firm, law, legal, litigation, matters, practice",,
+comedian,F,8,2,2,"adam, animated, comedian, comedy, local, mtv, stand, violence","nussbaum, voicing","festivals, girl"
+comedian,M,7,3,3,"comedians, comedy, jokes, performed, resonates, stand, television","fool, pranks, season","april, funny, seasonal"
+composer,F,7,3,3,"composer, compositions, electronic, ensemble, music, musical, scores","albums, ambient, textures","performed, quartet, recorded"
+composer,M,6,4,4,"composer, composing, composition, music, musical, orchestral","compositions, score, sounds, stravinsky","composed, electronica, film, scored"
+dentist,F,8,2,2,"associated, clinic, dental, dentistry, dentists, denture, licence, maxillofacial","oral, patient","bds, dentist"
+dentist,M,7,3,3,"dental, dentist, dentistry, dentists, patients, specialties, years","indian, licence, practicing","bds, clinic, practising"
+dietitian,F,8,2,2,"diet, dietetic, dietitian, diets, digestive, nutrition, nutritional, registered","doctors, food","dietitians, experiences"
+dietitian,M,3,7,7,"holistic, nutrition, weight","diet, diets, expert, food, health, nutritional, symptoms","addressing, coach, concerns, diabetes, digital, genetics, preventive"
+filmmaker,F,7,3,3,"directed, documentary, film, filmmaker, filmmaking, films, short","directorial, documentaries, screen","feature, forthcoming, national"
+filmmaker,M,9,1,1,"cinematographer, directed, documentary, feature, film, filmmaker, filmmaking, films, short",screened,production
+journalist,F,9,1,1,"articles, editor, journalism, journalist, news, publications, reported, reporting, writing",media,journalists
+journalist,M,7,3,3,"editor, journalism, journalist, journalists, news, reported, written","newspapers, reporter, writer","articles, book, covered"
+model,F,8,2,2,"born, fashion, freeones, gallery, model, modeling, modelling, playboy","ranked, runway","designers, photoshoots"
+model,M,4,6,6,"model, modeling, modelling, runway","185cm, experiences, fashion, films, include, performed","calendar, demonstrated, events, famous, professional, roles"
+nurse,F,5,5,5,"experiences, honors, nurse, nursing, practitioner","especially, health, hospital, hospitals, medical","career, degree, graduated, medicine, professional"
+nurse,M,5,5,5,"emergency, experiences, nurse, nurses, nursing","bgs, especially, health, hospital, virginia","degree, experience, graduated, honors, practitioner"
+painter,F,5,5,5,"art, bfa, gallery, painting, paintings","artist, painter, paints, studio, work","colors, exhibited, galleries, paint, studied"
+painter,M,6,4,4,"art, gallery, paint, painting, paintings, studio","drawing, thrift, work, works","artist, exhibited, exhibition, oil"
+photographer,F,9,1,1,"art, photo, photographer, photographic, photographing, photographs, photography, photos, shooting",work,photojournalism
+photographer,M,9,1,1,"camera, images, photograph, photographer, photographic, photographs, photography, photos, shoots",work,photographers
+physician,F,7,3,3,"hospital, medical, medicine, physician, practice, practices, specializes","affiliated, orthopaedic, pediatric","professional, school, years"
+physician,M,7,3,3,"graduate, graduated, hospital, medical, medicine, physician, practices","affiliated, attended, license","professional, school, university"
+poet,F,6,4,4,"english, mfa, poems, poet, poetry, writing","chapbook, prose, published, review","books, professor, symbolism, works"
+poet,M,7,3,3,"english, lyricism, poem, poems, poetry, published, writing","long, poet, pure","creative, playwrights, writer"
+professor,F,9,1,1,"doctorate, focuses, interests, phd, professor, research, studies, teaches, university",faculty,author
+professor,M,8,2,2,"faculty, focuses, interests, phd, professor, research, studies, university","doctoral, journal","received, teaches"
+psychologist,F,8,2,2,"clinical, counselling, psychological, psychologist, psychology, psychotherapy, therapists, therapy","doctors, psychodynamic","depression, experiences"
+psychologist,M,6,4,4,"clinical, counseling, psychological, psychologist, psychology, therapist","psychologists, psychotherapy, therapy, treatment","depression, experiences, professional, recuperating"
+software engineer,F,6,4,4,"analysis, engineering, ibm, javascript, node, team","development, joined, programming, symantec","android, code2040, database, software"
+software engineer,M,8,2,2,"architecture, code, developer, development, engineering, intel, programming, software","computer, linux","electrical, ibm"
+surgeon,F,7,3,3,"medical, medicine, orthopaedic, practice, practices, surgeon, surgery","cancer, hospital, wound","mbbs, surgeons, surgeries"
+surgeon,M,9,1,1,"hospital, medical, medicine, neurosurgery, orthopaedic, practice, practices, surgeon, surgery",surgical,surgeries
+teacher,F,9,1,1,"classroom, education, schools, student, students, taught, teacher, teachers, teaching",school,educators
+teacher,M,8,2,2,"classes, curriculum, school, students, teacher, teachers, teaches, teaching","class, classroom","education, ratemyteachers"

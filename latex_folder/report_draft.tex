@@ -367,6 +367,8 @@ We evaluate our models across three dimensions: task performance
 (§6.1), gender fairness (§6.2), and token-level proxy bias
 mechanisms (§6.3).
 
+The following results are descriptive of only the 3,000-sample evaluation subset, which may introduce some noise.
+
 \subsection{Task Performance}
 
 \begin{table}[h]
@@ -376,12 +378,12 @@ mechanisms (§6.3).
 \toprule
 \textbf{Model} & \textbf{C.} & \textbf{Acc.} & \textbf{F1} \\
 \midrule
-Pythia-160M FT & U & 0.082 & 0.020 \\
-Pythia-160M FT & M & 0.124 & 0.023 \\
-Pythia-410M FT & U & 0.579 & 0.320 \\
-Pythia-410M FT & M & 0.575 & 0.328 \\
-Pythia-1.4B FT & U & 0.876 & 0.849 \\
-Pythia-1.4B FT & M & 0.875 & 0.847 \\
+Pythia-160M FT & U & 0.079 & 0.020 \\
+Pythia-160M FT & M & 0.119 & 0.023 \\
+Pythia-410M FT & U & 0.581 & 0.323 \\
+Pythia-410M FT & M & 0.576 & 0.325 \\
+Pythia-1.4B FT & U & 0.877 & 0.848 \\
+Pythia-1.4B FT & M & 0.877 & 0.852 \\
 \midrule
 DistilBERT FT  & U & 0.875 & 0.843 \\
 DistilBERT FT  & M & 0.872 & 0.844 \\
@@ -402,16 +404,13 @@ Pythia-1.4B few-shot    & U & 0.558 & 0.578 \\
 Pythia-1.4B few-shot    & M & 0.558 & 0.577 \\
 \bottomrule
 \end{tabular}
-\caption{Task performance. U=unmasked; M=masked.}
+\caption{Task performance results. U=unmasked; M=masked.}
 \end{table}
 
-Pythia-1.4B fine-tuned reaches F1\,=\,0.849, matching encoder
-baselines (RoBERTa 0.851, DistilBERT 0.843); Pythia-160M fine-tuned
-fails (F1\,$\approx$\,0.02), likely due to label-space collapse under
-LoRA at insufficient capacity. Zero-shot F1 scales from 0.23 (160M)
-to 0.57 (1.4B); few-shot hurts at smaller scales (410M: 0.557→0.391)
-but recovers at 1.4B (0.578), suggesting a minimum capacity threshold.
-Masking has negligible impact on task performance across all models.
+
+Pythia-1.4B fine-tuned (M) reaches F1\,=\,0.877, nearing encoder
+baselines (RoBERTa (M) 0.880, DistilBERT (M) 0.872); Pythia-160M fine-tuned fails (F1\,$\approx$\,0.02), likely due to label-space collapse under LoRA at insufficient capacity. Zero-shot F1 scales from 0.23 (160M)
+to 0.57 (1.4B); few-shot hurts at smaller scales (410M $\to$ 160M: 0.557 $\to$ 0.391) but recovers at 1.4B (0.578), suggesting a minimum capacity threshold. Masking has negligible impact on task performance across all models.
 
 \subsection{Fairness Results}
 \label{sec:fairness}
@@ -425,7 +424,7 @@ Masking has negligible impact on task performance across all models.
 \textbf{RoBERTa FT}     & \textbf{U} & \textbf{0.082} & \textbf{0.024} & \textbf{0.082} & \textbf{0.005} \\
 RoBERTa FT              & M & 0.063 & 0.022 & 0.063 & 0.004 \\
 \textbf{DistilBERT FT}  & \textbf{U} & \textbf{0.088} & \textbf{0.022} & \textbf{0.088} & \textbf{0.004} \\
-DistilBERT FT           & M & 0.071 & 0.021 & 0.071 & 0.004 \\
+DistilBERT FT           & M & 0.071 & 0.022 & 0.071 & 0.004 \\
 \textbf{Pythia-1.4B FT} & \textbf{U} & \textbf{0.086} & \textbf{0.023} & \textbf{0.086} & \textbf{0.004} \\
 Pythia-1.4B FT          & M & 0.080 & 0.022 & 0.080 & 0.003 \\
 \textbf{Pythia-1.4B FS} & \textbf{U} & \textbf{0.121} & \textbf{0.031} & \textbf{0.121} & \textbf{0.016} \\
@@ -448,12 +447,14 @@ Pythia-160m 0s          & M & 0.092 & 0.027 & 0.092 & 0.024 \\
 \end{tabular}
 
 \caption{Fairness metrics (EO = Equalized Odds gap, DP = Demographic Parity gap, TPR = True Positive Rate gap, FPR = False Positive Rate gap) for each model, both masked (M) and unmasked (U). Row label abbreviations: FT = fine-tuned; FS = few-shot; 0s = zero-shot.}
+
 \end{table}
+
 
 \begin{figure}[h!]
 \centering
 \includegraphics[width=\linewidth]{pareto_frontier_labelled.png}
-\caption{Pareto frontier of Macro-F1 vs. Equalized Odds gap. RoBERTa masked fine-tuned, closely followed by Pythia-1.4B masked fine-tuned, is the most Pareto-optimal model. The generative models which are masked and with largest capacity, as well as the baseline encoders, strongly dominate lower-capacity, zero-shot and few-shot alternatives.}
+\caption{Pareto frontier of Macro-F1 vs. Equalized Odds gap. RoBERTa masked fine-tuned, followed by DistilBERT, is the most Pareto-optimal model. The generative models which are masked and with largest capacity, as well as the baseline encoders, strongly dominate lower-capacity, zero-shot and few-shot alternatives.}
 \label{fig:pareto}
 \end{figure}
 
@@ -1285,17 +1286,17 @@ For the 3000 test samples, the EO and DP gap for every occupation and every mode
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.094 & 0.002 & 0.012 & Pythia-410m FS & U & 0.167 & 0.002 & 0.009 \\
-DistilBERT FT & M & 0.062 & 0.000 & 0.010 & Pythia-410m FS & M & 0.167 & 0.002 & 0.009 \\
+DistilBERT FT & M & 0.031 & 0.000 & 0.009 & Pythia-410m FS & M & 0.167 & 0.002 & 0.009 \\
 RoBERTa FT & U & 0.062 & 0.000 & 0.009 & Pythia-410m 0s & U & 0.073 & 0.001 & 0.004 \\
-RoBERTa FT & M & 0.031 & 0.000 & 0.009 & Pythia-410m 0s & M & 0.073 & 0.000 & 0.003 \\
+RoBERTa FT & M & 0.010 & 0.001 & 0.008 & Pythia-410m 0s & M & 0.073 & 0.000 & 0.003 \\
 Pythia-1.4B FT & U & 0.229 & 0.002 & 0.013 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.229 & 0.002 & 0.013 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.333 & 0.004 & 0.015 & Pythia-160m FS & U & 0.083 & 0.000 & 0.001 \\
 Pythia-1.4B FS & M & 0.333 & 0.005 & 0.016 & Pythia-160m FS & M & 0.083 & 0.000 & 0.001 \\
 Pythia-1.4B 0s & U & 0.260 & 0.001 & 0.001 & Pythia-160m 0s & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B 0s & M & 0.260 & 0.001 & 0.001 & Pythia-160m 0s & M & 0.000 & 0.000 & 0.000 \\
-Pythia-410m FT & U & 0.062 & 0.003 & 0.001 &  & & & &  \\
-Pythia-410m FT & M & 0.042 & 0.001 & 0.003 &  & & & &  \\
+Pythia-410m FT & U & 0.062 & 0.003 & 0.001 & & & & & \\
+Pythia-410m FT & M & 0.042 & 0.001 & 0.003 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1308,17 +1309,17 @@ Pythia-410m FT & M & 0.042 & 0.001 & 0.003 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.242 & 0.006 & 0.017 & Pythia-410m FS & U & 0.118 & 0.010 & 0.021 \\
-DistilBERT FT & M & 0.206 & 0.007 & 0.017 & Pythia-410m FS & M & 0.170 & 0.010 & 0.022 \\
+DistilBERT FT & M & 0.134 & 0.008 & 0.019 & Pythia-410m FS & M & 0.170 & 0.010 & 0.022 \\
 RoBERTa FT & U & 0.173 & 0.008 & 0.020 & Pythia-410m 0s & U & 0.082 & 0.059 & 0.076 \\
-RoBERTa FT & M & 0.137 & 0.005 & 0.017 & Pythia-410m 0s & M & 0.099 & 0.060 & 0.077 \\
+RoBERTa FT & M & 0.156 & 0.007 & 0.020 & Pythia-410m 0s & M & 0.099 & 0.060 & 0.077 \\
 Pythia-1.4B FT & U & 0.209 & 0.005 & 0.017 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.175 & 0.003 & 0.016 & Pythia-160m FT & M & 0.000 & 0.002 & 0.002 \\
 Pythia-1.4B FS & U & 0.012 & 0.011 & 0.021 & Pythia-160m FS & U & 0.131 & 0.002 & 0.008 \\
 Pythia-1.4B FS & M & 0.012 & 0.010 & 0.020 & Pythia-160m FS & M & 0.114 & 0.001 & 0.006 \\
 Pythia-1.4B 0s & U & 0.135 & 0.002 & 0.005 & Pythia-160m 0s & U & 0.014 & 0.001 & 0.002 \\
 Pythia-1.4B 0s & M & 0.135 & 0.002 & 0.005 & Pythia-160m 0s & M & 0.050 & 0.001 & 0.003 \\
-Pythia-410m FT & U & 0.182 & 0.015 & 0.015 &  & & & &  \\
-Pythia-410m FT & M & 0.028 & 0.002 & 0.005 &  & & & &  \\
+Pythia-410m FT & U & 0.182 & 0.015 & 0.015 & & & & & \\
+Pythia-410m FT & M & 0.028 & 0.002 & 0.005 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1331,17 +1332,17 @@ Pythia-410m FT & M & 0.028 & 0.002 & 0.005 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.046 & 0.001 & 0.019 & Pythia-410m FS & U & 0.153 & 0.004 & 0.018 \\
-DistilBERT FT & M & 0.026 & 0.002 & 0.016 & Pythia-410m FS & M & 0.147 & 0.004 & 0.017 \\
+DistilBERT FT & M & 0.002 & 0.000 & 0.016 & Pythia-410m FS & M & 0.147 & 0.004 & 0.017 \\
 RoBERTa FT & U & 0.026 & 0.000 & 0.018 & Pythia-410m 0s & U & 0.202 & 0.008 & 0.037 \\
-RoBERTa FT & M & 0.026 & 0.002 & 0.016 & Pythia-410m 0s & M & 0.185 & 0.009 & 0.036 \\
+RoBERTa FT & M & 0.030 & 0.003 & 0.016 & Pythia-410m 0s & M & 0.185 & 0.009 & 0.036 \\
 Pythia-1.4B FT & U & 0.014 & 0.004 & 0.014 & Pythia-160m FT & U & 0.022 & 0.000 & 0.003 \\
 Pythia-1.4B FT & M & 0.020 & 0.001 & 0.017 & Pythia-160m FT & M & 0.002 & 0.002 & 0.002 \\
 Pythia-1.4B FS & U & 0.018 & 0.008 & 0.007 & Pythia-160m FS & U & 0.053 & 0.001 & 0.004 \\
 Pythia-1.4B FS & M & 0.018 & 0.008 & 0.007 & Pythia-160m FS & M & 0.046 & 0.001 & 0.003 \\
 Pythia-1.4B 0s & U & 0.065 & 0.005 & 0.001 & Pythia-160m 0s & U & 0.005 & 0.000 & 0.002 \\
 Pythia-1.4B 0s & M & 0.065 & 0.005 & 0.001 & Pythia-160m 0s & M & 0.012 & 0.001 & 0.003 \\
-Pythia-410m FT & U & 0.009 & 0.005 & 0.015 &  & & & &  \\
-Pythia-410m FT & M & 0.042 & 0.004 & 0.010 &  & & & &  \\
+Pythia-410m FT & U & 0.009 & 0.005 & 0.015 & & & & & \\
+Pythia-410m FT & M & 0.042 & 0.004 & 0.010 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1354,17 +1355,17 @@ Pythia-410m FT & M & 0.042 & 0.004 & 0.010 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.059 & 0.004 & 0.010 & Pythia-410m FS & U & 0.271 & 0.002 & 0.006 \\
-DistilBERT FT & M & 0.118 & 0.003 & 0.009 & Pythia-410m FS & M & 0.271 & 0.001 & 0.005 \\
+DistilBERT FT & M & 0.118 & 0.002 & 0.008 & Pythia-410m FS & M & 0.271 & 0.001 & 0.005 \\
 RoBERTa FT & U & 0.141 & 0.003 & 0.010 & Pythia-410m 0s & U & 0.271 & 0.001 & 0.005 \\
-RoBERTa FT & M & 0.059 & 0.002 & 0.009 & Pythia-410m 0s & M & 0.271 & 0.001 & 0.005 \\
+RoBERTa FT & M & 0.141 & 0.002 & 0.009 & Pythia-410m 0s & M & 0.271 & 0.001 & 0.005 \\
 Pythia-1.4B FT & U & 0.141 & 0.001 & 0.008 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.141 & 0.000 & 0.007 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.365 & 0.001 & 0.007 & Pythia-160m FS & U & 0.200 & 0.001 & 0.000 \\
 Pythia-1.4B FS & M & 0.365 & 0.001 & 0.007 & Pythia-160m FS & M & 0.200 & 0.000 & 0.001 \\
 Pythia-1.4B 0s & U & 0.047 & 0.000 & 0.002 & Pythia-160m 0s & U & 0.235 & 0.000 & 0.002 \\
 Pythia-1.4B 0s & M & 0.047 & 0.000 & 0.002 & Pythia-160m 0s & M & 0.235 & 0.000 & 0.002 \\
-Pythia-410m FT & U & 0.000 & 0.002 & 0.002 &  & & & &  \\
-Pythia-410m FT & M & 0.000 & 0.002 & 0.002 &  & & & &  \\
+Pythia-410m FT & U & 0.000 & 0.002 & 0.002 & & & & & \\
+Pythia-410m FT & M & 0.000 & 0.002 & 0.002 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1379,15 +1380,15 @@ Pythia-410m FT & M & 0.000 & 0.002 & 0.002 &  & & & &  \\
 DistilBERT FT & U & 0.025 & 0.001 & 0.015 & Pythia-410m FS & U & 0.152 & 0.003 & 0.011 \\
 DistilBERT FT & M & 0.025 & 0.001 & 0.015 & Pythia-410m FS & M & 0.152 & 0.005 & 0.013 \\
 RoBERTa FT & U & 0.003 & 0.000 & 0.013 & Pythia-410m 0s & U & 0.003 & 0.002 & 0.016 \\
-RoBERTa FT & M & 0.083 & 0.002 & 0.013 & Pythia-410m 0s & M & 0.003 & 0.003 & 0.016 \\
+RoBERTa FT & M & 0.054 & 0.001 & 0.014 & Pythia-410m 0s & M & 0.003 & 0.003 & 0.016 \\
 Pythia-1.4B FT & U & 0.025 & 0.001 & 0.015 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.054 & 0.000 & 0.015 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.162 & 0.006 & 0.019 & Pythia-160m FS & U & 0.051 & 0.001 & 0.003 \\
 Pythia-1.4B FS & M & 0.162 & 0.006 & 0.019 & Pythia-160m FS & M & 0.051 & 0.001 & 0.003 \\
 Pythia-1.4B 0s & U & 0.067 & 0.003 & 0.011 & Pythia-160m 0s & U & 0.051 & 0.001 & 0.002 \\
 Pythia-1.4B 0s & M & 0.067 & 0.003 & 0.011 & Pythia-160m 0s & M & 0.022 & 0.001 & 0.002 \\
-Pythia-410m FT & U & 0.165 & 0.004 & 0.004 &  & & & &  \\
-Pythia-410m FT & M & 0.025 & 0.001 & 0.002 &  & & & &  \\
+Pythia-410m FT & U & 0.165 & 0.004 & 0.004 & & & & & \\
+Pythia-410m FT & M & 0.025 & 0.001 & 0.002 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1400,17 +1401,17 @@ Pythia-410m FT & M & 0.025 & 0.001 & 0.002 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.057 & 0.002 & 0.030 & Pythia-410m FS & U & 0.016 & 0.000 & 0.026 \\
-DistilBERT FT & M & 0.057 & 0.002 & 0.030 & Pythia-410m FS & M & 0.016 & 0.001 & 0.027 \\
+DistilBERT FT & M & 0.080 & 0.002 & 0.029 & Pythia-410m FS & M & 0.016 & 0.001 & 0.027 \\
 RoBERTa FT & U & 0.068 & 0.002 & 0.029 & Pythia-410m 0s & U & 0.006 & 0.002 & 0.026 \\
-RoBERTa FT & M & 0.080 & 0.002 & 0.029 & Pythia-410m 0s & M & 0.006 & 0.002 & 0.025 \\
+RoBERTa FT & M & 0.057 & 0.002 & 0.030 & Pythia-410m 0s & M & 0.006 & 0.002 & 0.025 \\
 Pythia-1.4B FT & U & 0.068 & 0.002 & 0.029 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.068 & 0.002 & 0.029 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.045 & 0.004 & 0.031 & Pythia-160m FS & U & 0.201 & 0.001 & 0.021 \\
 Pythia-1.4B FS & M & 0.045 & 0.004 & 0.030 & Pythia-160m FS & M & 0.198 & 0.001 & 0.024 \\
 Pythia-1.4B 0s & U & 0.019 & 0.001 & 0.028 & Pythia-160m 0s & U & 0.016 & 0.000 & 0.016 \\
 Pythia-1.4B 0s & M & 0.019 & 0.000 & 0.027 & Pythia-160m 0s & M & 0.027 & 0.001 & 0.016 \\
-Pythia-410m FT & U & 0.082 & 0.002 & 0.019 &  & & & &  \\
-Pythia-410m FT & M & 0.053 & 0.001 & 0.020 &  & & & &  \\
+Pythia-410m FT & U & 0.082 & 0.002 & 0.019 & & & & & \\
+Pythia-410m FT & M & 0.053 & 0.001 & 0.020 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1423,17 +1424,17 @@ Pythia-410m FT & M & 0.053 & 0.001 & 0.020 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.103 & 0.000 & 0.018 & Pythia-410m FS & U & 0.552 & 0.002 & 0.010 \\
-DistilBERT FT & M & 0.103 & 0.000 & 0.018 & Pythia-410m FS & M & 0.552 & 0.002 & 0.010 \\
+DistilBERT FT & M & 0.034 & 0.000 & 0.019 & Pythia-410m FS & M & 0.552 & 0.002 & 0.010 \\
 RoBERTa FT & U & 0.069 & 0.001 & 0.019 & Pythia-410m 0s & U & 0.586 & 0.001 & 0.013 \\
-RoBERTa FT & M & 0.034 & 0.000 & 0.019 & Pythia-410m 0s & M & 0.552 & 0.001 & 0.012 \\
+RoBERTa FT & M & 0.103 & 0.000 & 0.018 & Pythia-410m 0s & M & 0.552 & 0.001 & 0.012 \\
 Pythia-1.4B FT & U & 0.069 & 0.001 & 0.019 & Pythia-160m FT & U & 0.190 & 0.002 & 0.003 \\
 Pythia-1.4B FT & M & 0.069 & 0.000 & 0.018 & Pythia-160m FT & M & 0.017 & 0.011 & 0.013 \\
 Pythia-1.4B FS & U & 0.103 & 0.010 & 0.028 & Pythia-160m FS & U & 0.000 & 0.003 & 0.003 \\
 Pythia-1.4B FS & M & 0.103 & 0.010 & 0.028 & Pythia-160m FS & M & 0.000 & 0.004 & 0.004 \\
 Pythia-1.4B 0s & U & 0.862 & 0.000 & 0.018 & Pythia-160m 0s & U & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B 0s & M & 0.862 & 0.000 & 0.018 & Pythia-160m 0s & M & 0.000 & 0.001 & 0.001 \\
-Pythia-410m FT & U & 0.034 & 0.006 & 0.007 &  & & & &  \\
-Pythia-410m FT & M & 0.034 & 0.003 & 0.004 &  & & & &  \\
+Pythia-410m FT & U & 0.034 & 0.006 & 0.007 & & & & & \\
+Pythia-410m FT & M & 0.034 & 0.003 & 0.004 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1446,17 +1447,17 @@ Pythia-410m FT & M & 0.034 & 0.003 & 0.004 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.079 & 0.003 & 0.007 & Pythia-410m FS & U & 0.071 & 0.003 & 0.002 \\
-DistilBERT FT & M & 0.079 & 0.004 & 0.008 & Pythia-410m FS & M & 0.071 & 0.003 & 0.002 \\
+DistilBERT FT & M & 0.021 & 0.003 & 0.009 & Pythia-410m FS & M & 0.071 & 0.003 & 0.002 \\
 RoBERTa FT & U & 0.064 & 0.003 & 0.008 & Pythia-410m 0s & U & 0.236 & 0.001 & 0.006 \\
-RoBERTa FT & M & 0.150 & 0.002 & 0.006 & Pythia-410m 0s & M & 0.157 & 0.001 & 0.005 \\
+RoBERTa FT & M & 0.043 & 0.003 & 0.009 & Pythia-410m 0s & M & 0.157 & 0.001 & 0.005 \\
 Pythia-1.4B FT & U & 0.036 & 0.001 & 0.008 & Pythia-160m FT & U & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FT & M & 0.014 & 0.002 & 0.009 & Pythia-160m FT & M & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FS & U & 0.093 & 0.001 & 0.004 & Pythia-160m FS & U & 0.114 & 0.000 & 0.001 \\
 Pythia-1.4B FS & M & 0.143 & 0.002 & 0.004 & Pythia-160m FS & M & 0.086 & 0.000 & 0.001 \\
 Pythia-1.4B 0s & U & 0.071 & 0.000 & 0.001 & Pythia-160m 0s & U & 0.029 & 0.000 & 0.001 \\
 Pythia-1.4B 0s & M & 0.071 & 0.000 & 0.001 & Pythia-160m 0s & M & 0.000 & 0.000 & 0.000 \\
-Pythia-410m FT & U & 0.029 & 0.003 & 0.003 &  & & & &  \\
-Pythia-410m FT & M & 0.029 & 0.002 & 0.002 &  & & & &  \\
+Pythia-410m FT & U & 0.029 & 0.003 & 0.003 & & & & & \\
+Pythia-410m FT & M & 0.029 & 0.002 & 0.002 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1469,17 +1470,17 @@ Pythia-410m FT & M & 0.029 & 0.002 & 0.002 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.076 & 0.003 & 0.012 & Pythia-410m FS & U & 0.106 & 0.037 & 0.047 \\
-DistilBERT FT & M & 0.064 & 0.006 & 0.009 & Pythia-410m FS & M & 0.092 & 0.025 & 0.035 \\
+DistilBERT FT & M & 0.063 & 0.002 & 0.013 & Pythia-410m FS & M & 0.092 & 0.025 & 0.035 \\
 RoBERTa FT & U & 0.111 & 0.001 & 0.019 & Pythia-410m 0s & U & 0.025 & 0.018 & 0.025 \\
-RoBERTa FT & M & 0.040 & 0.003 & 0.010 & Pythia-410m 0s & M & 0.047 & 0.021 & 0.027 \\
+RoBERTa FT & M & 0.048 & 0.004 & 0.010 & Pythia-410m 0s & M & 0.047 & 0.021 & 0.027 \\
 Pythia-1.4B FT & U & 0.055 & 0.002 & 0.013 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.033 & 0.007 & 0.006 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.103 & 0.036 & 0.030 & Pythia-160m FS & U & 0.021 & 0.075 & 0.077 \\
 Pythia-1.4B FS & M & 0.090 & 0.034 & 0.028 & Pythia-160m FS & M & 0.007 & 0.085 & 0.086 \\
 Pythia-1.4B 0s & U & 0.350 & 0.004 & 0.028 & Pythia-160m 0s & U & 0.137 & 0.002 & 0.011 \\
 Pythia-1.4B 0s & M & 0.350 & 0.004 & 0.028 & Pythia-160m 0s & M & 0.074 & 0.002 & 0.008 \\
-Pythia-410m FT & U & 0.009 & 0.002 & 0.003 &  & & & &  \\
-Pythia-410m FT & M & 0.043 & 0.006 & 0.002 &  & & & &  \\
+Pythia-410m FT & U & 0.009 & 0.002 & 0.003 & & & & & \\
+Pythia-410m FT & M & 0.043 & 0.006 & 0.002 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1492,17 +1493,17 @@ Pythia-410m FT & M & 0.043 & 0.006 & 0.002 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.173 & 0.002 & 0.028 & Pythia-410m FS & U & 0.127 & 0.014 & 0.001 \\
-DistilBERT FT & M & 0.153 & 0.002 & 0.028 & Pythia-410m FS & M & 0.127 & 0.014 & 0.001 \\
+DistilBERT FT & M & 0.304 & 0.000 & 0.028 & Pythia-410m FS & M & 0.127 & 0.014 & 0.001 \\
 RoBERTa FT & U & 0.153 & 0.002 & 0.023 & Pythia-410m 0s & U & 0.227 & 0.001 & 0.011 \\
-RoBERTa FT & M & 0.173 & 0.003 & 0.030 & Pythia-410m 0s & M & 0.227 & 0.001 & 0.011 \\
+RoBERTa FT & M & 0.062 & 0.001 & 0.027 & Pythia-410m 0s & M & 0.227 & 0.001 & 0.011 \\
 Pythia-1.4B FT & U & 0.173 & 0.001 & 0.027 & Pythia-160m FT & U & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FT & M & 0.082 & 0.001 & 0.027 & Pythia-160m FT & M & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FS & U & 0.233 & 0.004 & 0.031 & Pythia-160m FS & U & 0.069 & 0.016 & 0.012 \\
 Pythia-1.4B FS & M & 0.253 & 0.005 & 0.032 & Pythia-160m FS & M & 0.049 & 0.016 & 0.013 \\
 Pythia-1.4B 0s & U & 0.067 & 0.004 & 0.009 & Pythia-160m 0s & U & 0.162 & 0.002 & 0.002 \\
 Pythia-1.4B 0s & M & 0.067 & 0.004 & 0.009 & Pythia-160m 0s & M & 0.031 & 0.002 & 0.000 \\
-Pythia-410m FT & U & 0.209 & 0.003 & 0.008 &  & & & &  \\
-Pythia-410m FT & M & 0.380 & 0.003 & 0.010 &  & & & &  \\
+Pythia-410m FT & U & 0.209 & 0.003 & 0.008 & & & & & \\
+Pythia-410m FT & M & 0.380 & 0.003 & 0.010 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1515,17 +1516,17 @@ Pythia-410m FT & M & 0.380 & 0.003 & 0.010 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.060 & 0.012 & 0.086 & Pythia-410m FS & U & 0.179 & 0.029 & 0.085 \\
-DistilBERT FT & M & 0.129 & 0.014 & 0.076 & Pythia-410m FS & M & 0.235 & 0.028 & 0.085 \\
+DistilBERT FT & M & 0.074 & 0.006 & 0.078 & Pythia-410m FS & M & 0.235 & 0.028 & 0.085 \\
 RoBERTa FT & U & 0.067 & 0.009 & 0.084 & Pythia-410m 0s & U & 0.056 & 0.020 & 0.084 \\
-RoBERTa FT & M & 0.072 & 0.010 & 0.076 & Pythia-410m 0s & M & 0.034 & 0.021 & 0.083 \\
+RoBERTa FT & M & 0.019 & 0.011 & 0.082 & Pythia-410m 0s & M & 0.034 & 0.021 & 0.083 \\
 Pythia-1.4B FT & U & 0.100 & 0.012 & 0.086 & Pythia-160m FT & U & 0.056 & 0.001 & 0.000 \\
 Pythia-1.4B FT & M & 0.034 & 0.009 & 0.079 & Pythia-160m FT & M & 0.033 & 0.001 & 0.000 \\
 Pythia-1.4B FS & U & 0.024 & 0.062 & 0.123 & Pythia-160m FS & U & 0.137 & 0.004 & 0.017 \\
 Pythia-1.4B FS & M & 0.024 & 0.062 & 0.123 & Pythia-160m FS & M & 0.107 & 0.006 & 0.015 \\
 Pythia-1.4B 0s & U & 0.660 & 0.014 & 0.085 & Pythia-160m 0s & U & 0.260 & 0.006 & 0.030 \\
 Pythia-1.4B 0s & M & 0.660 & 0.015 & 0.086 & Pythia-160m 0s & M & 0.260 & 0.007 & 0.031 \\
-Pythia-410m FT & U & 0.113 & 0.005 & 0.040 &  & & & &  \\
-Pythia-410m FT & M & 0.232 & 0.004 & 0.037 &  & & & &  \\
+Pythia-410m FT & U & 0.113 & 0.005 & 0.040 & & & & & \\
+Pythia-410m FT & M & 0.232 & 0.004 & 0.037 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1538,17 +1539,17 @@ Pythia-410m FT & M & 0.232 & 0.004 & 0.037 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.178 & 0.001 & 0.005 & Pythia-410m FS & U & 0.044 & 0.003 & 0.004 \\
-DistilBERT FT & M & 0.143 & 0.000 & 0.004 & Pythia-410m FS & M & 0.025 & 0.003 & 0.002 \\
+DistilBERT FT & M & 0.046 & 0.002 & 0.000 & Pythia-410m FS & M & 0.025 & 0.003 & 0.002 \\
 RoBERTa FT & U & 0.057 & 0.003 & 0.002 & Pythia-410m 0s & U & 0.030 & 0.000 & 0.001 \\
-RoBERTa FT & M & 0.015 & 0.002 & 0.003 & Pythia-410m 0s & M & 0.004 & 0.001 & 0.000 \\
+RoBERTa FT & M & 0.046 & 0.001 & 0.000 & Pythia-410m 0s & M & 0.004 & 0.001 & 0.000 \\
 Pythia-1.4B FT & U & 0.043 & 0.000 & 0.002 & Pythia-160m FT & U & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FT & M & 0.078 & 0.001 & 0.001 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.001 & 0.000 & 0.000 & Pythia-160m FS & U & 0.018 & 0.001 & 0.001 \\
 Pythia-1.4B FS & M & 0.001 & 0.000 & 0.000 & Pythia-160m FS & M & 0.053 & 0.002 & 0.001 \\
 Pythia-1.4B 0s & U & 0.105 & 0.003 & 0.000 & Pythia-160m 0s & U & 0.065 & 0.017 & 0.015 \\
 Pythia-1.4B 0s & M & 0.139 & 0.003 & 0.001 & Pythia-160m 0s & M & 0.096 & 0.020 & 0.017 \\
-Pythia-410m FT & U & 0.059 & 0.003 & 0.004 &  & & & &  \\
-Pythia-410m FT & M & 0.018 & 0.004 & 0.004 &  & & & &  \\
+Pythia-410m FT & U & 0.059 & 0.003 & 0.004 & & & & & \\
+Pythia-410m FT & M & 0.018 & 0.004 & 0.004 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1561,17 +1562,17 @@ Pythia-410m FT & M & 0.018 & 0.004 & 0.004 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.013 & 0.001 & 0.023 & Pythia-410m FS & U & 0.079 & 0.044 & 0.061 \\
-DistilBERT FT & M & 0.018 & 0.003 & 0.019 & Pythia-410m FS & M & 0.065 & 0.038 & 0.055 \\
+DistilBERT FT & M & 0.001 & 0.002 & 0.022 & Pythia-410m FS & M & 0.065 & 0.038 & 0.055 \\
 RoBERTa FT & U & 0.054 & 0.002 & 0.029 & Pythia-410m 0s & U & 0.040 & 0.004 & 0.026 \\
-RoBERTa FT & M & 0.089 & 0.002 & 0.026 & Pythia-410m 0s & M & 0.031 & 0.003 & 0.024 \\
+RoBERTa FT & M & 0.030 & 0.002 & 0.023 & Pythia-410m 0s & M & 0.031 & 0.003 & 0.024 \\
 Pythia-1.4B FT & U & 0.065 & 0.000 & 0.026 & Pythia-160m FT & U & 0.014 & 0.002 & 0.003 \\
 Pythia-1.4B FT & M & 0.028 & 0.000 & 0.025 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.019 & 0.014 & 0.033 & Pythia-160m FS & U & 0.084 & 0.003 & 0.013 \\
 Pythia-1.4B FS & M & 0.033 & 0.015 & 0.035 & Pythia-160m FS & M & 0.123 & 0.001 & 0.018 \\
 Pythia-1.4B 0s & U & 0.057 & 0.008 & 0.008 & Pythia-160m 0s & U & 0.062 & 0.000 & 0.003 \\
 Pythia-1.4B 0s & M & 0.057 & 0.008 & 0.008 & Pythia-160m 0s & M & 0.035 & 0.001 & 0.004 \\
-Pythia-410m FT & U & 0.046 & 0.005 & 0.024 &  & & & &  \\
-Pythia-410m FT & M & 0.086 & 0.022 & 0.041 &  & & & &  \\
+Pythia-410m FT & U & 0.046 & 0.005 & 0.024 & & & & & \\
+Pythia-410m FT & M & 0.086 & 0.022 & 0.041 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1584,17 +1585,17 @@ Pythia-410m FT & M & 0.086 & 0.022 & 0.041 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.087 & 0.006 & 0.027 & Pythia-410m FS & U & 0.055 & 0.033 & 0.020 \\
-DistilBERT FT & M & 0.083 & 0.000 & 0.031 & Pythia-410m FS & M & 0.034 & 0.030 & 0.016 \\
+DistilBERT FT & M & 0.113 & 0.002 & 0.032 & Pythia-410m FS & M & 0.034 & 0.030 & 0.016 \\
 RoBERTa FT & U & 0.087 & 0.001 & 0.031 & Pythia-410m 0s & U & 0.147 & 0.043 & 0.036 \\
-RoBERTa FT & M & 0.072 & 0.006 & 0.024 & Pythia-410m 0s & M & 0.142 & 0.052 & 0.043 \\
+RoBERTa FT & M & 0.076 & 0.003 & 0.028 & Pythia-410m 0s & M & 0.142 & 0.052 & 0.043 \\
 Pythia-1.4B FT & U & 0.071 & 0.003 & 0.027 & Pythia-160m FT & U & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FT & M & 0.083 & 0.002 & 0.029 & Pythia-160m FT & M & 0.006 & 0.003 & 0.002 \\
 Pythia-1.4B FS & U & 0.065 & 0.014 & 0.011 & Pythia-160m FS & U & 0.181 & 0.003 & 0.010 \\
 Pythia-1.4B FS & M & 0.059 & 0.015 & 0.010 & Pythia-160m FS & M & 0.153 & 0.006 & 0.003 \\
 Pythia-1.4B 0s & U & 0.164 & 0.016 & 0.021 & Pythia-160m 0s & U & 0.195 & 0.016 & 0.003 \\
 Pythia-1.4B 0s & M & 0.151 & 0.016 & 0.020 & Pythia-160m 0s & M & 0.201 & 0.016 & 0.003 \\
-Pythia-410m FT & U & 0.104 & 0.013 & 0.018 &  & & & &  \\
-Pythia-410m FT & M & 0.129 & 0.015 & 0.018 &  & & & &  \\
+Pythia-410m FT & U & 0.104 & 0.013 & 0.018 & & & & & \\
+Pythia-410m FT & M & 0.129 & 0.015 & 0.018 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1607,17 +1608,17 @@ Pythia-410m FT & M & 0.129 & 0.015 & 0.018 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.220 & 0.000 & 0.004 & Pythia-410m FS & U & 0.107 & 0.002 & 0.004 \\
-DistilBERT FT & M & 0.187 & 0.001 & 0.002 & Pythia-410m FS & M & 0.107 & 0.004 & 0.006 \\
+DistilBERT FT & M & 0.153 & 0.002 & 0.004 & Pythia-410m FS & M & 0.107 & 0.004 & 0.006 \\
 RoBERTa FT & U & 0.153 & 0.001 & 0.003 & Pythia-410m 0s & U & 0.147 & 0.000 & 0.003 \\
-RoBERTa FT & M & 0.227 & 0.001 & 0.005 & Pythia-410m 0s & M & 0.113 & 0.001 & 0.001 \\
+RoBERTa FT & M & 0.120 & 0.002 & 0.004 & Pythia-410m 0s & M & 0.113 & 0.001 & 0.001 \\
 Pythia-1.4B FT & U & 0.120 & 0.001 & 0.003 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.187 & 0.002 & 0.005 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.153 & 0.001 & 0.003 & Pythia-160m FS & U & 0.060 & 0.003 & 0.004 \\
 Pythia-1.4B FS & M & 0.153 & 0.000 & 0.003 & Pythia-160m FS & M & 0.060 & 0.004 & 0.005 \\
 Pythia-1.4B 0s & U & 0.133 & 0.002 & 0.004 & Pythia-160m 0s & U & 0.020 & 0.008 & 0.009 \\
 Pythia-1.4B 0s & M & 0.133 & 0.003 & 0.005 & Pythia-160m 0s & M & 0.093 & 0.008 & 0.010 \\
-Pythia-410m FT & U & 0.060 & 0.001 & 0.002 &  & & & &  \\
-Pythia-410m FT & M & 0.127 & 0.004 & 0.002 &  & & & &  \\
+Pythia-410m FT & U & 0.060 & 0.001 & 0.002 & & & & & \\
+Pythia-410m FT & M & 0.127 & 0.004 & 0.002 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1630,17 +1631,17 @@ Pythia-410m FT & M & 0.127 & 0.004 & 0.002 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.024 & 0.012 & 0.022 & Pythia-410m FS & U & 0.040 & 0.006 & 0.018 \\
-DistilBERT FT & M & 0.015 & 0.011 & 0.024 & Pythia-410m FS & M & 0.042 & 0.005 & 0.018 \\
+DistilBERT FT & M & 0.022 & 0.024 & 0.031 & Pythia-410m FS & M & 0.042 & 0.005 & 0.018 \\
 RoBERTa FT & U & 0.018 & 0.024 & 0.032 & Pythia-410m 0s & U & 0.299 & 0.029 & 0.118 \\
-RoBERTa FT & M & 0.012 & 0.024 & 0.034 & Pythia-410m 0s & M & 0.301 & 0.028 & 0.118 \\
+RoBERTa FT & M & 0.020 & 0.019 & 0.028 & Pythia-410m 0s & M & 0.301 & 0.028 & 0.118 \\
 Pythia-1.4B FT & U & 0.003 & 0.012 & 0.030 & Pythia-160m FT & U & 0.046 & 0.011 & 0.005 \\
 Pythia-1.4B FT & M & 0.003 & 0.002 & 0.023 & Pythia-160m FT & M & 0.006 & 0.017 & 0.014 \\
 Pythia-1.4B FS & U & 0.120 & 0.010 & 0.050 & Pythia-160m FS & U & 0.097 & 0.019 & 0.047 \\
 Pythia-1.4B FS & M & 0.119 & 0.010 & 0.050 & Pythia-160m FS & M & 0.120 & 0.024 & 0.057 \\
 Pythia-1.4B 0s & U & 0.078 & 0.243 & 0.206 & Pythia-160m 0s & U & 0.144 & 0.231 & 0.211 \\
 Pythia-1.4B 0s & M & 0.083 & 0.242 & 0.207 & Pythia-160m 0s & M & 0.165 & 0.215 & 0.206 \\
-Pythia-410m FT & U & 0.020 & 0.026 & 0.007 &  & & & &  \\
-Pythia-410m FT & M & 0.020 & 0.026 & 0.008 &  & & & &  \\
+Pythia-410m FT & U & 0.020 & 0.026 & 0.007 & & & & & \\
+Pythia-410m FT & M & 0.020 & 0.026 & 0.008 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1653,22 +1654,22 @@ Pythia-410m FT & M & 0.020 & 0.026 & 0.008 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.006 & 0.002 & 0.023 & Pythia-410m FS & U & 0.060 & 0.001 & 0.010 \\
-DistilBERT FT & M & 0.010 & 0.003 & 0.022 & Pythia-410m FS & M & 0.067 & 0.001 & 0.010 \\
+DistilBERT FT & M & 0.067 & 0.003 & 0.021 & Pythia-410m FS & M & 0.067 & 0.001 & 0.010 \\
 RoBERTa FT & U & 0.034 & 0.000 & 0.024 & Pythia-410m 0s & U & 0.024 & 0.004 & 0.014 \\
-RoBERTa FT & M & 0.058 & 0.003 & 0.027 & Pythia-410m 0s & M & 0.013 & 0.004 & 0.015 \\
+RoBERTa FT & M & 0.002 & 0.001 & 0.024 & Pythia-410m 0s & M & 0.013 & 0.004 & 0.015 \\
 Pythia-1.4B FT & U & 0.060 & 0.002 & 0.025 & Pythia-160m FT & U & 0.011 & 0.002 & 0.002 \\
 Pythia-1.4B FT & M & 0.031 & 0.002 & 0.024 & Pythia-160m FT & M & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FS & U & 0.010 & 0.023 & 0.038 & Pythia-160m FS & U & 0.026 & 0.005 & 0.005 \\
 Pythia-1.4B FS & M & 0.010 & 0.023 & 0.038 & Pythia-160m FS & M & 0.008 & 0.003 & 0.004 \\
 Pythia-1.4B 0s & U & 0.305 & 0.006 & 0.030 & Pythia-160m 0s & U & 0.003 & 0.000 & 0.002 \\
 Pythia-1.4B 0s & M & 0.294 & 0.006 & 0.029 & Pythia-160m 0s & M & 0.028 & 0.000 & 0.002 \\
-Pythia-410m FT & U & 0.175 & 0.011 & 0.025 &  & & & &  \\
-Pythia-410m FT & M & 0.120 & 0.006 & 0.017 &  & & & &  \\
+Pythia-410m FT & U & 0.175 & 0.011 & 0.025 & & & & & \\
+Pythia-410m FT & M & 0.120 & 0.006 & 0.017 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-% --- SOFTWARE_ENGINEER ---
+% --- SOFTWARE ENGINEER ---
 \vspace{4pt}\noindent\textbf{Software Engineer}
 \begin{center}\scriptsize
 \begin{tabular}{llccc|llccc}
@@ -1676,17 +1677,17 @@ Pythia-410m FT & M & 0.120 & 0.006 & 0.017 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.070 & 0.010 & 0.028 & Pythia-410m FS & U & 0.021 & 0.003 & 0.003 \\
-DistilBERT FT & M & 0.112 & 0.010 & 0.027 & Pythia-410m FS & M & 0.043 & 0.003 & 0.004 \\
+DistilBERT FT & M & 0.070 & 0.007 & 0.025 & Pythia-410m FS & M & 0.043 & 0.003 & 0.004 \\
 RoBERTa FT & U & 0.112 & 0.009 & 0.026 & Pythia-410m 0s & U & 0.155 & 0.006 & 0.013 \\
-RoBERTa FT & M & 0.052 & 0.009 & 0.028 & Pythia-410m 0s & M & 0.112 & 0.006 & 0.012 \\
+RoBERTa FT & M & 0.134 & 0.008 & 0.024 & Pythia-410m 0s & M & 0.112 & 0.006 & 0.012 \\
 Pythia-1.4B FT & U & 0.027 & 0.009 & 0.029 & Pythia-160m FT & U & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FT & M & 0.036 & 0.007 & 0.029 & Pythia-160m FT & M & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B FS & U & 0.322 & 0.040 & 0.061 & Pythia-160m FS & U & 0.021 & 0.002 & 0.003 \\
 Pythia-1.4B FS & M & 0.322 & 0.040 & 0.061 & Pythia-160m FS & M & 0.021 & 0.004 & 0.005 \\
 Pythia-1.4B 0s & U & 0.103 & 0.014 & 0.027 & Pythia-160m 0s & U & 0.000 & 0.001 & 0.001 \\
 Pythia-1.4B 0s & M & 0.103 & 0.014 & 0.027 & Pythia-160m 0s & M & 0.000 & 0.001 & 0.001 \\
-Pythia-410m FT & U & 0.106 & 0.001 & 0.004 &  & & & &  \\
-Pythia-410m FT & M & 0.043 & 0.000 & 0.001 &  & & & &  \\
+Pythia-410m FT & U & 0.106 & 0.001 & 0.004 & & & & & \\
+Pythia-410m FT & M & 0.043 & 0.000 & 0.001 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1699,17 +1700,17 @@ Pythia-410m FT & M & 0.043 & 0.000 & 0.001 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.070 & 0.010 & 0.041 & Pythia-410m FS & U & 0.045 & 0.002 & 0.010 \\
-DistilBERT FT & M & 0.059 & 0.008 & 0.038 & Pythia-410m FS & M & 0.007 & 0.002 & 0.010 \\
+DistilBERT FT & M & 0.020 & 0.007 & 0.037 & Pythia-410m FS & M & 0.007 & 0.002 & 0.010 \\
 RoBERTa FT & U & 0.043 & 0.011 & 0.042 & Pythia-410m 0s & U & 0.018 & 0.001 & 0.010 \\
-RoBERTa FT & M & 0.014 & 0.006 & 0.034 & Pythia-410m 0s & M & 0.018 & 0.002 & 0.011 \\
+RoBERTa FT & M & 0.018 & 0.007 & 0.037 & Pythia-410m 0s & M & 0.018 & 0.002 & 0.011 \\
 Pythia-1.4B FT & U & 0.116 & 0.012 & 0.045 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.055 & 0.009 & 0.041 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.002 & 0.013 & 0.030 & Pythia-160m FS & U & 0.016 & 0.001 & 0.002 \\
 Pythia-1.4B FS & M & 0.002 & 0.013 & 0.030 & Pythia-160m FS & M & 0.004 & 0.001 & 0.002 \\
 Pythia-1.4B 0s & U & 0.116 & 0.001 & 0.000 & Pythia-160m 0s & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B 0s & M & 0.104 & 0.001 & 0.001 & Pythia-160m 0s & M & 0.000 & 0.000 & 0.000 \\
-Pythia-410m FT & U & 0.198 & 0.011 & 0.030 &  & & & &  \\
-Pythia-410m FT & M & 0.252 & 0.005 & 0.024 &  & & & &  \\
+Pythia-410m FT & U & 0.198 & 0.011 & 0.030 & & & & & \\
+Pythia-410m FT & M & 0.252 & 0.005 & 0.024 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1722,21 +1723,20 @@ Pythia-410m FT & M & 0.252 & 0.005 & 0.024 &  & & & &  \\
 \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} & \textbf{Model} & \textbf{C.} & \textbf{TPR} & \textbf{FPR} & \textbf{DP} \\
 \midrule
 DistilBERT FT & U & 0.073 & 0.000 & 0.021 & Pythia-410m FS & U & 0.157 & 0.033 & 0.045 \\
-DistilBERT FT & M & 0.028 & 0.006 & 0.024 & Pythia-410m FS & M & 0.170 & 0.035 & 0.047 \\
+DistilBERT FT & M & 0.040 & 0.006 & 0.025 & Pythia-410m FS & M & 0.170 & 0.035 & 0.047 \\
 RoBERTa FT & U & 0.132 & 0.010 & 0.033 & Pythia-410m 0s & U & 0.227 & 0.202 & 0.220 \\
-RoBERTa FT & M & 0.133 & 0.005 & 0.028 & Pythia-410m 0s & M & 0.227 & 0.208 & 0.225 \\
+RoBERTa FT & M & 0.086 & 0.004 & 0.025 & Pythia-410m 0s & M & 0.227 & 0.208 & 0.225 \\
 Pythia-1.4B FT & U & 0.099 & 0.010 & 0.032 & Pythia-160m FT & U & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FT & M & 0.178 & 0.009 & 0.034 & Pythia-160m FT & M & 0.000 & 0.000 & 0.000 \\
 Pythia-1.4B FS & U & 0.228 & 0.054 & 0.074 & Pythia-160m FS & U & 0.037 & 0.004 & 0.008 \\
 Pythia-1.4B FS & M & 0.228 & 0.054 & 0.074 & Pythia-160m FS & M & 0.056 & 0.007 & 0.012 \\
 Pythia-1.4B 0s & U & 0.534 & 0.060 & 0.091 & Pythia-160m 0s & U & 0.447 & 0.205 & 0.225 \\
 Pythia-1.4B 0s & M & 0.534 & 0.061 & 0.092 & Pythia-160m 0s & M & 0.513 & 0.205 & 0.228 \\
-Pythia-410m FT & U & 0.043 & 0.001 & 0.005 &  & & & &  \\
-Pythia-410m FT & M & 0.053 & 0.010 & 0.017 &  & & & &  \\
+Pythia-410m FT & U & 0.043 & 0.001 & 0.005 & & & & & \\
+Pythia-410m FT & M & 0.053 & 0.010 & 0.017 & & & & & \\
 \bottomrule
 \end{tabular}
 \end{center}
-
 
 \section{Gender-Conditioned Faithfulness by Profession}
 

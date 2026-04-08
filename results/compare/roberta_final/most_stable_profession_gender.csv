@@ -1,0 +1,11 @@
+profession,gender,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens,shared_ratio
+professor,M,10,0,0,"faculty, interests, ph.d, phd, professor, research, studies, teaches, teaching, university",,,1.0
+teacher,F,10,0,0,"classes, education, school, schools, students, taught, teacher, teachers, teaches, teaching",,,1.0
+accountant,M,9,1,1,"accountancy, accountants, accounting, accounts, business, cfo, finance, financial, firm",reporting,practice,0.8181818181818182
+attorney,F,9,1,1,"attorney, clients, court, juris, law, legal, litigation, practice, represents",attorneys,representing,0.8181818181818182
+professor,F,9,1,1,"interests, ph.d, phd, professor, research, studies, teaches, teaching, university",focuses,doctorate,0.8181818181818182
+surgeon,M,9,1,1,"hospital, medical, medicine, neurosurgery, practice, surgeon, surgeries, surgery, surgical",surgeons,practices,0.8181818181818182
+architect,M,8,2,2,"architect, architects, architectural, architecture, building, construction, design, designing","buildings, java","designed, practice",0.6666666666666666
+attorney,M,8,2,2,"attorney, clients, counsel, law, legal, litigation, practice, represented","bar, cases","court, representing",0.6666666666666666
+filmmaker,F,8,2,2,"directed, directing, documentaries, documentary, feature, film, filmmaking, films","festival, filmmaker","forthcoming, projects",0.6666666666666666
+filmmaker,M,8,2,2,"directed, documentary, feature, film, filmmaker, filmmaking, films, videos","andrew_kukura@outlook.com, cinema","festival, production",0.6666666666666666

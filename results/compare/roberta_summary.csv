@@ -1,0 +1,21 @@
+profession,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens
+accountant,9,1,1,"accountancy, accountants, accounting, accounts, business, cfo, finance, financial, tax",accountant,firm
+architect,9,1,1,"architect, architects, architectural, architecture, building, construction, design, designing, techniques",java,designed
+attorney,9,1,1,"attorney, clients, counsel, court, law, legal, litigation, practice, represents",cases,representing
+comedian,5,5,5,"comedians, comedic, comedy, joke, stand-up","bajwa, comedian, humor, punjabi-language, show","best, fringe, jokes, stand, stunt"
+composer,6,4,4,"composing, composition, compositions, music, musical, scores","ensemble, films, orchestra, score","performed, short, tuscany, works"
+dentist,5,5,5,"clinic, dental, dentist, dentistry, patients","doctor, hospital, licence, lybrate.com, online","appointment, cross/blue, maxillofacial, practices, practicing"
+dietitian,7,3,3,"diet, dietitian, dietitians, nutrition, nutritional, patients, professional","appointment, food, metabolic","clients, experience, registered"
+filmmaker,7,3,3,"directed, documentary, feature, film, filmmaker, filmmaking, films","andrew_kukura@outlook.com, directing, videos","festival, production, short"
+journalist,8,2,2,"covered, journalism, journalist, journalists, news, reporter, reporting, times","editor, writing","media, reported"
+model,6,4,4,"born, fashion, model, modeling, modelling, ranked","gallery, models, playboy, section","career, freeones, listed, runway"
+nurse,7,3,3,"health, hospital, medical, nurse, nursing, patients, practitioner","appointment, call, clinical","graduated, interview, nurses"
+painter,7,3,3,"art, artist, gallery, paint, painting, paintings, studio","artistic, colors, depicted","drawing, exhibited, work"
+photographer,8,2,2,"images, photo, photographer, photographic, photographs, photography, portraits, work","camera, photos","photographing, shoots"
+physician,7,3,3,"medical, medicine, patients, physician, practices, professional, residency","hospital, spanish, specializes","affiliated, credentials, practice"
+poet,8,2,2,"creative, poem, poems, poetry, published, review, work, writing","lyricism, poets","collection, write"
+professor,10,0,0,"faculty, interests, ph.d, phd, professor, research, studies, teaches, teaching, university",,
+psychologist,9,1,1,"appointment, clinical, counseling, counselling, psychological, psychologist, psychology, psychotherapy, therapy",specialists,experiences
+software engineer,6,4,4,"code, computer, development, engineering, programming, software","applications, devops, java/c/c, javascript","building, engineer, php, websphere"
+surgeon,8,2,2,"hospital, medical, medicine, practice, surgeon, surgeries, surgery, surgical","neurosurgery, surgeons","practices, professor"
+teacher,9,1,1,"education, school, schools, students, taught, teacher, teachers, teaches, teaching",teach,classes

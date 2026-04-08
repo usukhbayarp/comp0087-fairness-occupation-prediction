@@ -1,0 +1,11 @@
+profession,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens,shared_ratio
+comedian,5,5,5,"comedians, comedic, comedy, joke, stand-up","bajwa, comedian, humor, punjabi-language, show","best, fringe, jokes, stand, stunt",0.3333333333333333
+dentist,5,5,5,"clinic, dental, dentist, dentistry, patients","doctor, hospital, licence, lybrate.com, online","appointment, cross/blue, maxillofacial, practices, practicing",0.3333333333333333
+composer,6,4,4,"composing, composition, compositions, music, musical, scores","ensemble, films, orchestra, score","performed, short, tuscany, works",0.42857142857142855
+model,6,4,4,"born, fashion, model, modeling, modelling, ranked","gallery, models, playboy, section","career, freeones, listed, runway",0.42857142857142855
+software engineer,6,4,4,"code, computer, development, engineering, programming, software","applications, devops, java/c/c, javascript","building, engineer, php, websphere",0.42857142857142855
+dietitian,7,3,3,"diet, dietitian, dietitians, nutrition, nutritional, patients, professional","appointment, food, metabolic","clients, experience, registered",0.5384615384615384
+filmmaker,7,3,3,"directed, documentary, feature, film, filmmaker, filmmaking, films","andrew_kukura@outlook.com, directing, videos","festival, production, short",0.5384615384615384
+nurse,7,3,3,"health, hospital, medical, nurse, nursing, patients, practitioner","appointment, call, clinical","graduated, interview, nurses",0.5384615384615384
+painter,7,3,3,"art, artist, gallery, paint, painting, paintings, studio","artistic, colors, depicted","drawing, exhibited, work",0.5384615384615384
+physician,7,3,3,"medical, medicine, patients, physician, practices, professional, residency","hospital, spanish, specializes","affiliated, credentials, practice",0.5384615384615384

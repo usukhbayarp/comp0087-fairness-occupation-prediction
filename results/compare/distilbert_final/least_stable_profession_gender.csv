@@ -1,0 +1,11 @@
+profession,gender,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens,shared_ratio
+dietitian,M,3,7,7,"holistic, nutrition, weight","diet, diets, expert, food, health, nutritional, symptoms","addressing, coach, concerns, diabetes, digital, genetics, preventive",0.17647058823529413
+model,M,4,6,6,"model, modeling, modelling, runway","185cm, experiences, fashion, films, include, performed","calendar, demonstrated, events, famous, professional, roles",0.25
+architect,F,5,5,5,"architect, architects, architectural, architecture, design","board, building, buildings, progressive, techniques","business, construction, information, sustainable, symantec",0.3333333333333333
+nurse,F,5,5,5,"experiences, honors, nurse, nursing, practitioner","especially, health, hospital, hospitals, medical","career, degree, graduated, medicine, professional",0.3333333333333333
+nurse,M,5,5,5,"emergency, experiences, nurse, nurses, nursing","bgs, especially, health, hospital, virginia","degree, experience, graduated, honors, practitioner",0.3333333333333333
+painter,F,5,5,5,"art, bfa, gallery, painting, paintings","artist, painter, paints, studio, work","colors, exhibited, galleries, paint, studied",0.3333333333333333
+accountant,F,6,4,4,"accountant, accounting, accounts, families, financial, tax","receivables, treasurer, wisconsin, years","aged, businesses, cpas, works",0.42857142857142855
+accountant,M,6,4,4,"accountancy, accountants, accounting, finance, financial, kpmg","cfo, company, degree, pricewaterhousecoopers","accounts, firm, taxes, while",0.42857142857142855
+architect,M,6,4,4,"architect, architects, architectural, architecture, design, technical","building, buildings, firms, microsoft","construction, ellenzweig, firm, solutions",0.42857142857142855
+composer,M,6,4,4,"composer, composing, composition, music, musical, orchestral","compositions, score, sounds, stravinsky","composed, electronica, film, scored",0.42857142857142855

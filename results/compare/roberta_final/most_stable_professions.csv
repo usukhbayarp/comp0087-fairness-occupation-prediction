@@ -1,0 +1,11 @@
+profession,n_shared_top_tokens,n_masked_only_top_tokens,n_unmasked_only_top_tokens,shared_tokens,masked_only_tokens,unmasked_only_tokens,shared_ratio
+professor,10,0,0,"faculty, interests, ph.d, phd, professor, research, studies, teaches, teaching, university",,,1.0
+accountant,9,1,1,"accountancy, accountants, accounting, accounts, business, cfo, finance, financial, tax",accountant,firm,0.8181818181818182
+architect,9,1,1,"architect, architects, architectural, architecture, building, construction, design, designing, techniques",java,designed,0.8181818181818182
+attorney,9,1,1,"attorney, clients, counsel, court, law, legal, litigation, practice, represents",cases,representing,0.8181818181818182
+psychologist,9,1,1,"appointment, clinical, counseling, counselling, psychological, psychologist, psychology, psychotherapy, therapy",specialists,experiences,0.8181818181818182
+teacher,9,1,1,"education, school, schools, students, taught, teacher, teachers, teaches, teaching",teach,classes,0.8181818181818182
+journalist,8,2,2,"covered, journalism, journalist, journalists, news, reporter, reporting, times","editor, writing","media, reported",0.6666666666666666
+photographer,8,2,2,"images, photo, photographer, photographic, photographs, photography, portraits, work","camera, photos","photographing, shoots",0.6666666666666666
+poet,8,2,2,"creative, poem, poems, poetry, published, review, work, writing","lyricism, poets","collection, write",0.6666666666666666
+surgeon,8,2,2,"hospital, medical, medicine, practice, surgeon, surgeries, surgery, surgical","neurosurgery, surgeons","practices, professor",0.6666666666666666
