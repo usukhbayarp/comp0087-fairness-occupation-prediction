@@ -36,7 +36,8 @@ Takes canonical CSV tables and produces aesthetic metric dashboards demonstratin
 
 **Outputs:**
 
-- **Pareto Frontier** (`pareto_frontier.png`): Plotting model configurations mapping Macro-F1 against the Equalized Odds Gap.
+- **Pareto Frontier (Unlabelled)** (`pareto_frontier.png`): Plotting model configurations mapping Macro-F1 against the Equalized Odds Gap.
+- **Pareto Frontier (Labelled)** (`pareto_frontier_labelled.png`): The same as before, but labels have been manually added (using Microsoft PowerPoint)
 - **Job Bias Analysis** (`job_bias_comparison.png`): Explicit visual mappings showing exact TPR/FPR reduction metrics mapping directly against job types between explicitly paired `(Masked)` and `(Unmasked)` variants.
 - **Scaling Laws** (`scaling_performance.png`, `scaling_fairness.png`): Effects of scaling model sizes (e.g., 160M -> 410M -> 1.4B) over capabilities versus bias magnification.
 - **Correlation Plots**: 
