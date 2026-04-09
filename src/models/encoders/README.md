@@ -7,6 +7,9 @@ The encoder approach differs from the prompt-based Pythia experiments: here we u
 Two data regimes are supported:
 - unmasked: original biographies
 - masked: gender and label-leakage masking applied via load_bios(cfg)
+Note: In the masked regime, model-specific mask tokens are used:
+- DistilBERT uses `[MASK]`
+- RoBERTa uses `<mask>`
 
 **Inputs**
 
@@ -16,7 +19,7 @@ id: unique integer identifier (generated if not provided)
 
 text: biography text
 
-label: profession label (kept as stringified occupation ID)
+label: profession label (string, e.g. "nurse", "physician")
 
 label_id: integer label index derived from the selected label vocabulary
 
@@ -66,7 +69,10 @@ one folder per model/regime:
 - checkpoints/roberta_masked
 
 Note: Model checkpoints are not included in the repository due to their large size.
-They can be reproduced by running train_encoder.py.
+Pretrained checkpoints can be downloaded here:
+<https://liveuclac-my.sharepoint.com/:f:/g/personal/zcabkam_ucl_ac_uk/IgB1sMM6KvDkRJinN4I-5d-fAUxZA_lAs4SteWG-cKuAbZU?e=zyG7xK>
+
+Alternatively, they can be reproduced by running train_encoder.py.
 
 **eval_encoder.py (Inference + JSONL export)**
 
