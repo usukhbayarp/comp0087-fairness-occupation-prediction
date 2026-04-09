@@ -62,14 +62,14 @@ This paper addresses three open questions: how does model
 are those features precisely.
 
 \paragraph{Contributions.}
-\textit{Primary novel contribution} (to our knowledge, no prior work
-on this dataset provides this):
+\textit{Primary contribution} (to our knowledge, limited prior work
+on this dataset provides systematic attribution analysis of this kind):
 (i)~token-level Integrated Gradients attribution tables stratified by
-both profession and gender, with proxy stability compared across
-encoder models.
-\textit{Secondary novel contribution}:
-(ii)~an erasure faithfulness validation of those attribution scores
-on the Bias-in-Bios task.
+both profession and gender, with proxy stability and erasure faithfulness
+compared across encoder architectures.
+\textit{Secondary contribution}:
+(ii)~a cross-model comparison of how proxy token distributions shift
+under gender masking, quantifying both stability and functional importance.
 \textit{Empirical applications of known methods to this setting}:
 (iii)~a Pythia scaling study (160M--1.4B) across zero-shot, few-shot,
 and fine-tuned regimes;
@@ -331,7 +331,10 @@ where $\text{count\_topk}(t,p)$ is the number of examples in which
 token $t$ appears in the stage-1 top-5 for profession $p$, and
 $\overline{\text{attr}}(t,p)$ is the mean attribution score.
 Aggregation uses the model's \emph{predicted} label (not the true
-label), consistent with attribution targeting the predicted class.
+label): we attribute toward the predicted class to analyse the
+model's decision mechanism rather than its correctness---the
+goal is to understand what the model relies on, not whether it
+is right \citep{sundararajan2017axiomatic}.
 
 \textbf{Stability analysis.}
 The masked vs.\ unmasked comparison takes the \textbf{top-10
@@ -605,7 +608,13 @@ than DistilBERT profession tokens (55.53--329.52); within RoBERTa,
 the highest gender token (\emph{mrs}: 2.11) is 33--158$\times$
 smaller than RoBERTa profession tokens (70.44--333.32).
 Bias likely operates primarily through indirect contextual signals
-rather than explicit gender indicators.
+rather than explicit gender indicators---consistent with an account
+in which models exploit statistical co-occurrences present in the
+training corpus \citep{de-arteaga-etal-2019-bias,
+gonen-goldberg-2019-lipstick}: gender-skewed role vocabulary,
+credential terminology, and contextual framing patterns become
+spurious correlates that carry the gender signal without any
+explicit gender reference.
 
 Gender-conditioned analysis reveals partial asymmetry.
 Under DistilBERT, nurse$|$F and nurse$|$M both retain 5 shared
@@ -787,7 +796,11 @@ The dataset provides binary gender labels inferred from pronoun
 usage by the original authors \citep{de-arteaga-etal-2019-bias}, 
 which do not capture the full spectrum of gender identity and 
 limit fairness evaluation to a male/female binary. Attribution is restricted to encoder
-models. Per-profession evaluation uses proportional
+models. Integrated Gradients and token erasure provide evidence
+of functional token importance but do not establish causal
+relationships between input features and model predictions;
+the scores reflect learned associations, not mechanisms.
+Per-profession evaluation uses proportional
 stratification from the 3,000-sample canonical subset, resulting in
 small sample sizes for low-frequency professions (e.g.\ comedian
 $n\!=\!27$, dietitian $n\!=\!30$); per-profession fairness estimates
@@ -1836,13 +1849,25 @@ Mean faithfulness scores split by gender for professions with at least
 $n$ = number of examples. Dietitian is excluded from masked rows
 (male $n{=}3$ in both masked conditions).
 
-\begin{center}\small
-\begin{tabular}{lcccc}
+\small
+\begin{longtable}{lcccc}
 \toprule
 \textbf{Profession} & \multicolumn{2}{c}{\textbf{Female}} &
 \multicolumn{2}{c}{\textbf{Male}} \\
 & \textbf{Faith.} & \textbf{n} & \textbf{Faith.} & \textbf{n} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Profession} & \multicolumn{2}{c}{\textbf{Female}} &
+\multicolumn{2}{c}{\textbf{Male}} \\
+& \textbf{Faith.} & \textbf{n} & \textbf{Faith.} & \textbf{n} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{5}{r}{\small\textit{(continued on next page)}} \\
+\endfoot
+\bottomrule
+\endlastfoot
 \multicolumn{5}{l}{\textit{DistilBERT --- unmasked}} \\
 \midrule
 Accountant    & 0.373 &  10 & 0.408 &  31 \\
@@ -1916,9 +1941,8 @@ Professor     & 0.172 & 410 & 0.191 & 525 \\
 Psychologist  & 0.274 &  80 & 0.221 &  55 \\
 Surgeon       & 0.247 &  20 & 0.214 &  83 \\
 Teacher       & 0.225 &  79 & 0.354 &  52 \\
-\bottomrule
-\end{tabular}
-\end{center}
+\end{longtable}
+\normalsize
 {\small Professions where only one gender reaches $n \geq 10$ (comedian$|$M,
 composer$|$M, model$|$F, software engineer$|$M) are omitted; their
 overall faithfulness appears in Appendix~E. Dietitian$|$M ($n{=}3$ in
