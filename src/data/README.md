@@ -95,7 +95,27 @@ summary tables and plots for class and gender distributions
 
 ## Export dataset to JSONL files
 ```bash
-python -m src.data.export_dataset_jsonl --output_dir processed --top_n {20} --mask_gender {False}
+python -m src.data.export_dataset_jsonl --output_dir processed
+
+--top_n {20}
+
+### Unmasked Dataset (used for baseline encoder + Pythia runs)
+```bash
+python -m scripts.export_dataset_jsonl \
+    --top_k 20 \
+    --mask_gender false \
+    --output_dir data/processed/unmasked
+```
+### Masked Dataset (used for fairness-controlled runs)
+```bash
+python -m scripts.export_dataset_jsonl \
+    --top_k 20 \
+    --mask_gender true \
+    --mask_titles true \
+    --mask_gendered_nouns true \
+    --mask_label_leakage true \
+    --output_dir data/processed/masked
+```
 ```
 **Note**: edit the parameters in the {} to your needs.
 
