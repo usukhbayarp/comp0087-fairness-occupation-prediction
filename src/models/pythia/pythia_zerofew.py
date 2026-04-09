@@ -12,6 +12,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from prompts import format_prompt
 
+# Ensure project root is in sys.path to allow absolute imports
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from src.data.masking import mask_gendered_language
+
 def load_data(data_path):
     data = []
     with open(data_path, 'r', encoding='utf-8') as f:
@@ -72,6 +79,7 @@ def main():
     parser.add_argument("--data_path", type=str, required=True, help="Path to input JSONL data")
     parser.add_argument("--candidate_labels", type=str, nargs='+', required=False, help="List of candidate occupations (if not provided, will look for candidate_labels.txt in data_path dir)")
     parser.add_argument("--output_dir", type=str, default=".", help="Directory to save output JSONL")
+    parser.add_argument("--apply_masking", action="store_true", help="Dynamically apply masking to the input text and prompts")
     
     # New arguments for batching, sampling, and max tokens
     parser.add_argument("--batch_size", type=int, default=16, help="Batch size for inference")
@@ -150,7 +158,9 @@ def main():
             prompts = []
             for item in batch_items:
                 text = item.get("masked_text", item.get("text", "")) # checks for masked_text first
-                prompt = format_prompt(text, regime=args.regime)
+                if args.apply_masking:
+                    text = mask_gendered_language(text)
+                prompt = format_prompt(text, regime=args.regime, apply_masking=args.apply_masking)
                 prompts.append(prompt)
                 
             # Compute log likelihoods for each candidate across the batch

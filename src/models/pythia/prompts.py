@@ -17,10 +17,20 @@ Occupation: physician
 Biography: He covers local news and politics for the daily newspaper.
 Occupation: journalist
 
+Biography: She has been caring for patients in the pediatric ward for over a decade.
+Occupation: nurse
+
 Biography: {text}
 Occupation:"""
 
-def format_prompt(text: str, regime: str = "zeroshot", few_shot_examples: str = None) -> str:
+def _get_masking_fn():
+    try:
+        from src.data.masking import mask_gendered_language
+        return mask_gendered_language
+    except ImportError:
+        return lambda x: x
+
+def format_prompt(text: str, regime: str = "zeroshot", few_shot_examples: str = None, apply_masking: bool = False) -> str:
     """
     Format the prompt for the given regime.
     """
@@ -29,9 +39,17 @@ def format_prompt(text: str, regime: str = "zeroshot", few_shot_examples: str = 
     elif regime == "fewshot":
         if few_shot_examples:
             # Custom examples string
-            return few_shot_examples + f"\n\nBiography: {text}\nOccupation:"
+            base_prompt = few_shot_examples + "\n\nBiography: {text}\nOccupation:"
         else:
             # Default few-shot examples
-            return FEW_SHOT_PROMPT.format(text=text)
+            base_prompt = FEW_SHOT_PROMPT
+            
+        if apply_masking:
+            mask_fn = _get_masking_fn()
+            # Mask the prompt template (avoid masking the placeholder '{text}')
+            parts = base_prompt.split("{text}")
+            base_prompt = "{text}".join([mask_fn(p) for p in parts])
+            
+        return base_prompt.format(text=text)
     else:
         raise ValueError(f"Unknown regime: {regime}")
