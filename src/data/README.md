@@ -75,6 +75,20 @@ gender masking utility (masking.py)
 
 dataset statistics (dataset_stats.json)
 
+## Output Files
+
+Each run writes three JSONL splits:
+
+- `data/exports/clean_train.jsonl`
+- `data/exports/clean_dev.jsonl`
+- `data/exports/clean_test.jsonl`
+
+Masked preprocessing writes to:
+
+- `data/exports/masked_train.jsonl`
+- `data/exports/masked_dev.jsonl`
+- `data/exports/masked_test.jsonl`
+
 summary tables and plots for class and gender distributions
 
 # How to run
