@@ -81,7 +81,7 @@ summary tables and plots for class and gender distributions
 
 ## Export dataset to JSONL files
 ```bash
-python export_dataset_jsonl.py --output_dir processed --top_n {20} --mask_gender {False}
+python -m src.data.export_dataset_jsonl --output_dir processed --top_n {20} --mask_gender {False}
 ```
 **Note**: edit the parameters in the {} to your needs.
 
