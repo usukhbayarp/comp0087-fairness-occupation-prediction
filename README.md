@@ -104,12 +104,8 @@ The results will be securely serialized to `results/pythia`.
 
 ### Part 3: Pythia Finetuned Inference
 
-Requirements: 
-```
-pip install -q "transformers==4.40.0" "peft==0.10.0" accelerate bitsandbytes scikit-learn tqdm
-```
-
 Export dataset:
+
 ```
 python src/models/pythia/export_finetune.py --output_dir processed --top_n 20
 ```
