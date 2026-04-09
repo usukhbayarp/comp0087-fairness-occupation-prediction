@@ -79,12 +79,24 @@ fairness on Bias-in-Bios;
 both task performance and fairness metrics.
 
 \paragraph{Key Findings.}
-Critically, zero-shot bias \emph{increases} with Pythia scale (EO gap
-${\sim}0.09$ at 160M to ${\sim}0.21$ at 1.4B), gender tokens carry
-weights 61--289$\times$ smaller than dominant profession tokens
-\citep{de-arteaga-etal-2019-bias}, and---novel on this dataset---proxy
-stability is model-dependent: the same profession can be stable under
-one encoder and unstable under another.
+(1)~Fine-tuned models substantially outperform zero- and few-shot
+baselines in both task performance and fairness, consistent with prior
+work on task-specific adaptation \citep{de-arteaga-etal-2019-bias,
+romanov-etal-2019-whats};
+(2)~zero-shot bias \emph{increases} with Pythia scale (EO gap
+${\sim}0.09$ at 160M to ${\sim}0.21$ at 1.4B), in line with scaling
+risks documented for foundation models \citep{bommasani2021opportunities};
+(3)~gender-token masking reduces aggregate bias for encoder models but
+produces profession-level backfire effects, consistent with the
+documented limits of scrubbing-based debiasing
+\citep{romanov-etal-2019-whats, lu-etal-2020-gender};
+(4)~gender tokens carry weights 33--287$\times$ smaller than dominant
+profession tokens within each model (48--287$\times$ for DistilBERT,
+33--158$\times$ for RoBERTa), suggesting bias operates through indirect
+contextual signals \citep{de-arteaga-etal-2019-bias}; and
+(5)~\emph{novel on this dataset}---proxy stability is model-dependent:
+the same profession can be stable under one encoder and unstable under
+another.
 Full findings are reported in §\ref{sec:fairness} and §6.3.
 We do not claim these findings generalise beyond the Bias-in-Bios setting.
 
@@ -128,7 +140,9 @@ gender signals are removed.
 
 \subsection{Bias-in-Bios}
 We use the Bias-in-Bios dataset \citep{de-arteaga-etal-2019-bias}
-(\texttt{LabHC/bias\_in\_bios}), a standard NLP fairness benchmark.
+(\texttt{LabHC/bias\_in\_bios}), a widely-used benchmark in the NLP
+fairness and gender bias community, primarily employed to study
+occupational stereotypes and evaluate debiasing methods.
 Each example is a biography (\texttt{hard\_text}) with an integer
 profession label and a binary gender attribute (inferred from pronoun
 usage by the original authors; 0\,$\to$\,M, 1\,$\to$\,F).
@@ -200,6 +214,10 @@ Distribution is consistent across all splits.}
 All models are evaluated on a canonical \textbf{3,000-sample test
 subset}, stratified proportionally by profession from the 95,468-example
 test split; a shared ID list ensures cross-model comparability.
+The subset was limited to 3,000 examples due to the computational cost
+of Integrated Gradients attribution, which requires 32 forward passes
+per example; running attribution on the full 95,468-example test split
+was not feasible within available compute.
 Per-profession sizes range from 932 (professor) to 27 (comedian);
 results for low-frequency professions should be interpreted with caution.
 
@@ -328,6 +346,7 @@ $\mathcal{T}_\text{u}$ are the sets of tokens shared, masked-only,
 and unmasked-only respectively among the top-10.
 Gender-conditioned proxy tables are produced identically, stratified
 by profession and gender field.
+
 \textbf{Faithfulness validation.}
 The top-5 attributed tokens are erased from each example's text and
 the model is re-run to measure the probability drop:
@@ -472,8 +491,7 @@ Masking reduces aggregate EO for encoders (RoBERTa: 0.082$\to$0.063;
 DistilBERT: 0.088$\to$0.071) but is non-uniform at profession level:
 Pythia-1.4B FT sees backfire for \emph{teacher}, \emph{poet}, and
 \emph{painter}, while Pythia-410M FT shows aggregate backfire
-(0.085$\to$0.088). TPR gap equals EO gap across all models, indicating
-that differential true positive rates are the primary fairness issue.
+(0.085$\to$0.088). FPR gap is consistently much smaller than TPR gap, indicating TPR disparity is the primary fairness issue.
 To understand why disparities persist under masking, we turn to
 token-level attribution analysis.
 
@@ -490,27 +508,43 @@ gender signal, and finally assess token importance using erasure-based faithfuln
 \toprule
 \textbf{Profession} & \textbf{DistilBERT} & \textbf{RoBERTa} \\
 \midrule
+accountant        & 0.43 & 0.82 \\
+architect         & 0.43 & 0.82 \\
+attorney          & 0.67 & 0.82 \\
 comedian          & 0.54 & 0.33 \\
+composer          & 0.54 & 0.43 \\
 dentist           & 0.54 & 0.33 \\
 dietitian         & 0.67 & 0.54 \\
+filmmaker         & 0.67 & 0.54 \\
+journalist        & 0.67 & 0.67 \\
+model             & 0.82 & 0.43 \\
 nurse             & 0.43 & 0.54 \\
+painter           & 0.67 & 0.54 \\
+photographer      & 0.67 & 0.67 \\
+physician         & 0.67 & 0.54 \\
+poet              & 0.54 & 0.67 \\
+professor         & 0.82 & 1.00 \\
 psychologist      & 0.82 & 0.82 \\
 software engineer & 0.67 & 0.43 \\
-attorney          & 0.67 & 0.82 \\
-journalist        & 0.67 & 0.67 \\
-physician         & 0.67 & 0.54 \\
-professor         & 0.82 & 1.00 \\
+surgeon           & 0.67 & 0.67 \\
+teacher           & 0.82 & 0.82 \\
 \bottomrule
 \end{tabular}
-\caption{Shared token ratio (masked vs.\ unmasked). Higher = more stable.}
+\caption{Shared token ratio (masked vs.\ unmasked) for all 20 professions.
+Higher = more stable. Ratio = shared / (shared + masked-only + unmasked-only)
+over the top-10 aggregated tokens.}
 \end{table}
 
 Under RoBERTa, \emph{comedian} and \emph{dentist} are the most
 unstable professions (ratio 0.33), while under DistilBERT both
 are moderately stable (0.54)---the same reversal observed for
-\emph{nurse} (DistilBERT 0.43, RoBERTa 0.54). \emph{Professor}
-reaches maximum stability under RoBERTa (1.00), meaning its top-10
-tokens are identical across masked and unmasked conditions. These
+\emph{nurse} (DistilBERT 0.43, RoBERTa 0.54). Under DistilBERT,
+\emph{accountant} and \emph{architect} reach the same minimum ratio
+(0.43) as \emph{nurse}, while both are substantially more stable
+under RoBERTa (0.82), illustrating that instability is not confined
+to gender-skewed professions. \emph{Professor} reaches maximum
+stability under RoBERTa (1.00), meaning its top-10 tokens are
+identical across masked and unmasked conditions. These
 cross-profession reversals reinforce the conclusion that proxy
 stability depends on the specific model, not only training data.
 
@@ -546,25 +580,30 @@ DistilBERT & \emph{sister} & gender & 1.13 \\
 DistilBERT & \emph{mrs}    & gender & 1.05 \\
 \midrule
 RoBERTa & \emph{mrs}    & gender & 2.11 \\
-RoBERTa & \emph{wife}   & gender & 0.78 \\
+RoBERTa & \emph{sister} & gender & 1.13 \\
+\midrule
+DistilBERT & \emph{nursing}  & profession & 55.53 \\
+DistilBERT & \emph{medicine} & profession & 268.20 \\
+DistilBERT & \emph{research} & profession & 329.52 \\
 \midrule
 RoBERTa & \emph{nursing}  & profession & 70.44 \\
 RoBERTa & \emph{medicine} & profession & 166.64 \\
 RoBERTa & \emph{research} & profession & 333.32 \\
 \bottomrule
 \end{tabular}
-\caption{Attribution weight of gender tokens vs.\ profession tokens.
-Gender tokens appear in both models but with substantially smaller
-weights than dominant profession tokens.}
+\caption{Attribution weight of gender tokens vs.\ dominant profession tokens,
+within each model. Gender tokens appear in both models but with substantially
+smaller weights than profession tokens.}
 \label{tab:gender_tokens}
 \end{table}
 
 Under both models, a small number of explicit gender tokens appear
 in the aggregated top-$K$ features, but with substantially smaller
-weights than dominant profession tokens: DistilBERT's highest gender
-token (\emph{actor}: 1.15) is 61--289$\times$ smaller than the
-profession tokens in Table~\ref{tab:gender_tokens} (70.44--333.32),
-and RoBERTa's \emph{mrs} (2.11) is similarly dwarfed.
+weights than dominant profession tokens: within DistilBERT, the
+highest gender token (\emph{actor}: 1.15) is 48--287$\times$ smaller
+than DistilBERT profession tokens (55.53--329.52); within RoBERTa,
+the highest gender token (\emph{mrs}: 2.11) is 33--158$\times$
+smaller than RoBERTa profession tokens (70.44--333.32).
 Bias likely operates primarily through indirect contextual signals
 rather than explicit gender indicators.
 
@@ -694,10 +733,11 @@ Software Engineer & 0.171 & 0.204 & 0.193 & 0.199 \\
 \bottomrule
 \end{tabular}
 \caption{Mean faithfulness (probability drop after erasing top-5
-attributed tokens). U=unmasked; M=masked. Higher = more
-functionally important tokens under erasure. The \textit{Overall}
-row is the macro-average across all 20 professions (equal weight
-per profession, not per example).}
+attributed tokens) for a selected subset of professions.
+U=unmasked; M=masked. Higher = more functionally important tokens
+under erasure. The \textit{Overall} row is the macro-average across
+all 20 professions (equal weight per profession, not per example).
+Full results for all 20 professions are in Appendix~E.}
 \label{tab:faithfulness}
 \end{table}
 
@@ -720,7 +760,9 @@ predictions nearly halves the model's confidence, consistent with
 male nurse representations being concentrated in a critically
 small feature set. Under RoBERTa the asymmetry is also present:
 nurse$|$M = 0.534 versus nurse$|$F = 0.163. Full gender-conditioned
-faithfulness results are reported in Appendix~D.
+faithfulness results for all professions with $n{\geq}10$ per gender
+are reported in Appendix~D; a second notable asymmetry is observed
+for \emph{poet} under DistilBERT unmasked (0.434 vs.\ 0.200).
 
 Masking increases overall faithfulness for both models (DistilBERT:
 +0.034; RoBERTa: +0.006), suggesting that after gender signals are
@@ -771,8 +813,8 @@ and support throughout the semester.
 \noindent Top-5 attributed tokens (weighted score = count\_topk $\times$ mean attribution)
 per profession for DistilBERT and RoBERTa under unmasked (U) and masked (M) conditions.
 Aggregated over 3,000 test examples; stopwords and tokens shorter than 3 characters excluded.
-\textit{Note: some RoBERTa entries (e.g.\ \emph{olog}, \emph{ession}, \emph{ition}) reflect
-BPE subword fragments and should be interpreted as components of larger lexical units.}
+\textit{Note: occasional RoBERTa entries may reflect corpus artefacts (e.g.\ proper nouns or
+URL fragments from the training data) rather than semantically meaningful profession features.}
 
 
 \vspace{4pt}\noindent\textbf{Accountant}
@@ -783,17 +825,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{accounting} & 20.8 & & \emph{accounting} & 17.8 \\
-\emph{financial} & 9.5 & & \emph{financial} & 9.2 \\
-\emph{accounts} & 3.9 & & \emph{account} & 7.0 \\
-\emph{finance} & 3.1 & & \emph{business} & 6.4 \\
-\emph{tax} & 2.1 & & \emph{tax} & 5.6 \\
+\emph{accounting} & 20.8 & & \emph{accounting} & 21.2 \\
+\emph{financial} & 9.5 & & \emph{financial} & 6.7 \\
+\emph{accountants} & 4.3 & & \emph{accountants} & 5.3 \\
+\emph{accounts} & 3.8 & & \emph{business} & 5.3 \\
+\emph{finance} & 3.1 & & \emph{tax} & 5.1 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{accounting} & 21.4 & & \emph{accounting} & 18.3 \\
-\emph{financial} & 10.6 & & \emph{financial} & 10.3 \\
-\emph{accounts} & 4.0 & & \emph{account} & 9.0 \\
-\emph{finance} & 4.0 & & \emph{business} & 8.2 \\
-\emph{tax} & 2.2 & & \emph{finance} & 5.1 \\
+\emph{accounting} & 25.2 & & \emph{accounting} & 30.7 \\
+\emph{financial} & 7.3 & & \emph{financial} & 10.5 \\
+\emph{accountants} & 4.6 & & \emph{finance} & 10.2 \\
+\emph{finance} & 2.8 & & \emph{business} & 7.4 \\
+\emph{accounts} & 2.7 & & \emph{cfo} & 6.2 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -806,17 +848,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{architecture} & 29.4 & & \emph{architecture} & 43.5 \\
-\emph{architectural} & 15.7 & & \emph{design} & 21.3 \\
-\emph{design} & 13.0 & & \emph{architect} & 20.6 \\
-\emph{architect} & 11.1 & & \emph{architectural} & 13.0 \\
-\emph{architects} & 7.9 & & \emph{architects} & 9.0 \\
+\emph{architecture} & 29.7 & & \emph{architecture} & 38.9 \\
+\emph{architectural} & 15.5 & & \emph{architectural} & 24.6 \\
+\emph{design} & 13.1 & & \emph{design} & 17.7 \\
+\emph{architect} & 11.1 & & \emph{architect} & 10.6 \\
+\emph{architects} & 7.9 & & \emph{architects} & 10.4 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{architecture} & 27.8 & & \emph{architecture} & 38.7 \\
-\emph{architectural} & 15.1 & & \emph{design} & 20.4 \\
-\emph{design} & 13.6 & & \emph{architects} & 13.3 \\
-\emph{architects} & 8.8 & & \emph{architectural} & 12.1 \\
-\emph{construction} & 4.1 & & \emph{architect} & 11.9 \\
+\emph{architecture} & 38.8 & & \emph{architecture} & 57.1 \\
+\emph{architectural} & 19.8 & & \emph{architectural} & 29.9 \\
+\emph{architect} & 12.4 & & \emph{design} & 24.1 \\
+\emph{design} & 10.3 & & \emph{architect} & 12.5 \\
+\emph{architects} & 6.2 & & \emph{architects} & 12.2 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -829,17 +871,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{law} & 53.3 & & \emph{law} & 183.4 \\
-\emph{attorney} & 37.1 & & \emph{attorney} & 54.9 \\
-\emph{legal} & 26.9 & & \emph{litigation} & 51.5 \\
-\emph{litigation} & 25.0 & & \emph{legal} & 46.3 \\
-\emph{clients} & 19.7 & & \emph{practice} & 42.9 \\
+\emph{law} & 56.0 & & \emph{law} & 143.6 \\
+\emph{attorney} & 37.4 & & \emph{litigation} & 54.0 \\
+\emph{legal} & 27.6 & & \emph{legal} & 49.5 \\
+\emph{litigation} & 25.5 & & \emph{practice} & 47.1 \\
+\emph{clients} & 19.8 & & \emph{attorney} & 46.2 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{law} & 56.9 & & \emph{law} & 168.8 \\
-\emph{legal} & 28.6 & & \emph{legal} & 56.7 \\
-\emph{litigation} & 25.3 & & \emph{litigation} & 53.8 \\
-\emph{clients} & 19.7 & & \emph{practice} & 31.4 \\
-\emph{counsel} & 18.8 & & \emph{court} & 21.9 \\
+\emph{law} & 82.0 & & \emph{law} & 182.2 \\
+\emph{attorney} & 33.2 & & \emph{litigation} & 70.7 \\
+\emph{litigation} & 30.2 & & \emph{attorney} & 56.7 \\
+\emph{legal} & 25.5 & & \emph{practice} & 52.3 \\
+\emph{clients} & 18.4 & & \emph{legal} & 31.7 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -852,17 +894,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{comedy} & 16.4 & & \emph{comedy} & 16.7 \\
-\emph{stand} & 4.3 & & \emph{stand} & 6.5 \\
-\emph{comedians} & 2.9 & & \emph{comedians} & 5.8 \\
-\emph{performed} & 2.0 & & \emph{performed} & 2.1 \\
--- & -- & & \emph{show} & 1.5 \\
+\emph{comedy} & 16.4 & & \emph{comedy} & 12.6 \\
+\emph{stand} & 4.3 & & \emph{comedians} & 4.6 \\
+\emph{comedians} & 3.0 & & \emph{stand-up} & 4.4 \\
+\emph{performed} & 2.0 & & \emph{joke} & 3.6 \\
+\emph{april} & 1.3 & & \emph{comedic} & 3.2 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{comedy} & 16.7 & & \emph{comedy} & 19.0 \\
-\emph{stand} & 3.8 & & \emph{comedians} & 6.1 \\
-\emph{comedians} & 3.1 & & \emph{stand} & 4.9 \\
-\emph{funny} & 2.4 & & \emph{show} & 1.4 \\
-\emph{performed} & 1.8 & & -- & -- \\
+\emph{comedy} & 16.5 & & \emph{comedy} & 23.7 \\
+\emph{stand} & 4.5 & & \emph{bajwa} & 8.4 \\
+\emph{comedians} & 4.1 & & \emph{comedians} & 5.0 \\
+\emph{performed} & 2.3 & & \emph{stand-up} & 4.9 \\
+\emph{jokes} & 1.9 & & \emph{show} & 3.4 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -875,17 +917,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{music} & 23.9 & & \emph{music} & 28.6 \\
-\emph{composition} & 6.4 & & \emph{composition} & 7.2 \\
-\emph{composer} & 6.3 & & \emph{scores} & 7.1 \\
-\emph{musical} & 5.0 & & \emph{musical} & 6.8 \\
-\emph{composing} & 4.2 & & \emph{compositions} & 6.7 \\
+\emph{music} & 24.3 & & \emph{short} & 25.5 \\
+\emph{composition} & 6.9 & & \emph{music} & 22.4 \\
+\emph{composer} & 6.4 & & \emph{composition} & 9.6 \\
+\emph{musical} & 4.6 & & \emph{compositions} & 7.9 \\
+\emph{composing} & 4.3 & & \emph{musical} & 7.1 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{music} & 23.9 & & \emph{music} & 27.3 \\
-\emph{composition} & 7.2 & & \emph{composition} & 10.1 \\
-\emph{compositions} & 5.3 & & \emph{scores} & 6.6 \\
-\emph{musical} & 5.0 & & \emph{musical} & 6.0 \\
-\emph{composing} & 3.9 & & \emph{composing} & 5.6 \\
+\emph{music} & 37.4 & & \emph{music} & 53.2 \\
+\emph{composition} & 9.1 & & \emph{composition} & 12.2 \\
+\emph{composer} & 5.8 & & \emph{compositions} & 10.9 \\
+\emph{compositions} & 5.8 & & \emph{musical} & 9.5 \\
+\emph{musical} & 5.7 & & \emph{orchestra} & 8.6 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -898,17 +940,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{dental} & 105.5 & & \emph{ental} & 90.5 \\
-\emph{dentistry} & 48.8 & & \emph{dent} & 45.7 \\
-\emph{dentist} & 28.3 & & \emph{dental} & 33.4 \\
-\emph{bds} & 23.2 & & \emph{clinic} & 22.7 \\
-\emph{clinic} & 9.6 & & \emph{patients} & 21.1 \\
+\emph{dental} & 107.2 & & \emph{dental} & 185.2 \\
+\emph{dentistry} & 48.8 & & \emph{dentistry} & 39.8 \\
+\emph{dentist} & 28.9 & & \emph{clinic} & 25.2 \\
+\emph{bds} & 23.4 & & \emph{dentist} & 24.1 \\
+\emph{clinic} & 9.6 & & \emph{practices} & 19.6 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{dental} & 125.2 & & \emph{ental} & 94.5 \\
-\emph{dentistry} & 49.9 & & \emph{dental} & 39.8 \\
-\emph{bds} & 18.7 & & \emph{dent} & 33.0 \\
-\emph{clinic} & 11.4 & & \emph{clinic} & 23.0 \\
-\emph{patients} & 9.2 & & \emph{patients} & 19.4 \\
+\emph{dental} & 107.4 & & \emph{dental} & 200.2 \\
+\emph{dentistry} & 41.1 & & \emph{dentistry} & 45.8 \\
+\emph{dentist} & 32.2 & & \emph{clinic} & 29.6 \\
+\emph{patients} & 9.9 & & \emph{patients} & 27.9 \\
+\emph{dentists} & 8.8 & & \emph{dentist} & 27.4 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -921,17 +963,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{nutrition} & 37.4 & & \emph{nutrition} & 24.7 \\
-\emph{dietitian} & 35.1 & & \emph{diet} & 4.9 \\
-\emph{registered} & 6.4 & & \emph{ession} & 4.3 \\
-\emph{nutritional} & 3.9 & & \emph{nutritional} & 3.8 \\
-\emph{diet} & 3.1 & & \emph{health} & 2.2 \\
+\emph{nutrition} & 37.7 & & \emph{nutrition} & 30.7 \\
+\emph{dietitian} & 35.3 & & \emph{dietitian} & 27.8 \\
+\emph{registered} & 6.4 & & \emph{professional} & 10.4 \\
+\emph{nutritional} & 3.8 & & \emph{nutritional} & 5.1 \\
+\emph{diet} & 3.2 & & \emph{registered} & 4.7 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{nutrition} & 57.3 & & \emph{nutrition} & 20.8 \\
-\emph{having} & 4.4 & & \emph{ession} & 7.1 \\
-\emph{experiences} & 3.8 & & \emph{diet} & 4.5 \\
-\emph{nutritional} & 3.5 & & \emph{nutritional} & 4.0 \\
-\emph{diet} & 3.4 & & \emph{specializes} & 2.7 \\
+\emph{dietitian} & 37.5 & & \emph{nutrition} & 45.7 \\
+\emph{nutrition} & 35.7 & & \emph{professional} & 21.6 \\
+\emph{registered} & 7.4 & & \emph{dietitian} & 14.5 \\
+\emph{diets} & 4.8 & & \emph{nutritional} & 5.0 \\
+\emph{diet} & 4.6 & & \emph{appointment} & 3.8 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -944,17 +986,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{film} & 20.7 & & \emph{film} & 26.4 \\
-\emph{films} & 12.2 & & \emph{films} & 24.9 \\
-\emph{documentary} & 8.5 & & \emph{feature} & 7.8 \\
-\emph{filmmaking} & 7.8 & & \emph{filmmaker} & 7.2 \\
-\emph{directed} & 4.5 & & \emph{filmmaking} & 6.9 \\
+\emph{film} & 21.0 & & \emph{films} & 19.7 \\
+\emph{films} & 12.5 & & \emph{film} & 17.1 \\
+\emph{documentary} & 8.5 & & \emph{filmmaker} & 7.8 \\
+\emph{filmmaking} & 7.8 & & \emph{feature} & 7.6 \\
+\emph{directed} & 4.6 & & \emph{directed} & 6.0 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{film} & 21.4 & & \emph{film} & 27.4 \\
-\emph{films} & 11.7 & & \emph{films} & 20.9 \\
-\emph{filmmaking} & 7.2 & & \emph{filmmaking} & 6.6 \\
-\emph{documentary} & 5.7 & & \emph{documentary} & 5.8 \\
-\emph{directed} & 5.2 & & \emph{festivals} & 5.4 \\
+\emph{film} & 32.2 & & \emph{film} & 39.5 \\
+\emph{films} & 16.4 & & \emph{films} & 28.8 \\
+\emph{documentary} & 7.5 & & \emph{filmmaking} & 12.0 \\
+\emph{filmmaking} & 5.8 & & \emph{filmmaker} & 9.0 \\
+\emph{directed} & 5.5 & & \emph{feature} & 8.3 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -967,23 +1009,22 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{journalism} & 34.5 & & \emph{journalism} & 32.0 \\
-\emph{journalist} & 17.9 & & \emph{news} & 19.6 \\
-\emph{news} & 12.9 & & \emph{journalist} & 15.7 \\
-\emph{editor} & 11.4 & & \emph{editor} & 13.7 \\
-\emph{journalists} & 8.4 & & \emph{reporting} & 8.9 \\
+\emph{journalism} & 34.6 & & \emph{journalism} & 28.7 \\
+\emph{journalist} & 18.1 & & \emph{news} & 16.2 \\
+\emph{news} & 13.7 & & \emph{journalist} & 15.4 \\
+\emph{editor} & 11.5 & & \emph{reporting} & 8.8 \\
+\emph{journalists} & 8.6 & & \emph{times} & 8.4 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{journalism} & 35.3 & & \emph{journalism} & 36.1 \\
-\emph{news} & 14.4 & & \emph{news} & 23.4 \\
-\emph{editor} & 12.5 & & \emph{editor} & 10.8 \\
-\emph{journalists} & 7.8 & & \emph{times} & 10.4 \\
-\emph{reporting} & 7.4 & & \emph{reporting} & 10.0 \\
+\emph{journalism} & 27.8 & & \emph{journalism} & 44.6 \\
+\emph{journalist} & 16.6 & & \emph{news} & 24.6 \\
+\emph{editor} & 12.8 & & \emph{journalist} & 22.2 \\
+\emph{news} & 10.6 & & \emph{journalists} & 15.6 \\
+\emph{reporting} & 8.6 & & \emph{writing} & 10.4 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 \vspace{4pt}\noindent\textbf{Model}
-{\scriptsize\textit{Note: \emph{freeones} is a website name from the training corpus, not a profession descriptor --- an example of dataset artefacts appearing in proxy tables.}}
 \begin{center}\scriptsize
 \begin{tabular}{lrllr}
 \toprule
@@ -991,17 +1032,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{model} & 16.4 & & \emph{model} & 28.1 \\
-\emph{freeones} & 15.2 & & \emph{born} & 20.8 \\
-\emph{modeling} & 14.0 & & \emph{modeling} & 13.9 \\
-\emph{born} & 7.1 & & \emph{currently} & 6.7 \\
-\emph{gallery} & 5.3 & & \emph{fashion} & 6.5 \\
+\emph{model} & 17.1 & & \emph{model} & 24.2 \\
+\emph{freeones} & 15.0 & & \emph{modeling} & 11.5 \\
+\emph{modeling} & 14.2 & & \emph{ranked} & 10.4 \\
+\emph{born} & 7.2 & & \emph{born} & 8.4 \\
+\emph{gallery} & 5.3 & & \emph{modelling} & 6.0 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{freeones} & 22.7 & & \emph{modeling} & 17.7 \\
-\emph{modeling} & 15.2 & & \emph{gallery} & 8.5 \\
-\emph{born} & 8.0 & & \emph{modelling} & 8.4 \\
-\emph{gallery} & 5.8 & & \emph{currently} & 8.4 \\
-\emph{modelling} & 4.6 & & \emph{ranked} & 6.3 \\
+\emph{model} & 12.1 & & \emph{model} & 31.1 \\
+\emph{modeling} & 11.5 & & \emph{born} & 22.7 \\
+\emph{born} & 7.7 & & \emph{gallery} & 18.1 \\
+\emph{freeones} & 7.5 & & \emph{modeling} & 17.1 \\
+\emph{ranked} & 6.0 & & \emph{modelling} & 8.2 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1014,17 +1055,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{nurse} & 127.3 & & \emph{nursing} & 91.5 \\
-\emph{nursing} & 54.6 & & \emph{nurse} & 76.2 \\
-\emph{practitioner} & 25.1 & & \emph{specialists} & 24.2 \\
-\emph{graduated} & 20.5 & & \emph{graduated} & 23.2 \\
-\emph{experiences} & 14.5 & & \emph{medical} & 21.8 \\
+\emph{nurse} & 129.9 & & \emph{nurse} & 141.1 \\
+\emph{nursing} & 55.5 & & \emph{nursing} & 70.4 \\
+\emph{practitioner} & 26.5 & & \emph{practitioner} & 25.3 \\
+\emph{graduated} & 19.1 & & \emph{graduated} & 24.9 \\
+\emph{experiences} & 15.2 & & \emph{medical} & 13.3 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{nursing} & 66.6 & & \emph{nursing} & 107.5 \\
-\emph{graduated} & 23.0 & & \emph{medical} & 20.3 \\
-\emph{nurse} & 8.9 & & \emph{doctors} & 17.4 \\
-\emph{nurses} & 7.6 & & \emph{ition} & 16.9 \\
-\emph{medicine} & 7.2 & & \emph{health} & 15.6 \\
+\emph{nurse} & 152.7 & & \emph{nurse} & 166.4 \\
+\emph{nursing} & 60.7 & & \emph{nursing} & 85.1 \\
+\emph{especially} & 15.5 & & \emph{practitioner} & 20.5 \\
+\emph{practitioner} & 11.2 & & \emph{call} & 16.0 \\
+\emph{hospital} & 9.0 & & \emph{medical} & 14.2 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1037,17 +1078,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{paintings} & 25.4 & & \emph{painting} & 41.5 \\
-\emph{painting} & 21.1 & & \emph{paintings} & 38.8 \\
-\emph{gallery} & 8.1 & & \emph{art} & 9.6 \\
-\emph{art} & 7.8 & & \emph{paint} & 8.6 \\
-\emph{paint} & 4.1 & & \emph{gallery} & 7.2 \\
+\emph{paintings} & 25.6 & & \emph{painting} & 36.1 \\
+\emph{painting} & 21.0 & & \emph{paintings} & 24.3 \\
+\emph{gallery} & 8.2 & & \emph{art} & 8.1 \\
+\emph{art} & 8.0 & & \emph{gallery} & 5.4 \\
+\emph{paint} & 4.1 & & \emph{paint} & 4.8 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{paintings} & 23.8 & & \emph{painting} & 36.7 \\
-\emph{painting} & 22.1 & & \emph{paintings} & 35.4 \\
-\emph{art} & 8.7 & & \emph{art} & 11.9 \\
-\emph{gallery} & 7.1 & & \emph{paint} & 8.6 \\
-\emph{paint} & 4.1 & & \emph{gallery} & 6.2 \\
+\emph{paintings} & 25.7 & & \emph{painting} & 51.4 \\
+\emph{painting} & 24.5 & & \emph{paintings} & 50.0 \\
+\emph{art} & 8.1 & & \emph{art} & 13.3 \\
+\emph{gallery} & 4.7 & & \emph{gallery} & 9.6 \\
+\emph{work} & 4.4 & & \emph{depicted} & 8.7 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1060,17 +1101,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{photography} & 146.1 & & \emph{photography} & 164.7 \\
-\emph{photographs} & 25.5 & & \emph{photographs} & 32.9 \\
-\emph{photographer} & 22.9 & & \emph{photographer} & 26.8 \\
-\emph{photographic} & 15.9 & & \emph{images} & 18.9 \\
-\emph{photo} & 14.3 & & \emph{photographic} & 17.8 \\
+\emph{photography} & 149.1 & & \emph{photography} & 126.0 \\
+\emph{photographs} & 26.2 & & \emph{photographs} & 23.9 \\
+\emph{photographer} & 23.6 & & \emph{photographer} & 23.0 \\
+\emph{photographic} & 16.2 & & \emph{photographic} & 15.1 \\
+\emph{photo} & 14.3 & & \emph{shoots} & 12.8 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{photography} & 153.9 & & \emph{photography} & 176.8 \\
-\emph{photographs} & 24.4 & & \emph{photographs} & 30.8 \\
-\emph{photo} & 17.8 & & \emph{images} & 17.1 \\
-\emph{photographic} & 17.0 & & \emph{photo} & 17.1 \\
-\emph{images} & 10.1 & & \emph{photographic} & 16.5 \\
+\emph{photography} & 143.0 & & \emph{photography} & 239.6 \\
+\emph{photographs} & 24.3 & & \emph{photographs} & 45.2 \\
+\emph{photographer} & 22.0 & & \emph{photographer} & 39.2 \\
+\emph{work} & 15.9 & & \emph{photographic} & 29.4 \\
+\emph{photographic} & 15.8 & & \emph{images} & 24.9 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1083,17 +1124,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{medicine} & 262.6 & & \emph{medicine} & 203.5 \\
-\emph{practices} & 77.5 & & \emph{practices} & 172.6 \\
-\emph{medical} & 64.1 & & \emph{medical} & 110.4 \\
-\emph{physician} & 36.1 & & \emph{specializes} & 45.8 \\
-\emph{graduate} & 16.7 & & \emph{affiliated} & 41.7 \\
+\emph{medicine} & 268.2 & & \emph{practices} & 179.3 \\
+\emph{practices} & 76.9 & & \emph{medicine} & 166.6 \\
+\emph{medical} & 66.4 & & \emph{medical} & 77.4 \\
+\emph{physician} & 36.1 & & \emph{affiliated} & 68.8 \\
+\emph{graduate} & 15.9 & & \emph{physician} & 26.0 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{medicine} & 238.6 & & \emph{practices} & 148.7 \\
-\emph{practices} & 101.1 & & \emph{medicine} & 121.6 \\
-\emph{medical} & 63.0 & & \emph{medical} & 106.7 \\
-\emph{specializes} & 29.1 & & \emph{affiliated} & 79.5 \\
-\emph{graduate} & 17.0 & & \emph{specializes} & 46.4 \\
+\emph{medicine} & 287.6 & & \emph{medicine} & 292.2 \\
+\emph{medical} & 89.3 & & \emph{practices} & 224.6 \\
+\emph{practices} & 72.8 & & \emph{medical} & 97.4 \\
+\emph{hospital} & 33.0 & & \emph{patients} & 52.7 \\
+\emph{physician} & 31.0 & & \emph{specializes} & 38.3 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1106,17 +1147,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{poetry} & 34.5 & & \emph{poetry} & 40.4 \\
-\emph{poems} & 8.1 & & \emph{poems} & 19.7 \\
-\emph{writing} & 4.4 & & \emph{writing} & 10.0 \\
-\emph{english} & 3.0 & & \emph{poem} & 8.3 \\
-\emph{poem} & 3.0 & & \emph{published} & 6.2 \\
+\emph{poetry} & 34.9 & & \emph{poetry} & 52.0 \\
+\emph{poems} & 8.1 & & \emph{poems} & 15.7 \\
+\emph{writing} & 4.7 & & \emph{writing} & 8.7 \\
+\emph{english} & 3.1 & & \emph{poem} & 6.3 \\
+\emph{poem} & 3.0 & & \emph{published} & 3.6 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{poetry} & 35.9 & & \emph{poetry} & 47.3 \\
-\emph{poems} & 8.3 & & \emph{poems} & 18.8 \\
-\emph{writing} & 4.7 & & \emph{writing} & 13.5 \\
-\emph{poem} & 3.5 & & \emph{etry} & 6.3 \\
-\emph{english} & 3.2 & & \emph{poem} & 6.1 \\
+\emph{poetry} & 44.9 & & \emph{poetry} & 67.8 \\
+\emph{poems} & 9.9 & & \emph{poems} & 14.0 \\
+\emph{writing} & 5.1 & & \emph{writing} & 7.6 \\
+\emph{poem} & 4.5 & & \emph{poem} & 6.6 \\
+\emph{english} & 3.5 & & \emph{review} & 6.6 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1129,17 +1170,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{research} & 322.9 & & \emph{research} & 364.0 \\
-\emph{phd} & 92.0 & & \emph{phd} & 127.4 \\
-\emph{interests} & 58.8 & & \emph{university} & 126.5 \\
-\emph{university} & 58.6 & & \emph{interests} & 83.1 \\
-\emph{focuses} & 48.0 & & \emph{teaching} & 67.5 \\
+\emph{research} & 329.5 & & \emph{research} & 333.3 \\
+\emph{phd} & 93.8 & & \emph{ph.d} & 170.5 \\
+\emph{interests} & 60.9 & & \emph{phd} & 119.2 \\
+\emph{university} & 58.6 & & \emph{university} & 105.0 \\
+\emph{focuses} & 49.3 & & \emph{interests} & 48.4 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{research} & 220.1 & & \emph{research} & 302.4 \\
-\emph{phd} & 69.9 & & \emph{university} & 135.8 \\
-\emph{university} & 66.5 & & \emph{phd} & 100.4 \\
-\emph{interests} & 58.0 & & \emph{interests} & 68.0 \\
-\emph{focuses} & 50.2 & & \emph{faculty} & 63.5 \\
+\emph{research} & 377.2 & & \emph{research} & 514.2 \\
+\emph{university} & 193.5 & & \emph{university} & 302.8 \\
+\emph{phd} & 79.8 & & \emph{interests} & 95.4 \\
+\emph{professor} & 49.0 & & \emph{phd} & 94.1 \\
+\emph{interests} & 46.9 & & \emph{ph.d} & 91.7 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1152,17 +1193,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{psychologist} & 58.3 & & \emph{psychology} & 35.9 \\
-\emph{psychology} & 42.0 & & \emph{olog} & 30.0 \\
-\emph{psychological} & 9.1 & & \emph{clinical} & 13.2 \\
-\emph{psychotherapy} & 9.1 & & \emph{psych} & 12.3 \\
-\emph{experiences} & 8.0 & & \emph{psychological} & 10.5 \\
+\emph{psychologist} & 58.6 & & \emph{psychologist} & 55.0 \\
+\emph{psychology} & 43.0 & & \emph{psychology} & 31.5 \\
+\emph{psychological} & 9.2 & & \emph{clinical} & 18.7 \\
+\emph{psychotherapy} & 9.2 & & \emph{appointment} & 13.2 \\
+\emph{experiences} & 8.3 & & \emph{experiences} & 10.5 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{psychology} & 42.1 & & \emph{psychology} & 36.8 \\
-\emph{psychological} & 16.3 & & \emph{psychological} & 18.3 \\
-\emph{psychotherapy} & 9.5 & & \emph{psych} & 11.7 \\
-\emph{depression} & 9.2 & & \emph{clinical} & 11.1 \\
-\emph{therapy} & 6.4 & & \emph{ical} & 10.8 \\
+\emph{psychologist} & 56.4 & & \emph{psychologist} & 61.6 \\
+\emph{psychology} & 33.0 & & \emph{psychology} & 40.4 \\
+\emph{clinical} & 17.5 & & \emph{clinical} & 22.0 \\
+\emph{psychological} & 8.4 & & \emph{psychological} & 16.8 \\
+\emph{psychotherapy} & 7.1 & & \emph{psychotherapy} & 13.4 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1175,17 +1216,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{development} & 5.2 & & \emph{development} & 9.3 \\
-\emph{engineering} & 4.6 & & \emph{engineering} & 9.2 \\
-\emph{software} & 4.2 & & \emph{computer} & 7.0 \\
-\emph{ibm} & 2.9 & & \emph{software} & 5.0 \\
-\emph{developer} & 2.7 & & \emph{java} & 3.7 \\
+\emph{software} & 4.8 & & \emph{development} & 12.3 \\
+\emph{development} & 4.6 & & \emph{engineering} & 9.7 \\
+\emph{engineering} & 4.2 & & \emph{computer} & 6.4 \\
+\emph{ibm} & 2.9 & & \emph{software} & 6.3 \\
+\emph{code} & 2.6 & & \emph{building} & 3.4 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{engineering} & 5.5 & & \emph{development} & 12.3 \\
-\emph{development} & 4.8 & & \emph{engineering} & 7.8 \\
-\emph{software} & 3.9 & & \emph{software} & 5.2 \\
-\emph{ibm} & 2.9 & & \emph{computer} & 4.5 \\
-\emph{code} & 2.4 & & \emph{building} & 3.2 \\
+\emph{computer} & 7.4 & & \emph{software} & 14.2 \\
+\emph{engineering} & 7.4 & & \emph{engineering} & 8.0 \\
+\emph{software} & 5.8 & & \emph{development} & 4.7 \\
+\emph{development} & 4.5 & & \emph{javascript} & 4.5 \\
+\emph{intel} & 3.7 & & \emph{devops} & 4.4 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1198,17 +1239,17 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{surgery} & 43.7 & & \emph{surgery} & 83.7 \\
-\emph{medical} & 13.2 & & \emph{medical} & 27.8 \\
-\emph{medicine} & 11.7 & & \emph{surgeon} & 12.5 \\
-\emph{practices} & 8.5 & & \emph{hospital} & 9.0 \\
-\emph{surgeon} & 7.7 & & \emph{surgeries} & 8.9 \\
+\emph{surgery} & 44.2 & & \emph{surgery} & 51.1 \\
+\emph{medical} & 13.2 & & \emph{medical} & 20.0 \\
+\emph{medicine} & 12.1 & & \emph{practice} & 16.5 \\
+\emph{practices} & 8.9 & & \emph{medicine} & 12.2 \\
+\emph{surgeon} & 7.7 & & \emph{hospital} & 10.8 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{surgery} & 42.6 & & \emph{surgery} & 80.4 \\
-\emph{practices} & 10.5 & & \emph{medical} & 33.2 \\
-\emph{medicine} & 8.9 & & \emph{practices} & 12.9 \\
-\emph{medical} & 8.6 & & \emph{hospital} & 11.0 \\
-\emph{practice} & 6.8 & & \emph{practice} & 10.1 \\
+\emph{surgery} & 24.4 & & \emph{surgery} & 95.6 \\
+\emph{medical} & 15.9 & & \emph{medical} & 22.9 \\
+\emph{practice} & 12.7 & & \emph{surgeon} & 16.8 \\
+\emph{medicine} & 11.7 & & \emph{medicine} & 13.9 \\
+\emph{orthopaedic} & 8.0 & & \emph{neurosurgery} & 10.6 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1221,20 +1262,21 @@ BPE subword fragments and should be interpreted as components of larger lexical 
 \textbf{Token} & \textbf{W.Score} & & \textbf{Token} & \textbf{W.Score} \\
 \midrule
 \multicolumn{5}{l}{\textit{Unmasked}} \\
-\emph{teacher} & 19.5 & & \emph{teaching} & 26.9 \\
-\emph{students} & 18.2 & & \emph{school} & 25.3 \\
-\emph{teaching} & 15.8 & & \emph{students} & 25.2 \\
-\emph{school} & 12.2 & & \emph{teacher} & 23.0 \\
-\emph{teachers} & 12.1 & & \emph{taught} & 17.6 \\
+\emph{teacher} & 19.9 & & \emph{students} & 25.3 \\
+\emph{students} & 18.7 & & \emph{teaching} & 20.7 \\
+\emph{teaching} & 16.3 & & \emph{teacher} & 20.4 \\
+\emph{school} & 12.8 & & \emph{school} & 18.6 \\
+\emph{teachers} & 12.4 & & \emph{taught} & 13.7 \\
 \multicolumn{5}{l}{\textit{Masked}} \\
-\emph{students} & 19.4 & & \emph{school} & 32.9 \\
-\emph{teachers} & 15.0 & & \emph{teaching} & 26.6 \\
-\emph{teaching} & 14.5 & & \emph{students} & 26.2 \\
-\emph{school} & 11.3 & & \emph{teachers} & 15.8 \\
-\emph{schools} & 8.4 & & \emph{teaches} & 12.4 \\
+\emph{students} & 27.1 & & \emph{students} & 38.4 \\
+\emph{teacher} & 18.2 & & \emph{teaching} & 34.2 \\
+\emph{teaching} & 14.5 & & \emph{school} & 26.3 \\
+\emph{teachers} & 12.3 & & \emph{teaches} & 26.1 \\
+\emph{school} & 10.8 & & \emph{teacher} & 23.6 \\
 \bottomrule
 \end{tabular}
 \end{center}
+
 
 \newpage
 \onecolumn
@@ -1747,11 +1789,50 @@ Pythia-410m FT & M & 0.053 & 0.010 & 0.017 & & & & & \\
 \end{tabular}
 \end{center}
 
+\section{Full Faithfulness Scores by Profession}
+
+Mean faithfulness (probability drop after erasing top-5 attributed tokens)
+for all 20 professions across both models and masking conditions.
+U\,=\,unmasked; M\,=\,masked. Macro-average (equal weight per profession)
+reported in the \textit{Overall} row.
+
+\begin{center}\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Profession} & \multicolumn{2}{c}{\textbf{DistilBERT}} & \multicolumn{2}{c}{\textbf{RoBERTa}} \\
+& \textbf{U} & \textbf{M} & \textbf{U} & \textbf{M} \\
+\midrule
+Accountant        & 0.399 & 0.422 & 0.259 & 0.268 \\
+Architect         & 0.370 & 0.433 & 0.283 & 0.268 \\
+Attorney          & 0.162 & 0.221 & 0.175 & 0.158 \\
+Comedian          & 0.352 & 0.296 & 0.240 & 0.292 \\
+Composer          & 0.373 & 0.467 & 0.228 & 0.329 \\
+Dentist           & 0.353 & 0.390 & 0.271 & 0.228 \\
+Dietitian         & 0.619 & 0.743 & 0.548 & 0.372 \\
+Filmmaker         & 0.277 & 0.368 & 0.190 & 0.188 \\
+Journalist        & 0.268 & 0.275 & 0.281 & 0.318 \\
+Model             & 0.294 & 0.153 & 0.100 & 0.192 \\
+Nurse             & 0.395 & 0.518 & 0.203 & 0.197 \\
+Painter           & 0.473 & 0.418 & 0.339 & 0.342 \\
+Photographer      & 0.385 & 0.469 & 0.283 & 0.346 \\
+Physician         & 0.233 & 0.191 & 0.235 & 0.200 \\
+Poet              & 0.315 & 0.368 & 0.124 & 0.150 \\
+Professor         & 0.160 & 0.214 & 0.162 & 0.182 \\
+Psychologist      & 0.356 & 0.378 & 0.232 & 0.252 \\
+Software Engineer & 0.171 & 0.204 & 0.193 & 0.199 \\
+Surgeon           & 0.255 & 0.411 & 0.249 & 0.221 \\
+Teacher           & 0.383 & 0.342 & 0.269 & 0.276 \\
+\midrule
+\textit{Overall}  & 0.330 & 0.364 & 0.243 & 0.249 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \section{Gender-Conditioned Faithfulness by Profession}
 
-Mean faithfulness scores split by gender for key professions,
-shown for all four conditions (two models $\times$ masked/unmasked).
-Only professions with at least 10 examples per gender group are shown;
+Mean faithfulness scores split by gender for professions with at least
+10 examples per gender group, shown for all four conditions
+(two models $\times$ masked/unmasked).
 $n$ = number of examples. Dietitian is excluded from masked rows
 (male $n{=}3$ in both masked conditions).
 
@@ -1764,47 +1845,98 @@ $n$ = number of examples. Dietitian is excluded from masked rows
 \midrule
 \multicolumn{5}{l}{\textit{DistilBERT --- unmasked}} \\
 \midrule
-Nurse         & 0.354 & 132 & \textbf{0.756} & 15 \\
-Dietitian     & 0.656 &  27 & 0.288 &  3 \\
-Psychologist  & 0.370 &  79 & 0.336 & 55 \\
-Physician     & 0.198 & 171 & 0.270 & 157 \\
+Accountant    & 0.373 &  10 & 0.408 &  31 \\
+Architect     & 0.490 &  17 & 0.326 &  47 \\
 Attorney      & 0.161 & 110 & 0.162 & 160 \\
+Dentist       & 0.350 &  31 & 0.354 &  85 \\
+Dietitian     & 0.656 &  27 & 0.288 &   3 \\
+Filmmaker     & 0.263 &  17 & 0.284 &  31 \\
+Journalist    & 0.238 &  80 & 0.301 &  74 \\
+Nurse         & 0.354 & 132 & \textbf{0.756} & 15 \\
+Painter       & 0.492 &  31 & 0.452 &  28 \\
+Photographer  & 0.432 &  76 & 0.357 & 126 \\
+Physician     & 0.198 & 171 & 0.270 & 157 \\
+\textbf{Poet} & \textbf{0.200} &  29 & \textbf{0.434} &  28 \\
 Professor     & 0.158 & 413 & 0.162 & 519 \\
+Psychologist  & 0.370 &  79 & 0.336 &  55 \\
+Surgeon       & 0.290 &  15 & 0.249 &  84 \\
+Teacher       & 0.338 &  76 & 0.446 &  55 \\
 \midrule
 \multicolumn{5}{l}{\textit{DistilBERT --- masked}} \\
 \midrule
-Nurse         & 0.494 & 126 & \textbf{0.660} & 22 \\
-Psychologist  & 0.391 &  69 & 0.359 & 47 \\
-Physician     & 0.183 & 173 & 0.201 & 150 \\
+Accountant    & 0.413 &  11 & 0.425 &  28 \\
+Architect     & 0.521 &  14 & 0.406 &  47 \\
 Attorney      & 0.223 & 115 & 0.220 & 161 \\
+Dentist       & 0.348 &  31 & 0.406 &  83 \\
+Filmmaker     & 0.310 &  17 & 0.397 &  34 \\
+Journalist    & 0.311 &  79 & 0.235 &  72 \\
+Nurse         & 0.494 & 126 & \textbf{0.660} & 22 \\
+Painter       & 0.476 &  26 & 0.368 &  30 \\
+Photographer  & 0.509 &  76 & 0.444 & 124 \\
+Physician     & 0.183 & 173 & 0.201 & 150 \\
+Poet          & 0.254 &  28 & 0.491 &  26 \\
 Professor     & 0.197 & 422 & 0.227 & 544 \\
+Psychologist  & 0.391 &  69 & 0.359 &  47 \\
+Surgeon       & 0.397 &  19 & 0.414 &  82 \\
+Teacher       & 0.308 &  75 & 0.395 &  48 \\
 \midrule
 \multicolumn{5}{l}{\textit{RoBERTa --- unmasked}} \\
 \midrule
-Nurse         & 0.163 & 130 & \textbf{0.534} & 16 \\
-Dietitian     & 0.549 &  28 & 0.533 &  2 \\
-Psychologist  & 0.234 &  77 & 0.227 & 52 \\
-Physician     & 0.280 & 174 & 0.184 & 154 \\
+Accountant    & 0.408 &  12 & 0.197 &  29 \\
+Architect     & 0.381 &  17 & 0.252 &  52 \\
 Attorney      & 0.192 & 108 & 0.164 & 156 \\
+Dentist       & 0.289 &  31 & 0.265 &  84 \\
+Dietitian     & 0.549 &  28 & 0.533 &   2 \\
+Filmmaker     & 0.088 &  20 & 0.244 &  37 \\
+Journalist    & 0.259 &  84 & 0.309 &  68 \\
+Nurse         & 0.163 & 130 & \textbf{0.534} & 16 \\
+Painter       & 0.310 &  28 & 0.367 &  29 \\
+Photographer  & 0.291 &  72 & 0.278 & 131 \\
+Physician     & 0.280 & 174 & 0.184 & 154 \\
+Poet          & 0.139 &  28 & 0.108 &  28 \\
 Professor     & 0.155 & 411 & 0.168 & 533 \\
+Psychologist  & 0.234 &  77 & 0.227 &  52 \\
+Surgeon       & 0.384 &  15 & 0.226 &  86 \\
+Teacher       & 0.249 &  85 & 0.307 &  46 \\
 \midrule
 \multicolumn{5}{l}{\textit{RoBERTa --- masked}} \\
 \midrule
-Nurse         & 0.172 & 129 & \textbf{0.374} & 18 \\
-Psychologist  & 0.274 &  80 & 0.221 & 55 \\
-Physician     & 0.218 & 170 & 0.181 & 154 \\
+Accountant    & 0.382 &  14 & 0.215 &  30 \\
+Architect     & 0.405 &  18 & 0.221 &  53 \\
 Attorney      & 0.190 & 109 & 0.134 & 153 \\
+Dentist       & 0.241 &  31 & 0.223 &  85 \\
+Filmmaker     & 0.177 &  19 & 0.194 &  36 \\
+Journalist    & 0.313 &  77 & 0.324 &  74 \\
+Nurse         & 0.172 & 129 & \textbf{0.374} & 18 \\
+Painter       & 0.363 &  28 & 0.324 &  32 \\
+Photographer  & 0.418 &  74 & 0.302 & 124 \\
+Physician     & 0.218 & 170 & 0.181 & 154 \\
+Poet          & 0.142 &  28 & 0.159 &  27 \\
 Professor     & 0.172 & 410 & 0.191 & 525 \\
+Psychologist  & 0.274 &  80 & 0.221 &  55 \\
+Surgeon       & 0.247 &  20 & 0.214 &  83 \\
+Teacher       & 0.225 &  79 & 0.354 &  52 \\
 \bottomrule
 \end{tabular}
 \end{center}
-\vspace{2pt}
-{\small The nurse$|$M asymmetry is the largest gender-conditioned
-faithfulness gap observed in both unmasked conditions: DistilBERT
-0.756 vs.\ 0.354, RoBERTa 0.534 vs.\ 0.163. Under masking, the gap
-narrows substantially (DistilBERT: 0.660 vs.\ 0.494; RoBERTa:
-0.374 vs.\ 0.172) but does not disappear, consistent with implicit
-proxy signals persisting after explicit gender-token removal.}
+{\small Professions where only one gender reaches $n \geq 10$ (comedian$|$M,
+composer$|$M, model$|$F, software engineer$|$M) are omitted; their
+overall faithfulness appears in Appendix~E. Dietitian$|$M ($n{=}3$ in
+DU; $n{=}2$ in RU; $n < 10$ in masked conditions) is included for
+reference but should be interpreted with caution.}
+
+\vspace{4pt}
+{\small The nurse$|$M asymmetry remains the largest gender-conditioned
+faithfulness gap in both unmasked conditions: DistilBERT 0.756
+vs.\ 0.354, RoBERTa 0.534 vs.\ 0.163. A second notable asymmetry
+appears for \emph{poet} under DistilBERT unmasked (0.434 vs.\ 0.200),
+suggesting that male poet predictions are similarly concentrated on
+a small decisive feature set---though it does not persist under
+masking (0.491 vs.\ 0.254) or under RoBERTa (0.108 vs.\ 0.139).
+Under masking, the nurse gap narrows substantially
+(DistilBERT: 0.660 vs.\ 0.494; RoBERTa: 0.374 vs.\ 0.172)
+but does not disappear, consistent with implicit proxy signals
+persisting after explicit gender-token removal.}
 
 \bibliographystyle{plainnat}
 \bibliography{references}
