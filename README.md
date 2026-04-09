@@ -130,3 +130,46 @@ python src/models/pythia/pythia_eval.py \
 ```
 
 Results will be stored in ` results/pythia_finetuned`. Check ` src/models/pythia/README_finetuned.md` for more information.
+
+### Part 4: Encoder-based Models (DistilBERT & RoBERTa)
+
+Train encoder models (DistilBERT and RoBERTa) on both unmasked and masked data regimes:
+
+```bash
+python -m src.models.encoders.train_encoder --model_name distilbert-base-uncased --data_regime unmasked
+python -m src.models.encoders.train_encoder --model_name distilbert-base-uncased --data_regime masked
+python -m src.models.encoders.train_encoder --model_name roberta-base --data_regime unmasked
+python -m src.models.encoders.train_encoder --model_name roberta-base --data_regime masked
+```
+
+Best checkpoints (by Macro-F1) will be saved to `checkpoints/`. Pretrained checkpoints can also be downloaded from [OneDrive](https://liveuclac-my.sharepoint.com/:f:/g/personal/zcabkam_ucl_ac_uk/IgB1sMM6KvDkRJinN4I-5d-fAUxZA_lAs4SteWG-cKuAbZU?e=zyG7xK).
+
+Evaluate and export predictions:
+
+```bash
+python -m src.models.encoders.eval_encoder \
+    --model_dir checkpoints/distilbert_unmasked \
+    --model_tag distilbert-ft \
+    --data_regime unmasked \
+    --out_jsonl results/predictions/distilbert_unmasked.jsonl
+
+python -m src.models.encoders.eval_encoder \
+    --model_dir checkpoints/distilbert_masked \
+    --model_tag distilbert-ft \
+    --data_regime masked \
+    --out_jsonl results/predictions/distilbert_masked.jsonl
+
+python -m src.models.encoders.eval_encoder \
+    --model_dir checkpoints/roberta_unmasked \
+    --model_tag roberta-ft \
+    --data_regime unmasked \
+    --out_jsonl results/predictions/roberta_unmasked.jsonl
+
+python -m src.models.encoders.eval_encoder \
+    --model_dir checkpoints/roberta_masked \
+    --model_tag roberta-ft \
+    --data_regime masked \
+    --out_jsonl results/predictions/roberta_masked.jsonl
+```
+
+Results will be stored in `results/predictions/`. Check `src/models/encoders/README.md` for more information.
