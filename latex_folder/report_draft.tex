@@ -37,7 +37,7 @@ Our main findings: (1) fine-tuned models substantially outperform
 zero/few-shot baselines in both performance and fairness;
 (2) larger models are not inherently fairer---zero-shot bias
 \emph{increases} with scale; (3) gender-token masking reduces bias for some professions but produces backfire effects for others, suggesting that implicit proxy signals survive removal of explicit gender tokens; (4) explicit gender tokens are not the primary
-drivers of bias---they appear with weights 61--289$\times$ smaller than
+drivers of bias---they appear with weights 33--287$\times$ smaller than
 dominant profession tokens, while indirect contextual signals carry
 the latent gender signal; and (5) proxy bias is model-dependent, the same profession 
 can be stable under one model and unstable under another, 
@@ -122,6 +122,21 @@ their systematic use in occupation classification is limited.
 Critically, no prior work on the Bias-in-Bios occupation prediction 
 task provides token-level proxy word tables with quantified attribution 
 weights, nor examines how those weights shift under gender masking.
+
+\textbf{Attribution method selection.}
+Local surrogate methods such as LIME \citep{ribeiro2016should} and additive
+feature attribution methods such as SHAP \citep{lundberg2017unified} offer
+alternative interpretability frameworks. LIME fits a locally linear model
+around each prediction and can be unstable across runs; KernelSHAP satisfies
+consistency and local accuracy axioms but requires a large number of model
+evaluations for each example, making it costly for token-level analysis of
+long sequences. Integrated Gradients \citep{sundararajan2017axiomatic}
+provides a deterministic, path-integral attribution satisfying completeness
+(attributions sum to the prediction gap from the baseline) and sensitivity,
+with a fixed cost of $O(m)$ forward passes for $m$ interpolation steps.
+For sequence classification tasks where token-level granularity and
+reproducibility matter, IG is the standard choice
+\citep{attanasio2022entropy}; we adopt it for the same reasons.
 
 \textbf{Model scaling and fairness.}
 \citet{bommasani2021opportunities} discusses risks of foundation models including
@@ -239,7 +254,7 @@ would conflate gender-signal removal with loss of biographical information.
 \subsection{Pythia: Zero-shot and Few-shot}
 We evaluate Pythia \citep{biderman2023pythia} at 160M, 410M, and 1.4B
 parameters under zero-shot (biography + candidate list) and few-shot
-($K\!=\!4$ exemplar pairs) regimes, with and without gender masking.
+($K\!=\!4$ exemplar pairs) regimes, with and without gender masking.\footnote{The four exemplars cover professor (female pronoun), physician, journalist, and photographer (all male pronouns). To assess whether this 3:1 male skew introduced exemplar-level bias, we compared few-shot vs.\ zero-shot TPR gaps for these four professions across all three model sizes; no consistent directional effect was observed (full values in Appendix~C), so exemplar gender is unlikely to be a primary confound in the few-shot results.}
 As a causal language model, Pythia scores each candidate label $c_k$
 by its joint log-probability given prompt $p$:
 \begin{equation} \log P(c_k \mid p) = \sum_{t=1}^{|c_k|} \log P\!\left(c_k^{(t)} \mid p, c_k^{(1)}, \ldots, c_k^{(t-1)}\right) \end{equation}
@@ -805,6 +820,13 @@ stratification from the 3,000-sample canonical subset, resulting in
 small sample sizes for low-frequency professions (e.g.\ comedian
 $n\!=\!27$, dietitian $n\!=\!30$); per-profession fairness estimates
 for these occupations should be interpreted with caution.
+The few-shot exemplars were not gender-balanced (3 male, 1 female pronouns);
+no consistent directional effect on TPR gaps is observable for the four
+exemplar professions across model sizes (§4.1, footnote), but a residual
+exemplar-level confound cannot be fully excluded.
+Differences in masked/unmasked fairness metrics are reported descriptively
+without statistical significance tests; small per-profession sample sizes
+mean some observed gaps may be within sampling noise.
 
 \paragraph{Future work.}
 Remaining directions include extending attribution to generative models
