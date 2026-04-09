@@ -98,7 +98,7 @@ summary tables and plots for class and gender distributions
 python -m src.data.export_dataset_jsonl --output_dir processed
 
 --top_n {20}
-
+```
 ### Unmasked Dataset (used for baseline encoder + Pythia runs)
 ```bash
 python -m scripts.export_dataset_jsonl \
@@ -116,7 +116,7 @@ python -m scripts.export_dataset_jsonl \
     --mask_label_leakage true \
     --output_dir data/processed/masked
 ```
-```
+
 **Note**: edit the parameters in the {} to your needs.
 
 
