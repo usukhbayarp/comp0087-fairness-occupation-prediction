@@ -78,25 +78,6 @@ fairness on Bias-in-Bios;
 (v)~a paired masked/unmasked evaluation of gender-token scrubbing on
 both task performance and fairness metrics.
 
-\paragraph{Key Findings.}
-(1)~Fine-tuned models substantially outperform zero- and few-shot
-baselines in both task performance and fairness, consistent with prior
-work on task-specific adaptation \citep{de-arteaga-etal-2019-bias,
-romanov-etal-2019-whats};
-(2)~zero-shot bias \emph{increases} with Pythia scale (EO gap
-${\sim}0.09$ at 160M to ${\sim}0.21$ at 1.4B), in line with scaling
-risks documented for foundation models \citep{bommasani2021opportunities};
-(3)~gender-token masking reduces aggregate bias for encoder models but
-produces profession-level backfire effects, consistent with the
-documented limits of scrubbing-based debiasing
-\citep{romanov-etal-2019-whats, lu-etal-2020-gender};
-(4)~gender tokens carry weights 33--287$\times$ smaller than dominant
-profession tokens within each model (48--287$\times$ for DistilBERT,
-33--158$\times$ for RoBERTa), suggesting bias operates through indirect
-contextual signals \citep{de-arteaga-etal-2019-bias}; and
-(5)~\emph{novel on this dataset}---proxy stability is model-dependent:
-the same profession can be stable under one encoder and unstable under
-another.
 Full findings are reported in §\ref{sec:fairness} and §6.3.
 We do not claim these findings generalise beyond the Bias-in-Bios setting.
 
@@ -273,13 +254,6 @@ DistilBERT \citep{sanh2019distilbert} (66M) and RoBERTa-base
 with a linear head, lr $2\!\times\!10^{-5}$, batch 16, 3 epochs,
 max length 256, best checkpoint by Macro-F1. The same pipeline runs
 for both masked and unmasked conditions with a shared label mapping.
-
-%\subsection{Fairness Evaluation}
-%Metrics: Macro-F1, Accuracy, Demographic Parity (DP) gap, and
-%Equalized Odds (EO) gap $= \max(\overline{\Delta\text{TPR}}, \overline{\Delta\text{FPR}})$,
-%where $\overline{\Delta\text{TPR}}$ and $\overline{\Delta\text{FPR}}$ are
-%the macro-averaged TPR and FPR gaps respectively across the 20
-%one-vs-rest occupation classifiers.
 
 \subsection{Evaluation Metrics}
 \label{sec:evaluation}
