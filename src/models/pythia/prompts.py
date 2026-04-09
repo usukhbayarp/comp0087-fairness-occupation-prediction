@@ -17,8 +17,8 @@ Occupation: physician
 Biography: He covers local news and politics for the daily newspaper.
 Occupation: journalist
 
-Biography: She has been caring for patients in the pediatric ward for over a decade.
-Occupation: nurse
+Biography: She has been representing clients in corporate litigation for over a decade.
+Occupation: attorney
 
 Biography: {text}
 Occupation:"""
