@@ -101,3 +101,36 @@ To generate predictions for Pythia evaluating on the text prompts, run:
 bash scripts/run_pythia_zerofew.sh
 ```
 The results will be securely serialized to `results/pythia`.
+
+### Part 3: Pythia Finetuned Inference
+
+Requirements: 
+```
+pip install -q "transformers==4.40.0" "peft==0.10.0" accelerate bitsandbytes scikit-learn tqdm
+```
+
+Export dataset:
+```
+python src/models/pythia/export_finetune.py --output_dir processed --top_n 20
+```
+
+Finetuning:
+```
+python src/models/pythia/pythia_finetune.py \
+    --model_size 160m \
+    --train_batch_size 64 \
+    --data_dir data/processed \
+    --output_dir checkpoints
+```
+
+Evaluation:
+```
+python src/models/pythia/pythia_eval.py \
+    --model_size 160m \
+    --checkpoint_dir checkpoints/pythia-160m/best \
+    --data_dir data/processed \
+    --output_dir results/pythia_finetuned \
+    --batch_size 64
+```
+
+Results will be stored in ` results/pythia_finetuned`. Check ` src/models/pythia/README_finetuned.md` for more information.
