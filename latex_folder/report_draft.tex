@@ -134,6 +134,23 @@ gender bias. Unlike that work, we also measure how masking affects
 token-level attribution patterns, giving an internal view of how models
 redistribute feature importance when gender signals are removed.
 
+\textbf{Debiasing methods.}
+A range of training-time debiasing approaches have been proposed for
+NLP classifiers, including adversarial training to suppress sensitive
+attribute information from learned representations
+\citep{zhao-etal-2018-gender}, data augmentation and re-weighting
+\citep{lu-etal-2020-gender}, and post-hoc projection of gender
+directions from word embeddings (surveyed in
+\citealt{sun-etal-2019-mitigating}).
+\citet{gonen-goldberg-2019-lipstick} showed that such methods often
+conceal rather than remove bias, motivating diagnostic analysis of
+which features carry residual signals.
+Our work takes this complementary perspective: rather than proposing a
+debiasing intervention, we characterise the token-level mechanisms
+through which bias operates and persists under masking, providing
+evidence about which proxy signals would need to be targeted for
+debiasing to be effective.
+
 % ── 3. DATASET ──────────────────────────────────────────────────
 \section{Dataset and Preprocessing}
 
@@ -808,11 +825,22 @@ Attribution scores are correlational, not causal: erasure-based
 validation gives partial intervention-based support but does not
 establish causality. Integrated Gradients and token erasure reflect
 learned associations and functional importance, not underlying
-generative mechanisms. Per-profession sample sizes are small for
-rare occupations (comedian $n\!=\!27$, dietitian $n\!=\!30$), so
-those fairness estimates should be read with caution. Masked/unmasked
-differences are reported descriptively without significance tests;
-some observed gaps may fall within sampling noise.
+generative mechanisms. Per-profession sample sizes are small for rare occupations (comedian
+$n\!=\!27$, dietitian $n\!=\!30$), making per-profession TPR estimates
+unreliable for those classes (binomial SE\,$\approx\!0.23$ for comedian
+with $\sim\!6$ female examples).
+For typical professions (average $n\!\approx\!150$ per profession,
+$\sim\!70$ female and $\sim\!80$ male), the per-profession SE on a TPR
+difference is approximately 0.08; macro-averaging over 20 professions
+reduces the SE of the aggregate EO gap to roughly 0.018.
+This means the observed masked/unmasked EO differences for fine-tuned
+models (0.017--0.019) fall within approximately one standard error of
+the estimator, so those specific differences should be interpreted
+cautiously. By contrast, the larger zero-shot gaps
+($\sim\!0.09$--$0.21$) are well above the noise floor. These
+considerations motivate the confidence-interval work listed under future
+work; masked/unmasked differences are reported descriptively and some
+observed gaps may not survive bootstrap testing.
 
 \paragraph{Future work.}
 Extending attribution analysis to generative models would provide
