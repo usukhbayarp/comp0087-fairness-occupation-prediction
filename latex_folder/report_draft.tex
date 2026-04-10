@@ -22,58 +22,63 @@ Scaling, Masking, and Mechanistic Attribution across Model Families}
 
 % ── ABSTRACT ────────────────────────────────────────────────────
 \begin{abstract}
-We investigate gender bias and proxy feature encoding in occupation
-prediction across Pythia generative models (160M--1.4B) and encoder
-classifiers (DistilBERT, RoBERTa) on the Bias-in-Bios dataset, under
-both masked and unmasked conditions.
-Contrary to the intuition that larger models are fairer, we find that
+We study gender bias and proxy feature encoding in occupation prediction
+using the Bias-in-Bios dataset, comparing Pythia generative models
+(160M--1.4B) and encoder classifiers (DistilBERT, RoBERTa) under both
+masked and unmasked conditions.
+Against the common intuition that larger models are fairer, we find that
 zero-shot gender bias \emph{increases} with scale.
-Attribution-based analysis further suggests that explicit gender tokens
-are unlikely to be the primary drivers of bias---they carry weights
+Attribution-based analysis also suggests that explicit gender tokens are
+unlikely to be the main drivers of bias: they carry weights
 33--287$\times$ smaller than dominant profession-linked tokens, while
-indirect contextual signals sustain the latent gender signal even after
-masking.
+indirect contextual signals appear to sustain the gender signal even
+after masking.
 \end{abstract}
 
 % ── 1. INTRODUCTION ─────────────────────────────────────────────
 \section{Introduction}
 
-Occupation prediction from biographical text exposes persistent gender
-stereotypes: models trained on real-world career data reliably
-associate professions such as \emph{nurse} or \emph{dietitian} with
-female-typical language patterns, and \emph{surgeon} or
-\emph{software engineer} with male-typical ones. \citet{de-arteaga-etal-2019-bias} demonstrated on the Bias-in-Bios dataset
-that scrubbing explicit gender signals does not eliminate these
-disparities---implicit proxy features survive.
+Occupation prediction from biographical text surfaces persistent gender
+stereotypes. Models trained on real-world career data tend to associate
+professions like \emph{nurse} or \emph{dietitian} with female-typical
+language, and \emph{surgeon} or \emph{software engineer} with
+male-typical patterns. \citet{de-arteaga-etal-2019-bias} showed, using
+the Bias-in-Bios dataset, that scrubbing explicit gender signals does
+not remove these disparities: implicit proxy features survive.
+Yet the identity of these proxy features, which tokens carry the latent
+gender signal, how their role changes under masking, and whether this
+varies with model scale or architecture, remains poorly understood.
 
-This paper examines three under-explored aspects of gender bias in
-occupation prediction: how model \emph{capacity} interacts with
-fairness; how model \emph{type} shapes which proxy features are
-learned; and which specific tokens carry the latent gender signal.
+This paper looks at three aspects of gender bias in occupation
+prediction that have received limited attention: how model
+\emph{capacity} interacts with fairness, how model \emph{type} shapes
+which proxy features are learned, and which specific tokens carry the
+gender signal.
 
 \paragraph{Contributions.}
 \begin{itemize}
   \item To our knowledge, this is the first systematic token-level
-  attribution-based analysis on the Bias-in-Bios occupation task:
-  Integrated Gradients tables stratified by profession and gender,
-  with results suggesting that indirect contextual tokens carry
-  substantially more weight than explicit gender words (33--287$\times$
-  higher attribution scores).
-  \item A cross-model analysis showing that proxy token distributions
-  shift differently under gender masking depending on model type:
-  masking reduces aggregate bias in encoders but produces backfire
-  effects in generative models for specific professions.
+  attribution study on the Bias-in-Bios occupation task. We produce
+  Integrated Gradients tables stratified by profession and gender, and
+  find that indirect contextual tokens carry attribution weights
+  33--287$\times$ higher than explicit gender words, suggesting that
+  bias operates through vocabulary co-occurrence patterns rather than
+  direct gender references.
+  \item We show that proxy token distributions respond differently to
+  gender masking depending on model type. Masking reduces aggregate EO
+  gap in encoders, but produces backfire effects in generative models
+  for specific professions, indicating that the learned proxy
+  representations are model-specific.
   \item Applied to this setting: a Pythia scaling study (160M--1.4B)
-  demonstrating that zero-shot EO gap more than doubles with scale,
-  and a paired masked/unmasked comparison across five models showing
-  fine-tuning consistently dominates both zero-shot and few-shot
-  regimes in performance and fairness.
+  finding that zero-shot EO gap more than doubles with scale, and a
+  paired masked/unmasked comparison across five models showing that
+  fine-tuning consistently outperforms zero-shot and few-shot regimes
+  on both performance and fairness.
 \end{itemize}
 
-While our analysis is grounded in the Bias-in-Bios setting, the
-patterns we uncover---particularly the persistence of proxy signals
-after masking and their model-specific character---suggest broader
-implications for fairness-aware NLP.
+While the results are specific to Bias-in-Bios, the finding that proxy
+signals persist after masking and behave differently across model types
+may have relevance beyond this setting.
 
 % ── 2. RELATED WORK ─────────────────────────────────────────────
 \section{Related Work}
@@ -81,62 +86,62 @@ implications for fairness-aware NLP.
 \textbf{Bias in occupation prediction.}
 \citet{de-arteaga-etal-2019-bias} introduced Bias-in-Bios and showed that
 classifiers exhibit gender disparities even after pronoun scrubbing.
-\citet{romanov-etal-2019-whats} analysed limits of de-biasing through scrubbing.
-We extend these findings by identifying and quantifying specific proxy
-tokens through gradient-based attribution.
+\citet{romanov-etal-2019-whats} examined the limits of debiasing through
+scrubbing. Our work extends this line of research by identifying and
+quantifying the specific proxy tokens responsible, using gradient-based
+attribution.
 
 \textbf{Fairness metrics.}
-\citet{hardt2016equality} formalised Equalized Odds; \citet{dwork2012fairness} introduced demographic parity. We evaluate both using a one-vs-rest
-multiclass extension macro-averaged over occupations.
+\citet{hardt2016equality} formalised Equalized Odds and
+\citet{dwork2012fairness} introduced demographic parity. We evaluate both
+using a one-vs-rest multiclass extension macro-averaged over occupations.
 
 \textbf{Attribution methods.}
-\citet{sundararajan2017axiomatic} introduced Integrated Gradients satisfying
-completeness and sensitivity axioms. Attribution methods have been
-applied to gender bias in coreference \citep{attanasio2022entropy} but
-their systematic use in occupation classification is limited.
-This gap motivates our token-level attribution analysis, which quantifies proxy token weights and tracks how they shift under gender masking.
+\citet{sundararajan2017axiomatic} introduced Integrated Gradients, which
+satisfies completeness and sensitivity axioms. Attribution methods have
+been applied to gender bias in coreference resolution
+\citep{attanasio2022entropy}, but their use in occupation classification
+is limited. This motivates our token-level attribution analysis, which
+quantifies proxy token weights and tracks how they shift under masking.
 
 \textbf{Attribution method selection.}
-Local surrogate methods such as LIME \citep{ribeiro2016should} and additive
-feature attribution methods such as SHAP \citep{lundberg2017unified} offer
-alternative interpretability frameworks. LIME fits a locally linear model
-around each prediction and can be unstable across runs; KernelSHAP satisfies
-consistency and local accuracy axioms but requires a large number of model
-evaluations for each example, making it costly for token-level analysis of
-long sequences. Integrated Gradients \citep{sundararajan2017axiomatic}
-provides a deterministic, path-integral attribution satisfying completeness
-(attributions sum to the prediction gap from the baseline) and sensitivity,
-with a fixed cost of $O(m)$ forward passes for $m$ interpolation steps.
-For sequence classification tasks where token-level granularity and
-reproducibility matter, IG is the standard choice
-\citep{attanasio2022entropy}; we adopt it for the same reasons.
+We considered LIME \citep{ribeiro2016should} and SHAP
+\citep{lundberg2017unified} as alternatives. LIME fits a locally linear
+approximation around each prediction and can be unstable across runs.
+KernelSHAP satisfies consistency and local accuracy axioms but requires
+many model evaluations per example, making it expensive for token-level
+analysis of long sequences. Integrated Gradients
+\citep{sundararajan2017axiomatic} is deterministic and satisfies
+completeness (attributions sum to the prediction gap from the baseline)
+and sensitivity, at a fixed cost of $O(m)$ forward passes for $m$
+interpolation steps. For sequence classification tasks where
+reproducibility and token-level granularity matter, IG is the standard
+choice \citep{attanasio2022entropy}; we use it for the same reasons.
 
 \textbf{Model scaling and fairness.}
-\citet{bommasani2021opportunities} discusses risks of foundation models including
-bias amplification. Our scaling study provides empirical evidence that
-zero-shot bias increases with model size in the Pythia family.
+\citet{bommasani2021opportunities} discusses bias amplification as a risk
+in large foundation models. Our scaling study gives concrete evidence of
+this in the Pythia family: zero-shot bias increases with model size.
 
 \textbf{Gender masking.}
-\citet{lu-etal-2020-gender} study counterfactual data augmentation for gender
-bias. Unlike prior work, we measure not only the effect of masking on fairness metrics but also on token-level attribution patterns —
-providing the first internal view of how occupation
-prediction models redistribute feature importance when
-gender signals are removed.
+\citet{lu-etal-2020-gender} study counterfactual data augmentation for
+gender bias. Unlike that work, we also measure how masking affects
+token-level attribution patterns, giving an internal view of how models
+redistribute feature importance when gender signals are removed.
 
 % ── 3. DATASET ──────────────────────────────────────────────────
 \section{Dataset and Preprocessing}
 
 \subsection{Bias-in-Bios}
 We use the Bias-in-Bios dataset \citep{de-arteaga-etal-2019-bias}
-(\texttt{LabHC/bias\_in\_bios}), a widely-used benchmark in the NLP
-fairness and gender bias community, primarily employed to study
-occupational stereotypes and evaluate debiasing methods.
-Each example is a biography (\texttt{hard\_text}) with an integer
-profession label and a binary gender attribute (inferred from pronoun
-usage by the original authors; 0\,$\to$\,M, 1\,$\to$\,F).
-We restrict to the \textbf{top 20 most frequent occupations} from the
+(\texttt{LabHC/bias\_in\_bios}), a standard benchmark for studying
+occupational stereotypes and evaluating debiasing methods in NLP.
+Each example consists of a short biography (\texttt{hard\_text}) paired
+with an integer profession label and a binary gender attribute inferred
+from pronoun usage by the original authors (0\,$\to$\,M, 1\,$\to$\,F).
+We restrict to the \textbf{top 20 most frequent occupations} in the
 training split. The task is to predict occupation from biography text
-alone; gender is a post-hoc evaluation attribute only.
+alone; gender is used only for post-hoc fairness evaluation.
 
 \begin{table}[h]
 \centering\small
@@ -199,37 +204,38 @@ Distribution is consistent across all splits.}
 \end{table}
 
 \subsection{Evaluation Subset}
-All models are evaluated on a canonical \textbf{3,000-sample test
-subset}, stratified proportionally by profession from the 95,468-example
-test split; a shared ID list ensures cross-model comparability.
-The subset was limited to 3,000 examples due to the computational cost
-of Integrated Gradients attribution, which requires 32 forward passes
-per example; running attribution on the full 95,468-example test split
-was not feasible within available compute.
-Per-profession sizes range from 932 (professor) to 27 (comedian);
-results for low-frequency professions should be interpreted with caution.
+All models are evaluated on a \textbf{3,000-sample test subset},
+stratified proportionally by profession from the 95,468-example test
+split. A shared ID list ensures all models are compared on the same
+examples. The subset size was constrained by the computational cost of
+Integrated Gradients, which requires 32 forward passes per example;
+running attribution over the full test set was not feasible within our
+compute budget. Per-profession counts range from 932 (professor) to 27
+(comedian), so results for rare occupations should be read with caution.
 
 \subsection{Gender Masking}
-Two conditions: \textbf{Unmasked} (original text) and \textbf{Masked}
-(gender tokens replaced with the model's native mask token---\texttt{[MASK]}
-for DistilBERT, \texttt{<mask>} for RoBERTa---via case-insensitive
-word-boundary regex). Three token categories are masked: pronouns and
-possessives (\emph{he, she, his, her}, etc.), titles and honorifics
-(\emph{mr, mrs, ms, sir, lady}, etc.), and 54 gendered nouns
-(\emph{father, mother, husband, wife, actor, actress}, etc.).
-Name masking was not applied: general name rules introduce uncontrolled
-false positives, and names carry biographical content beyond gender that
-would conflate gender-signal removal with loss of biographical information.
+We evaluate all models under two conditions: \textbf{Unmasked}
+(original text) and \textbf{Masked}, where gender tokens are replaced
+with the model's native mask token (\texttt{[MASK]} for DistilBERT,
+\texttt{<mask>} for RoBERTa) using a case-insensitive word-boundary
+regex. Three categories of tokens are masked: pronouns and possessives
+(\emph{he, she, his, her}, etc.), titles and honorifics (\emph{mr,
+mrs, ms, sir, lady}, etc.), and 54 gendered nouns (\emph{father,
+mother, husband, wife, actor, actress}, etc.). We did not mask names,
+as general name-matching rules produce too many false positives and
+names carry biographical content unrelated to gender, which would
+conflate gender-signal removal with loss of informative text.
 
 % ── 4. METHODS ──────────────────────────────────────────────────
 \section{Methods}
 
 \subsection{Pythia: Zero-shot and Few-shot}
-We evaluate Pythia \citep{biderman2023pythia} at 160M, 410M, and 1.4B
-parameters under zero-shot (biography + candidate list) and few-shot
-($K\!=\!4$ exemplar pairs) regimes, with and without gender masking.\footnote{The four exemplars cover professor (female pronoun), physician (male pronoun), journalist (male pronoun), and attorney (female pronoun), giving a balanced 2:2 female-to-male ratio.}
+We evaluate Pythia \citep{biderman2023pythia} at three scales (160M,
+410M, and 1.4B parameters) under zero-shot (biography plus candidate
+label list) and few-shot ($K\!=\!4$ exemplar pairs) regimes, both with
+and without gender masking.\footnote{The four exemplars cover professor (female pronoun), physician (male pronoun), journalist (male pronoun), and attorney (female pronoun), giving a balanced 2:2 female-to-male ratio.}
 As a causal language model, Pythia scores each candidate label $c_k$
-by its joint log-probability given prompt $p$:
+by its joint log-probability given the prompt $p$:
 \begin{equation} \log P(c_k \mid p) = \sum_{t=1}^{|c_k|} \log P\!\left(c_k^{(t)} \mid p, c_k^{(1)}, \ldots, c_k^{(t-1)}\right) \end{equation}
 The predicted label is $\hat{y} = \arg\max_{c_k} \log P(c_k \mid p)$.
 
@@ -285,55 +291,52 @@ The final Equalized Odds gap is defined as the maximum of these two macro-averag
 $$ \text{EO Gap} = \max(\Delta \text{TPR}, \Delta \text{FPR}) $$
 
 \subsection{Proxy Bias Attribution}
-Integrated Gradients \citep{sundararajan2017axiomatic} is applied to the
-two fine-tuned encoder models, with attribution computed toward the
+We apply Integrated Gradients \citep{sundararajan2017axiomatic} to the
+two fine-tuned encoder models, computing attributions toward the
 \emph{predicted} class index.
-Attributions are computed using \textbf{32 interpolation steps} and a
-\textbf{zero-embedding baseline}.
-Token-level scores are obtained by \textbf{summing} attribution values
-across the embedding dimension for each token position.
-Subword tokens are merged to word level before top-$K$ selection:
-BERT-style \texttt{\#\#} continuation pieces and whitespace-prefixed tokens (RoBERTa's byte-pair encoding marks word boundaries with a special prefix character) are handled separately, with scores summed
-across pieces.
-Only tokens with \textbf{positive} attribution scores and minimum
-length of 2 characters are retained.
-Maximum sequence length is \textbf{256 tokens}.
+We use \textbf{32 interpolation steps} and a \textbf{zero-embedding
+baseline}. Token-level scores are obtained by summing attribution
+values across the embedding dimension for each token position.
+Before top-$K$ selection, subword tokens are merged to word level:
+BERT-style \texttt{\#\#} continuation pieces and RoBERTa's
+whitespace-prefixed BPE tokens are each handled separately, with
+scores summed across pieces. We keep only tokens with positive
+attribution scores and a minimum length of 2 characters, with a
+maximum sequence length of \textbf{256 tokens}.
 
-The pipeline operates in two stages with distinct $K$ values.
-\textbf{Stage 1 --- per-example extraction} ($K_1\!=\!5$): the 5
-highest-scoring positive tokens are retained per example.
-\textbf{Stage 2 --- profession-level aggregation}: tokens appearing
-across all examples for a profession are aggregated (minimum length
-3, stopwords removed) to compute:
+The pipeline runs in two stages. In \textbf{Stage 1} ($K_1\!=\!5$),
+the 5 highest-scoring positive tokens are extracted per example. In
+\textbf{Stage 2}, these are aggregated across all examples for each
+profession (minimum token length 3, stopwords removed) to compute a
+weighted score:
 \begin{equation}
   \text{wscore}(t,p) = \text{count\_topk}(t,p) \times \overline{\text{attr}}(t,p)
 \end{equation}
-where $\text{count\_topk}(t,p)$ is the number of examples in which
-token $t$ appears in the stage-1 top-5 for profession $p$, and
+where $\text{count\_topk}(t,p)$ is the number of examples where token
+$t$ appears in the stage-1 top-5 for profession $p$, and
 $\overline{\text{attr}}(t,p)$ is the mean attribution score.
-Aggregation uses the model's \emph{predicted} label (not the true
-label): we attribute toward the predicted class to analyse the
-model's decision mechanism rather than its correctness---the
-goal is to understand what the model relies on, not whether it
-is right \citep{sundararajan2017axiomatic}.
+We attribute toward the \emph{predicted} label rather than the true
+label throughout, since the goal is to understand what the model relies
+on, not whether it is correct \citep{sundararajan2017axiomatic}.
 
 \textbf{Stability analysis.}
-The masked vs.\ unmasked comparison takes the \textbf{top-10
-aggregated tokens} per profession ($K_2\!=\!10$) and computes the
-shared token ratio:
+To compare masked and unmasked attribution patterns, we take the
+\textbf{top-10 aggregated tokens} per profession ($K_2\!=\!10$) and
+compute a shared token ratio:
 \begin{equation}
   r(p) = \frac{|\mathcal{T}_\text{sh}|}{
     |\mathcal{T}_\text{sh}|+|\mathcal{T}_\text{m}|+|\mathcal{T}_\text{u}|}
 \end{equation}
 where $\mathcal{T}_\text{sh}$, $\mathcal{T}_\text{m}$,
-$\mathcal{T}_\text{u}$ are the sets of tokens shared, masked-only,
-and unmasked-only respectively among the top-10.
-Gender-conditioned proxy tables are produced identically, stratified
-by profession and gender field.
+$\mathcal{T}_\text{u}$ are the tokens shared between conditions,
+masked-only, and unmasked-only respectively.
+Gender-conditioned proxy tables are produced using the same procedure,
+stratified by profession and gender.
 
 \textbf{Faithfulness validation.}
-The top-5 attributed tokens are erased from each example's text and
-the model is re-run to measure the probability drop:
+To check whether the attributed tokens are actually important for the
+prediction, we erase the top-5 tokens from each example's text and
+re-run the model, measuring the resulting probability drop:
 \begin{equation}
   \text{Faith}(x) = P(y \mid x) - P(y \mid x_{\text{erased}})
 \end{equation}
@@ -366,11 +369,10 @@ Table~\ref{tab:configs} summarises all evaluated configurations.
 % ── 6. RESULTS ──────────────────────────────────────────────────
 \section{Results and Discussion}
 
-We evaluate our models across three dimensions: task performance
-(§6.1), gender fairness (§6.2), and token-level proxy bias
-mechanisms (§6.3).
-
-The following results are descriptive of only the 3,000-sample evaluation subset, which may introduce some noise.
+Results are organised across three dimensions: task performance (§6.1),
+gender fairness (§6.2), and token-level proxy bias analysis (§6.3).
+All results are based on the 3,000-sample evaluation subset and are
+descriptive; some variance is expected due to the subset size.
 
 \subsection{Task Performance}
 
@@ -411,9 +413,15 @@ Pythia-1.4B few-shot    & M & 0.558 & 0.577 \\
 \end{table}
 
 
-Pythia-1.4B fine-tuned (M) reaches F1\,=\,0.877, nearing encoder
-baselines (RoBERTa (M) 0.880, DistilBERT (M) 0.872); Pythia-160M fine-tuned performs poorly (F1\,$\approx$\,0.02), likely due to label-space collapse under LoRA at insufficient capacity. Zero-shot F1 scales from 0.23 (160M)
-to 0.57 (1.4B); few-shot hurts at smaller scales (410M $\to$ 160M: 0.557 $\to$ 0.391) but recovers at 1.4B (0.578), suggesting a minimum capacity threshold. Masking has negligible impact on task performance across all models.
+Pythia-1.4B fine-tuned reaches F1\,=\,0.877 (masked), close to the
+encoder baselines (RoBERTa 0.880, DistilBERT 0.872). At the other
+extreme, Pythia-160M fine-tuned performs poorly (F1\,$\approx$\,0.02),
+likely due to label-space collapse under LoRA at insufficient capacity.
+Zero-shot F1 improves with scale (0.23 at 160M, 0.57 at 1.4B), but
+few-shot hurts performance at smaller scales (410M: 0.557 to 160M:
+0.391) before recovering at 1.4B (0.578), pointing to a minimum
+capacity threshold for few-shot to be effective. Masking has little
+effect on task performance across all models.
 
 \subsection{Fairness Results}
 \label{sec:fairness}
@@ -468,23 +476,25 @@ Pythia-160m 0s          & M & 0.092 & 0.027 & 0.092 & 0.024 \\
 \label{fig:scaling_fairness}
 \end{figure}
 
-Fine-tuned models achieve markedly lower EO gaps than zero-shot
-counterparts; zero-shot EO grows from $\sim$0.09 (160M) to $\sim$0.21
-(1.4B), amplifying stereotypes without supervision.
-Masking reduces aggregate EO for encoders (RoBERTa: 0.082$\to$0.063;
-DistilBERT: 0.088$\to$0.071) but is non-uniform at profession level:
-Pythia-1.4B FT sees backfire for \emph{teacher}, \emph{poet}, and
-\emph{painter}, while Pythia-410M FT shows aggregate backfire
-(0.085$\to$0.088). FPR gap is consistently much smaller than TPR gap, indicating TPR disparity is the primary fairness issue.
-To understand why disparities persist under masking, we turn to
-token-level attribution analysis.
+Fine-tuned models consistently show lower EO gaps than their zero-shot
+counterparts. Zero-shot EO grows from $\sim$0.09 at 160M to $\sim$0.21
+at 1.4B, showing that unsupervised scaling amplifies stereotypes.
+Masking reduces aggregate EO for the encoder models (RoBERTa:
+0.082 to 0.063; DistilBERT: 0.088 to 0.071), but the picture is
+not uniform at the profession level. Pythia-1.4B FT shows backfire
+effects for \emph{teacher}, \emph{poet}, and \emph{painter}, and
+Pythia-410M FT shows a small aggregate increase (0.085 to 0.088).
+FPR gap is consistently much smaller than TPR gap across all models,
+so TPR disparity is the dominant fairness concern. To understand why
+disparities persist even after masking, we examine token-level attribution.
 
 \subsection{Proxy Bias Analysis}
 
-We analyse which tokens drive occupation predictions and how their
-importance shifts under gender masking. We first assess attribution
-stability under masking, then examine which token types carry the
-gender signal, and finally assess token importance using erasure-based faithfulness analysis.
+We look at which tokens drive occupation predictions and how their
+importance changes under gender masking. The analysis proceeds in three
+steps: attribution stability under masking, identification of which
+token types carry the gender signal, and erasure-based faithfulness
+validation.
 
 \begin{table}[h]
 \centering\small
@@ -520,37 +530,34 @@ over the top-10 aggregated tokens.}
 \end{table}
 
 Under RoBERTa, \emph{comedian} and \emph{dentist} are the most
-unstable professions (ratio 0.33), while under DistilBERT both
-are moderately stable (0.54)---the same reversal observed for
-\emph{nurse} (DistilBERT 0.43, RoBERTa 0.54). Under DistilBERT,
-\emph{accountant} and \emph{architect} reach the same minimum ratio
-(0.43) as \emph{nurse}, while both are substantially more stable
-under RoBERTa (0.82), illustrating that instability is not confined
-to gender-skewed professions. \emph{Professor} reaches maximum
-stability under RoBERTa (1.00), meaning its top-10 tokens are
-identical across masked and unmasked conditions. These
-cross-profession reversals reinforce the conclusion that proxy
-stability depends on the specific model, not only training data.
+unstable professions (ratio 0.33), yet under DistilBERT both are
+moderately stable (0.54). The same reversal appears for \emph{nurse}
+(DistilBERT 0.43, RoBERTa 0.54). Under DistilBERT, \emph{accountant}
+and \emph{architect} reach the same minimum ratio as \emph{nurse}
+(0.43), while both are substantially more stable under RoBERTa (0.82),
+showing that instability is not specific to gender-skewed professions.
+\emph{Professor} achieves maximum stability under RoBERTa (1.00), with
+identical top-10 tokens across masked and unmasked conditions. These
+cross-profession reversals suggest that proxy stability is
+model-specific, not simply a function of training data.
 
-When gender tokens are removed, attribution is redistributed across
-tokens rather than concentrated on the same dominant token, consistent
+When gender tokens are removed, attribution spreads across other tokens
+rather than concentrating on a single dominant one, which is consistent
 with the completeness property of Integrated Gradients.
-The profession label token (e.g.\ \emph{nurse} for the nurse class)
-frequently appears among the top-$K$ attributed tokens, reflecting
-label leakage where the profession name occurs directly in the
-biography. This is expected; the methodologically informative signal
-lies in how attribution shifts between unmasked and masked conditions.
-For DistilBERT on \emph{nurse}, the label token \emph{nurse}
-remains prominent under both conditions (129.89 unmasked,
-152.73 masked), consistent with label leakage noted above.
-The informative shift occurs in secondary tokens: \emph{practitioner}
-declines from 26.51 to 11.18 and \emph{graduated} from 19.11 to 1.47,
-while \emph{hospital} (8.96) and \emph{especially} (15.52)
-gain attribution weight.
-For RoBERTa on \emph{physician}, masking shifts weight toward
-higher-level clinical context: \emph{medicine} rises from 166.64
-to 292.25 and \emph{patients} (52.72) emerges as a new signal,
-while \emph{affiliated} (68.78 unmasked) drops from the top-5.
+We also observe label leakage: the profession name (e.g.\ \emph{nurse}
+for the nurse class) frequently appears among the top-$K$ attributed
+tokens, as biographies often mention the profession directly. This is
+expected; the informative signal lies in how attribution shifts between
+conditions for the secondary tokens.
+For DistilBERT on \emph{nurse}, the label token \emph{nurse} remains
+prominent under both conditions (129.89 unmasked, 152.73 masked), but
+secondary tokens shift noticeably: \emph{practitioner} drops from 26.51
+to 11.18 and \emph{graduated} from 19.11 to 1.47, while \emph{hospital}
+(8.96) and \emph{especially} (15.52) gain weight.
+For RoBERTa on \emph{physician}, masking shifts attribution toward
+higher-level clinical vocabulary: \emph{medicine} rises from 166.64 to
+292.25, \emph{patients} (52.72) appears as a new signal, and
+\emph{affiliated} (68.78 unmasked) drops out of the top-5.
 
 \begin{table}[h]
 \centering\small
@@ -581,39 +588,36 @@ smaller weights than profession tokens.}
 \label{tab:gender_tokens}
 \end{table}
 
-Under both models, a small number of explicit gender tokens appear
-in the aggregated top-$K$ features, but with substantially smaller
-weights than dominant profession tokens: within DistilBERT, the
-highest gender token (\emph{actor}: 1.15) is 48--287$\times$ smaller
-than DistilBERT profession tokens (55.53--329.52); within RoBERTa,
-the highest gender token (\emph{mrs}: 2.11) is 33--158$\times$
-smaller than RoBERTa profession tokens (70.44--333.32).
-Bias likely operates primarily through indirect contextual signals
-rather than explicit gender indicators---consistent with an account
-in which models exploit statistical co-occurrences present in the
+Both models show a small number of explicit gender tokens in the
+aggregated top-$K$ features, but their weights are much lower than
+those of dominant profession tokens. In DistilBERT, the highest-ranked
+gender token (\emph{actor}: 1.15) is 48--287$\times$ smaller than the
+top profession tokens (55.53--329.52). In RoBERTa, the highest gender
+token (\emph{mrs}: 2.11) is 33--158$\times$ smaller (profession range:
+70.44--333.32). This suggests that bias operates mainly through
+indirect contextual signals rather than explicit gender references,
+consistent with models exploiting statistical co-occurrences in the
 training corpus \citep{de-arteaga-etal-2019-bias,
-gonen-goldberg-2019-lipstick}: gender-skewed role vocabulary,
-credential terminology, and contextual framing patterns become
-spurious correlates that carry the gender signal without any
-explicit gender reference.
+gonen-goldberg-2019-lipstick}: gendered role vocabulary, credential
+terminology, and contextual framing carry the gender signal without any
+explicit reference to gender.
 
-Gender-conditioned analysis reveals partial asymmetry.
-Under DistilBERT, nurse$|$F and nurse$|$M both retain 5 shared
-tokens (ratio 0.33 each), showing no directional asymmetry.
-Under RoBERTa, nurse$|$F retains 7 shared tokens (ratio 0.54)
-versus nurse$|$M retaining 6 (ratio 0.43), a modest asymmetry
-suggesting the learned feature space for \emph{nurse} is
-somewhat more anchored in female-typical contextual patterns.
-This attribution-level asymmetry aligns with the fairness results in
-Section~\ref{sec:fairness}, where \emph{nurse} shows one of the
-largest EO gap reductions under masking---suggesting that professions
-with unstable proxy representations are precisely those where masking
-provides the most benefit.
+Gender-conditioned analysis shows partial asymmetry.
+Under DistilBERT, nurse$|$F and nurse$|$M both retain 5 shared tokens
+(ratio 0.33), so there is no directional difference between genders.
+Under RoBERTa, nurse$|$F retains 7 shared tokens (ratio 0.54) versus
+nurse$|$M at 6 (ratio 0.43), a modest asymmetry suggesting the model's
+feature space for \emph{nurse} is slightly more anchored in
+female-typical contextual patterns.
+This aligns with the fairness results in Section~\ref{sec:fairness},
+where \emph{nurse} shows one of the largest EO gap reductions under
+masking, suggesting that professions with less stable proxy
+representations benefit more from masking.
 
 \subsubsection*{Qualitative Illustrations}
 
 The following three examples from the DistilBERT unmasked condition
-provide concrete illustration of the aggregate patterns reported above.
+illustrate the aggregate patterns reported above.
 
 \medskip
 \noindent\textbf{Example~1: Gender asymmetry in attributed tokens
@@ -643,9 +647,9 @@ Top tokens: \emph{scope} (0.74), \emph{health} (0.66),
 \end{center}
 
 The male prediction anchors on explicit credentials (\emph{nursing},
-\emph{masters}); the female prediction distributes across social-care
-context words (\emph{scope}, \emph{aging})---consistent with the
-nurse$|$M faithfulness asymmetry (0.756 vs.\ 0.354).
+\emph{masters}), while the female prediction distributes across
+social-care context words (\emph{scope}, \emph{aging}), consistent
+with the nurse$|$M faithfulness asymmetry (0.756 vs.\ 0.354).
 
 \medskip
 \noindent\textbf{Example~2: Prediction flip after masking (backfire).}
@@ -665,9 +669,9 @@ Masked prediction: \emph{attorney}~$\times$ ---
 top tokens: \emph{408} (0.63), \emph{autism} (0.34),
 \emph{reached} (0.33), \emph{parents} (0.28).
 
-After masking \emph{He}, the parent/child anchor loses salience;
+After masking \emph{He}, the parent/child anchor loses salience and
 the phone number and ``consultation'' framing pattern-match
-\emph{attorney}, producing an error rather than a fairness gain.
+\emph{attorney}, producing an error rather than a fairness improvement.
 
 \medskip
 \noindent\textbf{Example~3 (mini): Indirect proxy tokens
@@ -684,23 +688,21 @@ Connecticut.''}
 top tokens: \emph{medicine} (1.13), \emph{practices} (0.96),
 \emph{hospital} (0.52).
 No gender tokens appear in the top~5.
-Clinical role words alone drive the prediction,
-consistent with the interpretation that indirect contextual
-signals, not explicit gender markers, carry the primary
+Clinical role words alone drive the prediction. No gender tokens
+appear in the top~5, consistent with the view that indirect
+contextual signals, not explicit gender markers, carry the main
 predictive load.
 
 \subsubsection*{Faithfulness Validation}
 
-While Integrated Gradients provides correlational insights into
-feature importance, the top-$K$ erasure test provides
-intervention-based validation: erasing attributed tokens and
-measuring the resulting confidence drop assesses whether
-those tokens are functionally important for the prediction.
-Table~\ref{tab:faithfulness} reports mean faithfulness scores by
-profession across both models and masking conditions. Across all
-3,000 examples, 89.6\% (DistilBERT) and 82.3\% (RoBERTa) of
-predictions show positive faithfulness, consistent with the
-attributed tokens being genuinely load-bearing.
+Integrated Gradients gives correlational evidence of feature
+importance. The top-$K$ erasure test complements this with a
+direct intervention: we erase the attributed tokens and measure the
+confidence drop to check whether they are genuinely load-bearing.
+Table~\ref{tab:faithfulness} reports mean faithfulness by profession
+across both models and conditions. Across all 3,000 examples, 89.6\%
+(DistilBERT) and 82.3\% (RoBERTa) of predictions show positive
+faithfulness, consistent with the attributed tokens being functional.
 
 \begin{table}[h]
 \centering\small
@@ -731,73 +733,73 @@ Full results for all 20 professions are in Appendix~E.}
 \label{tab:faithfulness}
 \end{table}
 
-Faithfulness scores align with the proxy stability analysis:
-professions with lower shared ratios tend toward higher faithfulness
-(\emph{dietitian}: 0.619, \emph{nurse}: 0.395), while stable
-professions show lower faithfulness (\emph{professor}: 0.160,
-\emph{attorney}: 0.162). This supports the interpretation that
-attribution instability identifies professions whose predictions
-are concentrated in a small, functionally decisive feature set.
-Notably, the \emph{model} profession under RoBERTa unmasked
-achieves the lowest faithfulness of all 20 professions (0.100),
-suggesting its predictions are distributed across many
+Faithfulness scores are broadly consistent with the stability analysis.
+Professions with lower shared ratios tend to have higher faithfulness
+(\emph{dietitian}: 0.619, \emph{nurse}: 0.395), while more stable
+professions show lower scores (\emph{professor}: 0.160,
+\emph{attorney}: 0.162). This supports the idea that attribution
+instability identifies professions whose predictions depend on a small,
+concentrated set of tokens. One notable outlier is \emph{model} under
+RoBERTa unmasked, which achieves the lowest faithfulness of all 20
+professions (0.100), suggesting its predictions are spread across many
 weakly-attributing tokens rather than a small decisive set.
 
-Gender-conditioned faithfulness reveals a striking asymmetry for
+Gender-conditioned faithfulness shows a clear asymmetry for
 \emph{nurse} under DistilBERT: nurse$|$M = 0.756 versus
-nurse$|$F = 0.354. Erasing the top-5 tokens for male nurse
-predictions nearly halves the model's confidence, consistent with
-male nurse representations being concentrated in a critically
-small feature set. Under RoBERTa the asymmetry is also present:
-nurse$|$M = 0.534 versus nurse$|$F = 0.163. Full gender-conditioned
-faithfulness results for all professions with $n{\geq}10$ per gender
-are reported in Appendix~D; a second notable asymmetry is observed
-for \emph{poet} under DistilBERT unmasked (0.434 vs.\ 0.200).
+nurse$|$F = 0.354. Erasing the top-5 tokens for male nurse predictions
+nearly halves model confidence, suggesting that male nurse
+representations are concentrated in a small set of critical tokens.
+The asymmetry also holds under RoBERTa (nurse$|$M = 0.534 versus
+nurse$|$F = 0.163). Full gender-conditioned faithfulness results for
+all professions with $n{\geq}10$ per gender are in Appendix~D. A
+second notable asymmetry appears for \emph{poet} under DistilBERT
+unmasked (0.434 vs.\ 0.200).
 
 Masking increases overall faithfulness for both models (DistilBERT:
-+0.034; RoBERTa: +0.006), suggesting that after gender signals are
-removed, the remaining attributed tokens become more functionally
-decisive --- consistent with the model concentrating predictions on
-a smaller, more critical feature set.
++0.034; RoBERTa: +0.006). This suggests that once gender signals are
+removed, the remaining tokens carry more of the predictive load,
+consistent with the model concentrating on a smaller, more critical
+feature set.
 
 % ── 7. CONCLUSION ───────────────────────────────────────────────
 \section{Conclusion}
 
-Fine-tuned models substantially outperform zero/few-shot baselines in both performance and fairness; scaling without supervision amplifies bias; masking reduces aggregate EO gaps in encoder models (by 0.017--0.019) but produces profession-level backfire effects in Pythia; and bias is encoded primarily through indirect contextual tokens whose importance is model-dependent and whose functional load is supported by erasure faithfulness testing.
-Notably, zero-shot EO gap grows from $\sim$0.09 at 160M to $\sim$0.21
-at 1.4B parameters---suggesting that model capacity alone is not a
-substitute for task-specific fine-tuning or explicit debiasing interventions.
-Gender-conditioned analysis further reveals that male nurse
-predictions are disproportionately dependent on a critically
-small feature set, with faithfulness nearly double that of
-female nurse predictions (0.756 vs.\ 0.354 under DistilBERT).
+Fine-tuned models outperform zero/few-shot baselines on both
+performance and fairness. Scaling without supervision amplifies bias:
+zero-shot EO gap grows from $\sim$0.09 at 160M to $\sim$0.21 at 1.4B,
+showing that model capacity alone is not a substitute for fine-tuning
+or explicit debiasing. Masking reduces aggregate EO in encoder models
+(by 0.017--0.019) but produces backfire effects at the profession level
+in Pythia. Attribution analysis suggests that bias operates mainly
+through indirect contextual tokens; their importance is model-specific
+and their functional role is supported by erasure faithfulness testing.
+Gender-conditioned analysis adds a further observation: male nurse
+predictions are concentrated in a critically small feature set, with
+faithfulness nearly double that of female nurse predictions
+(0.756 vs.\ 0.354 under DistilBERT).
 
 \paragraph{Limitations.}
-The dataset provides binary gender labels inferred from pronoun 
-usage by the original authors \citep{de-arteaga-etal-2019-bias}, 
-which do not capture the full spectrum of gender identity and 
-limit fairness evaluation to a male/female binary. Attribution is restricted to encoder
-models. Attribution scores provide correlational, not causal, evidence;
-erasure-based validation offers partial intervention-based support
-but does not establish causality. Integrated Gradients and token
-erasure reflect learned associations and functional importance, not
-underlying generative mechanisms.
-Per-profession evaluation uses proportional
-stratification from the 3,000-sample canonical subset, resulting in
-small sample sizes for low-frequency professions (e.g.\ comedian
-$n\!=\!27$, dietitian $n\!=\!30$); per-profession fairness estimates
-for these occupations should be interpreted with caution.
-Differences in masked/unmasked fairness metrics are reported descriptively
-without statistical significance tests; small per-profession sample sizes
-mean some observed gaps may be within sampling noise.
+Gender labels in Bias-in-Bios are binary and inferred from pronoun
+usage \citep{de-arteaga-etal-2019-bias}, which does not reflect the
+full spectrum of gender identity and constrains fairness evaluation to
+a male/female binary. Attribution is restricted to encoder models.
+Attribution scores are correlational, not causal: erasure-based
+validation gives partial intervention-based support but does not
+establish causality. Integrated Gradients and token erasure reflect
+learned associations and functional importance, not underlying
+generative mechanisms. Per-profession sample sizes are small for
+rare occupations (comedian $n\!=\!27$, dietitian $n\!=\!30$), so
+those fairness estimates should be read with caution. Masked/unmasked
+differences are reported descriptively without significance tests;
+some observed gaps may fall within sampling noise.
 
 \paragraph{Future work.}
-Remaining directions include extending attribution-based analysis to generative models
-to provide deeper explanations of observed fairness disparities;
-adding bootstrapped confidence intervals on fairness metrics to assess
-the significance of small masked/unmasked differences; and designing
-a formal cross-gender proxy bias score that jointly captures attribution
-asymmetry and fairness gaps across professions.
+Extending attribution analysis to generative models would provide
+deeper explanations of the fairness disparities observed for Pythia.
+Adding bootstrapped confidence intervals on fairness metrics would
+help distinguish real effects from sampling variance. It would also
+be useful to develop a formal cross-gender proxy bias score that
+combines attribution asymmetry and fairness gaps across professions.
 
 \section*{Acknowledgements}
 We thank our teaching assistant Karen Hambardzumyan for his guidance
