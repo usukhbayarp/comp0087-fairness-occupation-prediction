@@ -23,26 +23,16 @@ Scaling, Masking, and Mechanistic Attribution across Model Families}
 % ── ABSTRACT ────────────────────────────────────────────────────
 \begin{abstract}
 We investigate gender bias and proxy feature encoding in occupation
-prediction models trained on the Bias-in-Bios dataset.
-Our study spans two dimensions: \emph{model capacity}, comparing
-Pythia generative models (160M--1.4B parameters) across zero-shot,
-few-shot, and fine-tuned regimes, and \emph{model architecture},
-contrasting encoder-based classifiers (DistilBERT, RoBERTa) against
-generative models of comparable performance.
-We evaluate both task performance (Macro-F1) and gender fairness
-(Equalized Odds gap, Demographic Parity) under masked and unmasked
-conditions, and diagnose bias mechanisms through Integrated Gradients
-attribution validated by top-$K$ token erasure.
-Our main findings: (1) fine-tuned models substantially outperform
-zero/few-shot baselines in both performance and fairness;
-(2) larger models are not inherently fairer---zero-shot bias
-\emph{increases} with scale; (3) gender-token masking reduces bias for some professions but produces backfire effects for others, suggesting that implicit proxy signals survive removal of explicit gender tokens; (4) explicit gender tokens are not the primary
-drivers of bias---they appear with weights 33--287$\times$ smaller than
-dominant profession tokens, while indirect contextual signals carry
-the latent gender signal; and (5) proxy bias is model-dependent, the same profession 
-can be stable under one model and unstable under another, 
-though the precise cause (architecture, pre-training, or scale) 
-cannot be isolated from this comparison alone.
+prediction across Pythia generative models (160M--1.4B) and encoder
+classifiers (DistilBERT, RoBERTa) on the Bias-in-Bios dataset, under
+both masked and unmasked conditions.
+Contrary to the intuition that larger models are fairer, we find that
+zero-shot gender bias \emph{increases} with scale.
+Attribution-based analysis further suggests that explicit gender tokens
+are unlikely to be the primary drivers of bias---they carry weights
+33--287$\times$ smaller than dominant profession-linked tokens, while
+indirect contextual signals sustain the latent gender signal even after
+masking.
 \end{abstract}
 
 % ── 1. INTRODUCTION ─────────────────────────────────────────────
@@ -56,30 +46,34 @@ female-typical language patterns, and \emph{surgeon} or
 that scrubbing explicit gender signals does not eliminate these
 disparities---implicit proxy features survive.
 
-This paper addresses three open questions: how does model
-\emph{capacity} interact with fairness; how does model
-\emph{architecture} shape which proxy features are learned; and what
-are those features precisely.
+This paper examines three under-explored aspects of gender bias in
+occupation prediction: how model \emph{capacity} interacts with
+fairness; how model \emph{type} shapes which proxy features are
+learned; and which specific tokens carry the latent gender signal.
 
 \paragraph{Contributions.}
-\textit{Primary contribution} (to our knowledge, limited prior work
-on this dataset provides systematic attribution analysis of this kind):
-(i)~token-level Integrated Gradients attribution tables stratified by
-both profession and gender, with proxy stability and erasure faithfulness
-compared across encoder architectures.
-\textit{Secondary contribution}:
-(ii)~a cross-model comparison of how proxy token distributions shift
-under gender masking, quantifying both stability and functional importance.
-\textit{Empirical applications of known methods to this setting}:
-(iii)~a Pythia scaling study (160M--1.4B) across zero-shot, few-shot,
-and fine-tuned regimes;
-(iv)~a cross-architecture comparison of encoder and generative model
-fairness on Bias-in-Bios;
-(v)~a paired masked/unmasked evaluation of gender-token scrubbing on
-both task performance and fairness metrics.
+\begin{itemize}
+  \item To our knowledge, this is the first systematic token-level
+  attribution-based analysis on the Bias-in-Bios occupation task:
+  Integrated Gradients tables stratified by profession and gender,
+  with results suggesting that indirect contextual tokens carry
+  substantially more weight than explicit gender words (33--287$\times$
+  higher attribution scores).
+  \item A cross-model analysis showing that proxy token distributions
+  shift differently under gender masking depending on model type:
+  masking reduces aggregate bias in encoders but produces backfire
+  effects in generative models for specific professions.
+  \item Applied to this setting: a Pythia scaling study (160M--1.4B)
+  demonstrating that zero-shot EO gap more than doubles with scale,
+  and a paired masked/unmasked comparison across five models showing
+  fine-tuning consistently dominates both zero-shot and few-shot
+  regimes in performance and fairness.
+\end{itemize}
 
-Full findings are reported in §\ref{sec:fairness} and §6.3.
-We do not claim these findings generalise beyond the Bias-in-Bios setting.
+While our analysis is grounded in the Bias-in-Bios setting, the
+patterns we uncover---particularly the persistence of proxy signals
+after masking and their model-specific character---suggest broader
+implications for fairness-aware NLP.
 
 % ── 2. RELATED WORK ─────────────────────────────────────────────
 \section{Related Work}
@@ -100,9 +94,7 @@ multiclass extension macro-averaged over occupations.
 completeness and sensitivity axioms. Attribution methods have been
 applied to gender bias in coreference \citep{attanasio2022entropy} but
 their systematic use in occupation classification is limited.
-Critically, no prior work on the Bias-in-Bios occupation prediction 
-task provides token-level proxy word tables with quantified attribution 
-weights, nor examines how those weights shift under gender masking.
+This gap motivates our token-level attribution analysis, which quantifies proxy token weights and tracks how they shift under gender masking.
 
 \textbf{Attribution method selection.}
 Local surrogate methods such as LIME \citep{ribeiro2016should} and additive
@@ -420,7 +412,7 @@ Pythia-1.4B few-shot    & M & 0.558 & 0.577 \\
 
 
 Pythia-1.4B fine-tuned (M) reaches F1\,=\,0.877, nearing encoder
-baselines (RoBERTa (M) 0.880, DistilBERT (M) 0.872); Pythia-160M fine-tuned fails (F1\,$\approx$\,0.02), likely due to label-space collapse under LoRA at insufficient capacity. Zero-shot F1 scales from 0.23 (160M)
+baselines (RoBERTa (M) 0.880, DistilBERT (M) 0.872); Pythia-160M fine-tuned performs poorly (F1\,$\approx$\,0.02), likely due to label-space collapse under LoRA at insufficient capacity. Zero-shot F1 scales from 0.23 (160M)
 to 0.57 (1.4B); few-shot hurts at smaller scales (410M $\to$ 160M: 0.557 $\to$ 0.391) but recovers at 1.4B (0.578), suggesting a minimum capacity threshold. Masking has negligible impact on task performance across all models.
 
 \subsection{Fairness Results}
@@ -785,10 +777,11 @@ The dataset provides binary gender labels inferred from pronoun
 usage by the original authors \citep{de-arteaga-etal-2019-bias}, 
 which do not capture the full spectrum of gender identity and 
 limit fairness evaluation to a male/female binary. Attribution is restricted to encoder
-models. Integrated Gradients and token erasure provide evidence
-of functional token importance but do not establish causal
-relationships between input features and model predictions;
-the scores reflect learned associations, not mechanisms.
+models. Attribution scores provide correlational, not causal, evidence;
+erasure-based validation offers partial intervention-based support
+but does not establish causality. Integrated Gradients and token
+erasure reflect learned associations and functional importance, not
+underlying generative mechanisms.
 Per-profession evaluation uses proportional
 stratification from the 3,000-sample canonical subset, resulting in
 small sample sizes for low-frequency professions (e.g.\ comedian
@@ -799,8 +792,8 @@ without statistical significance tests; small per-profession sample sizes
 mean some observed gaps may be within sampling noise.
 
 \paragraph{Future work.}
-Remaining directions include extending attribution to generative models
-to provide mechanistic explanations for observed fairness disparities;
+Remaining directions include extending attribution-based analysis to generative models
+to provide deeper explanations of observed fairness disparities;
 adding bootstrapped confidence intervals on fairness metrics to assess
 the significance of small masked/unmasked differences; and designing
 a formal cross-gender proxy bias score that jointly captures attribution
