@@ -80,6 +80,7 @@ def main():
     parser.add_argument("--candidate_labels", type=str, nargs='+', required=False, help="List of candidate occupations (if not provided, will look for candidate_labels.txt in data_path dir)")
     parser.add_argument("--output_dir", type=str, default=".", help="Directory to save output JSONL")
     parser.add_argument("--apply_masking", action="store_true", help="Dynamically apply masking to the input text and prompts")
+    parser.add_argument("--match_ids_from", type=str, required=False, help="Path to a previous prediction JSONL. If provided, filters data to match these IDs exactly.")
     
     # New arguments for batching, sampling, and max tokens
     parser.add_argument("--batch_size", type=int, default=16, help="Batch size for inference")
@@ -121,8 +122,18 @@ def main():
     # Filter data to only include candidate labels (Top 20 professions)
     data = [item for item in data if item.get("label", "") in args.candidate_labels]
     
-    # Stratified Sampling
-    if args.num_samples is not None and args.num_samples < len(data):
+    if args.match_ids_from:
+        if not os.path.exists(args.match_ids_from):
+            raise FileNotFoundError(f"Provided match_ids_from file not found: {args.match_ids_from}")
+        target_ids = set()
+        with open(args.match_ids_from, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.strip():
+                    target_ids.add(json.loads(line).get("id"))
+        data = [item for item in data if item.get("id") in target_ids]
+        print(f"Loaded {len(target_ids)} target IDs from {args.match_ids_from}. Filtered data down to {len(data)} items.")
+    elif args.num_samples is not None and args.num_samples < len(data):
+        # Stratified Sampling
         random.seed(args.seed)
         if args.sampling_method == "random":
             data = random.sample(data, args.num_samples)

@@ -42,7 +42,8 @@ for model in "${MODELS[@]}"; do
             --num_samples "$NUM_SAMPLES" \
             --sampling_method "$SAMPLING_METHOD" \
             --seed "$SEED" \
-            --max_tokens "$MAX_TOKENS"
+            --max_tokens "$MAX_TOKENS" \
+            --match_ids_from "results/pythia/preds_pythia_1.4b_fewshot.jsonl"
             
     done
 done
