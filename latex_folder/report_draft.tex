@@ -235,7 +235,7 @@ would conflate gender-signal removal with loss of biographical information.
 \subsection{Pythia: Zero-shot and Few-shot}
 We evaluate Pythia \citep{biderman2023pythia} at 160M, 410M, and 1.4B
 parameters under zero-shot (biography + candidate list) and few-shot
-($K\!=\!4$ exemplar pairs) regimes, with and without gender masking.\footnote{The four exemplars cover professor (female pronoun), physician, journalist, and photographer (all male pronouns). To assess whether this 3:1 male skew introduced exemplar-level bias, we compared few-shot vs.\ zero-shot TPR gaps for these four professions across all three model sizes; no consistent directional effect was observed (full values in Appendix~C), so exemplar gender is unlikely to be a primary confound in the few-shot results.}
+($K\!=\!4$ exemplar pairs) regimes, with and without gender masking.\footnote{The four exemplars cover professor (female pronoun), physician (male pronoun), journalist (male pronoun), and attorney (female pronoun), giving a balanced 2:2 female-to-male ratio.}
 As a causal language model, Pythia scores each candidate label $c_k$
 by its joint log-probability given prompt $p$:
 \begin{equation} \log P(c_k \mid p) = \sum_{t=1}^{|c_k|} \log P\!\left(c_k^{(t)} \mid p, c_k^{(1)}, \ldots, c_k^{(t-1)}\right) \end{equation}
@@ -794,10 +794,6 @@ stratification from the 3,000-sample canonical subset, resulting in
 small sample sizes for low-frequency professions (e.g.\ comedian
 $n\!=\!27$, dietitian $n\!=\!30$); per-profession fairness estimates
 for these occupations should be interpreted with caution.
-The few-shot exemplars were not gender-balanced (3 male, 1 female pronouns);
-no consistent directional effect on TPR gaps is observable for the four
-exemplar professions across model sizes (§4.1, footnote), but a residual
-exemplar-level confound cannot be fully excluded.
 Differences in masked/unmasked fairness metrics are reported descriptively
 without statistical significance tests; small per-profession sample sizes
 mean some observed gaps may be within sampling noise.
@@ -1324,9 +1320,9 @@ Occupation: physician
 Biography: He covers local news and politics for the daily newspaper.
 Occupation: journalist
 
-Biography: He is a talented photographer who has won several awards for his
-work.
-Occupation: photographer
+Biography: She has been representing clients in corporate litigation for
+over a decade.
+Occupation: attorney
 
 Biography: {text}
 Occupation:
