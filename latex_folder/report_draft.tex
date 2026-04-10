@@ -70,11 +70,11 @@ gender signal.
   gap in encoders, but produces backfire effects in generative models
   for specific professions, indicating that the learned proxy
   representations are model-specific.
-  \item Applied to this setting: a Pythia scaling study (160M--1.4B)
-  finding that zero-shot EO gap more than doubles with scale, and a
-  paired masked/unmasked comparison across five models showing that
-  fine-tuning consistently outperforms zero-shot and few-shot regimes
-  on both performance and fairness.
+  \item We conduct a Pythia scaling study (160M--1.4B) and find that
+  zero-shot EO gap more than doubles with scale, and show through a
+  paired masked/unmasked comparison across five models that fine-tuning
+  consistently outperforms zero-shot and few-shot regimes on both
+  performance and fairness.
 \end{itemize}
 
 While the results are specific to Bias-in-Bios, the finding that proxy
@@ -161,6 +161,7 @@ Test  &  95,468 & 46.17\% & 53.83\% \\
 F\% across splits (range: 0.01\%, i.e.\ approximately 46.2\% female
 in each) indicates the original dataset was stratified by gender
 when partitioned.}
+\label{tab:splits}
 \end{table}
 
 Table~\ref{tab:professions} shows the per-profession counts and gender
@@ -218,8 +219,9 @@ compute budget. Per-profession counts range from 932 (professor) to 27
 We evaluate all models under two conditions: \textbf{Unmasked}
 (original text) and \textbf{Masked}, where gender tokens are replaced
 with the model's native mask token (\texttt{[MASK]} for DistilBERT,
-\texttt{<mask>} for RoBERTa) using a case-insensitive word-boundary
-regex. Three categories of tokens are masked: pronouns and possessives
+\texttt{<mask>} for RoBERTa, and the literal string \texttt{[MASK]}
+for Pythia, which as a causal language model has no native mask token)
+using a case-insensitive word-boundary regex. Three categories of tokens are masked: pronouns and possessives
 (\emph{he, she, his, her}, etc.), titles and honorifics (\emph{mr,
 mrs, ms, sir, lady}, etc.), and 54 gendered nouns (\emph{father,
 mother, husband, wife, actor, actress}, etc.). We did not mask names,
@@ -339,8 +341,9 @@ To check whether the attributed tokens are actually important for the
 prediction, we erase the top-5 tokens from each example's text and
 re-run the model, measuring the resulting probability drop:
 \begin{equation}
-  \text{Faith}(x) = P(y \mid x) - P(y \mid x_{\text{erased}})
+  \text{Faith}(x) = P(\hat{y} \mid x) - P(\hat{y} \mid x_{\text{erased}})
 \end{equation}
+where $\hat{y}$ is the predicted label for example $x$.
 
 % ── 5. EXPERIMENTAL SETUP ───────────────────────────────────────
 \section{Experimental Setup}
@@ -411,16 +414,17 @@ Pythia-1.4B few-shot    & M & 0.558 & 0.577 \\
 \bottomrule
 \end{tabular}
 \caption{Task performance results. U=unmasked; M=masked.}
+\label{tab:performance}
 \end{table}
 
 
-Pythia-1.4B fine-tuned reaches F1\,=\,0.877 (masked), close to the
+Pythia-1.4B fine-tuned reaches Accuracy\,=\,0.877 (masked), close to the
 encoder baselines (RoBERTa 0.880, DistilBERT 0.872). At the other
 extreme, Pythia-160M fine-tuned performs poorly (F1\,$\approx$\,0.02),
 likely due to label-space collapse under LoRA at insufficient capacity.
 Zero-shot F1 improves with scale (0.23 at 160M, 0.57 at 1.4B), but
-few-shot hurts performance at smaller scales (410M: 0.557 to 160M:
-0.391) before recovering at 1.4B (0.578), pointing to a minimum
+few-shot hurts performance at smaller scales (410M zero-shot: 0.557
+drops to few-shot: 0.391; 160M: 0.23$\to$0.20) before recovering at 1.4B (0.578), pointing to a minimum
 capacity threshold for few-shot to be effective. Masking has little
 effect on task performance across all models.
 
@@ -459,7 +463,7 @@ Pythia-160m 0s          & M & 0.092 & 0.027 & 0.092 & 0.024 \\
 \end{tabular}
 
 \caption{Fairness metrics (EO = Equalized Odds gap, DP = Demographic Parity gap, TPR = True Positive Rate gap, FPR = False Positive Rate gap) for each model, both masked (M) and unmasked (U). Row label abbreviations: FT = fine-tuned; FS = few-shot; 0s = zero-shot.}
-
+\label{tab:fairness}
 \end{table}
 
 
@@ -528,6 +532,7 @@ teacher           & 0.82 & 0.82 \\
 \caption{Shared token ratio (masked vs.\ unmasked) for all 20 professions.
 Higher = more stable. Ratio = shared / (shared + masked-only + unmasked-only)
 over the top-10 aggregated tokens.}
+\label{tab:stability}
 \end{table}
 
 Under RoBERTa, \emph{comedian} and \emph{dentist} are the most
@@ -688,7 +693,6 @@ Connecticut.''}
 \noindent Predicted: \emph{physician}~\checkmark\ ---
 top tokens: \emph{medicine} (1.13), \emph{practices} (0.96),
 \emph{hospital} (0.52).
-No gender tokens appear in the top~5.
 Clinical role words alone drive the prediction. No gender tokens
 appear in the top~5, consistent with the view that indirect
 contextual signals, not explicit gender markers, carry the main
@@ -701,7 +705,7 @@ importance. The top-$K$ erasure test complements this with a
 direct intervention: we erase the attributed tokens and measure the
 confidence drop to check whether they are genuinely load-bearing.
 Table~\ref{tab:faithfulness} reports mean faithfulness by profession
-across both models and conditions. Across all 3,000 examples, 89.6\%
+across both models and conditions. Across all 3,000 examples in the unmasked condition, 89.6\%
 (DistilBERT) and 82.3\% (RoBERTa) of predictions show positive
 faithfulness, consistent with the attributed tokens being functional.
 
@@ -735,21 +739,23 @@ Full results for all 20 professions are in Appendix~E.}
 \end{table}
 
 Faithfulness scores are broadly consistent with the stability analysis.
-Professions with lower shared ratios tend to have higher faithfulness
-(\emph{dietitian}: 0.620, \emph{nurse}: 0.395), while more stable
-professions show lower scores (\emph{professor}: 0.160,
-\emph{attorney}: 0.162). This supports the idea that attribution
-instability identifies professions whose predictions depend on a small,
-concentrated set of tokens. One notable outlier is \emph{model} under
+Professions with the highest faithfulness (\emph{dietitian}: 0.620,
+\emph{nurse}: 0.395) tend to have lower stability ratios than the most
+stable professions (\emph{professor}: ratio 0.82, faithfulness 0.160),
+suggesting that unstable proxy representations co-occur with more
+concentrated, load-bearing token sets. This supports the idea that
+attribution instability identifies professions whose predictions depend
+on a small, critical set of tokens. One notable outlier is \emph{model} under
 RoBERTa unmasked, which achieves the lowest faithfulness of all 20
 professions (0.100), suggesting its predictions are spread across many
 weakly-attributing tokens rather than a small decisive set.
 
 Gender-conditioned faithfulness shows a clear asymmetry for
 \emph{nurse} under DistilBERT: nurse$|$M = 0.756 versus
-nurse$|$F = 0.354. Erasing the top-5 tokens for male nurse predictions
-nearly halves model confidence, suggesting that male nurse
-representations are concentrated in a small set of critical tokens.
+nurse$|$F = 0.354. Erasing the top-5 tokens for male nurse predictions reduces model
+confidence by approximately 80\% (from 0.96 to 0.20), suggesting that
+male nurse representations are concentrated in a small set of critical
+tokens.
 The asymmetry also holds under RoBERTa (nurse$|$M = 0.533 versus
 nurse$|$F = 0.163). Full gender-conditioned faithfulness results for
 all professions with $n{\geq}10$ per gender are in Appendix~D. A
