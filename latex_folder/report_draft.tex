@@ -81,10 +81,6 @@ gender signal.
   performance and fairness.
 \end{itemize}
 
-While the results are specific to Bias-in-Bios, the finding that proxy
-signals persist after masking and behave differently across model types
-may have relevance beyond this setting.
-
 % ── 2. RELATED WORK ─────────────────────────────────────────────
 \section{Related Work}
 
@@ -102,26 +98,16 @@ attribution.
 using a one-vs-rest multiclass extension macro-averaged over occupations.
 
 \textbf{Attribution methods.}
-\citet{sundararajan2017axiomatic} introduced Integrated Gradients, which
-satisfies completeness and sensitivity axioms. Attribution methods have
-been applied to gender bias in coreference resolution
-\citep{attanasio2022entropy}, but their use in occupation classification
-is limited. This motivates our token-level attribution analysis, which
-quantifies proxy token weights and tracks how they shift under masking.
-
-\textbf{Attribution method selection.}
-We considered LIME \citep{ribeiro2016should} and SHAP
-\citep{lundberg2017unified} as alternatives. LIME fits a locally linear
-approximation around each prediction and can be unstable across runs.
-KernelSHAP satisfies consistency and local accuracy axioms but requires
-many model evaluations per example, making it expensive for token-level
-analysis of long sequences. Integrated Gradients
-\citep{sundararajan2017axiomatic} is deterministic and satisfies
-completeness (attributions sum to the prediction gap from the baseline)
-and sensitivity, at a fixed cost of $O(m)$ forward passes for $m$
-interpolation steps. For sequence classification tasks where
-reproducibility and token-level granularity matter, IG is the standard
-choice \citep{attanasio2022entropy}; we use it for the same reasons.
+\citet{sundararajan2017axiomatic} introduced Integrated Gradients (IG),
+which satisfies completeness and sensitivity axioms, is deterministic,
+and requires only $O(m)$ forward passes for $m$ interpolation steps.
+Compared to LIME \citep{ribeiro2016should}, which can be unstable across
+runs, and KernelSHAP \citep{lundberg2017unified}, which requires many
+model evaluations per example, IG is the standard choice for token-level
+analysis of sequence classifiers \citep{attanasio2022entropy}; we adopt
+it for the same reasons. Attribution methods have been applied to gender
+bias in coreference resolution \citep{attanasio2022entropy}, but their
+use in occupation classification is limited.
 
 \textbf{Model scaling and fairness.}
 \citet{bommasani2021opportunities} discusses bias amplification as a risk
@@ -161,29 +147,12 @@ occupational stereotypes and evaluating debiasing methods in NLP.
 Each example consists of a short biography (\texttt{hard\_text}) paired
 with an integer profession label and a binary gender attribute inferred
 from pronoun usage by the original authors (0\,$\to$\,M, 1\,$\to$\,F).
+The dataset contains 381,807 examples (train 248,141 / dev 38,198 /
+test 95,468), with a near-identical gender split of $\approx\!46.2\%$
+female across all partitions, indicating stratified sampling.
 We restrict to the \textbf{top 20 most frequent occupations} in the
 training split. The task is to predict occupation from biography text
 alone; gender is used only for post-hoc fairness evaluation.
-
-\begin{table}[h]
-\centering\small
-\begin{tabular}{lrrr}
-\toprule
-\textbf{Split} & \textbf{Total} & \textbf{Female} & \textbf{Male} \\
-\midrule
-Train & 248,141 & 46.16\% & 53.84\% \\
-Dev   &  38,198 & 46.16\% & 53.84\% \\
-Test  &  95,468 & 46.17\% & 53.83\% \\
-\midrule
-\textbf{Total} & \textbf{381,807} & 46.16\% & 53.84\% \\
-\bottomrule
-\end{tabular}
-\caption{Dataset split sizes and gender distribution. The near-identical
-F\% across splits (range: 0.01\%, i.e.\ approximately 46.2\% female
-in each) indicates the original dataset was stratified by gender
-when partitioned.}
-\label{tab:splits}
-\end{table}
 
 Table~\ref{tab:professions} shows the per-profession counts and gender
 distribution in the training split. Several occupations exhibit strong
@@ -277,43 +246,6 @@ with a linear head, lr $2\!\times\!10^{-5}$, batch 16, 3 epochs,
 max length 256, best checkpoint by Macro-F1. The same pipeline runs
 for both masked and unmasked conditions with a shared label mapping.
 
-\subsection{Evaluation Metrics}
-\label{sec:evaluation}
-
-We evaluate models on both task performance and fairness. Let $Y$ represent the true occupation label, $\hat{Y}$ the predicted label, $A \in \{M, F\}$ the binary gender attribute, and $\mathcal{C}$ the set of 20 occupation classes. 
-
-\textbf{Task Performance:} We report overall Accuracy and Macro-F1 score to account for the heavy class imbalance present in the dataset.
-
-\textbf{Fairness Metrics:} We measure gender disparities using one-vs-rest multiclass extensions of Demographic Parity (DP) and Equalized Odds (EO), macro-averaged across all occupations. 
-
-Demographic Parity requires the prediction to be independent of the sensitive attribute. We compute the macro-averaged DP gap as the absolute difference in positive prediction rates between genders for each class:
-
-\vspace{-1em}
-
-\begin{align*}
-\Delta \text{DP} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid A = M) \\
-&- P(\hat{Y} = c \mid A = F) \Big|
-\end{align*}
-
-Equalized Odds requires the prediction to be conditionally independent of the sensitive attribute given the true label. To compute the EO gap, we first calculate the macro-averaged True Positive Rate (TPR) gap and False Positive Rate (FPR) gap:
-
-\vspace{-1em}
-
-\begin{align*}
-\Delta \text{TPR} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid Y = c, A = M) \\
-&- P(\hat{Y} = c \mid Y = c, A = F) \Big|
-\end{align*}
-
-\vspace{-1.6em}
-
-\begin{align*}
-\Delta \text{FPR} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid Y \neq c, A = M) \\
-&- P(\hat{Y} = c \mid Y \neq c, A = F) \Big|
-\end{align*}
-
-The final Equalized Odds gap is defined as the maximum of these two macro-averaged disparities:
-$$ \text{EO Gap} = \max(\Delta \text{TPR}, \Delta \text{FPR}) $$
-
 \subsection{Proxy Bias Attribution}
 We apply Integrated Gradients \citep{sundararajan2017axiomatic} to the
 two fine-tuned encoder models, computing attributions toward the
@@ -369,7 +301,11 @@ where $\hat{y}$ is the predicted label for example $x$.
 % ── 5. EXPERIMENTAL SETUP ───────────────────────────────────────
 \section{Experimental Setup}
 
-Code and prediction files are available at \url{https://github.com/usukhbayarp/comp0087-fairness-occupation-prediction}.
+We evaluate five model families across two conditions (masked/unmasked)
+and three regimes (zero-shot, few-shot, fine-tuned), as summarised in
+Table~\ref{tab:configs}. All models are evaluated on the same 3,000-sample
+stratified subset (§3.2). Code and prediction files are available at
+\url{https://github.com/usukhbayarp/comp0087-fairness-occupation-prediction}.
 
 \begin{table}[h]
 \centering\small
@@ -381,15 +317,59 @@ Code and prediction files are available at \url{https://github.com/usukhbayarp/c
 Pythia-160M & Gen. & zero-shot, few-shot, FT & M, U \\
 Pythia-410M & Gen. & zero-shot, few-shot, FT & M, U \\
 Pythia-1.4B & Gen. & zero-shot, few-shot, FT & M, U \\
-DistilBERT  & Enc. & Fine-tuned           & M, U \\
-RoBERTa     & Enc. & Fine-tuned           & M, U \\
+DistilBERT  & Enc. & Fine-tuned              & M, U \\
+RoBERTa     & Enc. & Fine-tuned              & M, U \\
 \bottomrule
 \end{tabular}
 \caption{All model configurations. FT=fine-tuned; M=masked; U=unmasked.}
 \label{tab:configs}
 \end{table}
 
-Table~\ref{tab:configs} summarises all evaluated configurations.
+\subsection{Evaluation Metrics}
+\label{sec:evaluation}
+
+We evaluate on both task performance and fairness. Let $Y$ be the true
+occupation label, $\hat{Y}$ the predicted label, $A \in \{M, F\}$ the
+binary gender attribute, and $\mathcal{C}$ the set of 20 occupation classes.
+
+\textbf{Task performance.} We report Accuracy and Macro-F1 to account for
+class imbalance.
+
+\textbf{Fairness metrics.} We measure gender disparities using one-vs-rest
+multiclass extensions of Demographic Parity (DP) and Equalized Odds (EO),
+macro-averaged across occupations \citep{hardt2016equality,dwork2012fairness}.
+
+Demographic Parity requires the prediction to be independent of the
+sensitive attribute. We compute the macro-averaged DP gap as:
+
+\vspace{-1em}
+
+\begin{align*}
+\Delta \text{DP} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid A = M) \\
+&- P(\hat{Y} = c \mid A = F) \Big|
+\end{align*}
+
+Equalized Odds requires the prediction to be conditionally independent of
+the sensitive attribute given the true label. We compute the macro-averaged
+TPR gap and FPR gap:
+
+\vspace{-1em}
+
+\begin{align*}
+\Delta \text{TPR} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid Y = c, A = M) \\
+&- P(\hat{Y} = c \mid Y = c, A = F) \Big|
+\end{align*}
+
+\vspace{-1.6em}
+
+\begin{align*}
+\Delta \text{FPR} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid Y \neq c, A = M) \\
+&- P(\hat{Y} = c \mid Y \neq c, A = F) \Big|
+\end{align*}
+
+The final Equalized Odds gap is defined as the maximum of these two
+macro-averaged disparities:
+$$ \text{EO Gap} = \max(\Delta \text{TPR}, \Delta \text{FPR}) $$
 
 % ── 6. RESULTS ──────────────────────────────────────────────────
 \section{Results and Discussion}
@@ -483,7 +463,7 @@ Pythia-160m 0s          & M & 0.092 & 0.027 & 0.092 & 0.024 \\
 \bottomrule
 \end{tabular}
 
-\caption{Fairness metrics (EO = Equalized Odds gap, DP = Demographic Parity gap, TPR = True Positive Rate gap, FPR = False Positive Rate gap) for each model, both masked (M) and unmasked (U). Row label abbreviations: FT = fine-tuned; FS = few-shot; 0s = zero-shot.}
+\caption{Fairness metrics per model configuration. EO = Equalized Odds gap; DP = Demographic Parity gap; M/U = masked/unmasked; FT/FS/0s = fine-tuned/few-shot/zero-shot.}
 \label{tab:fairness}
 \end{table}
 
@@ -572,23 +552,14 @@ identical top-10 tokens across masked and unmasked conditions. These
 cross-profession reversals suggest that proxy stability is
 model-specific, not simply a function of training data.
 
-When gender tokens are removed, attribution spreads across other tokens
-rather than concentrating on a single dominant one, which is consistent
-with the completeness property of Integrated Gradients.
-We also observe label leakage: the profession name (e.g.\ \emph{nurse}
-for the nurse class) frequently appears among the top-$K$ attributed
-tokens, as biographies often mention the profession directly. This is
-expected; the informative signal lies in how attribution shifts between
-conditions for the secondary tokens.
-For DistilBERT on \emph{nurse}, the label token \emph{nurse} remains
-prominent under both conditions (129.89 unmasked, 152.73 masked), but
-secondary tokens shift noticeably: \emph{practitioner} drops from 26.51
-to 11.18 and \emph{graduated} from 19.11 to 1.47, while \emph{hospital}
-(8.96) and \emph{especially} (15.52) gain weight.
-For RoBERTa on \emph{physician}, masking shifts attribution toward
-higher-level clinical vocabulary: \emph{medicine} rises from 166.64 to
-292.25, \emph{patients} (52.72) appears as a new signal, and
-\emph{affiliated} (68.78 unmasked) drops out of the top-5.
+We also observe label leakage: the profession name frequently appears
+among the top-$K$ attributed tokens. This is expected; the informative
+signal lies in how attribution shifts for secondary tokens.
+For DistilBERT on \emph{nurse}, \emph{practitioner} drops from 26.51
+to 11.18 and \emph{graduated} from 19.11 to 1.47 after masking, while
+\emph{hospital} (8.96) and \emph{especially} (15.52) gain weight.
+For RoBERTa on \emph{physician}, \emph{medicine} rises from 166.64 to
+292.25 and \emph{patients} (52.72) appears as a new signal.
 
 \subsubsection*{Step 2: Gender Signal Identification}
 \label{sec:gender_signal}
