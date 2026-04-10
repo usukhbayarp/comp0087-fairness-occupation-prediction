@@ -8,6 +8,7 @@
 \usepackage{graphicx}
 \usepackage{longtable}
 \usepackage{xurl}
+\usepackage{amssymb}
 
 \title{\textbf{Fairness and Proxy Bias in Occupation Prediction:}\\
 Scaling, Masking, and Mechanistic Attribution across Model Families}
@@ -61,7 +62,7 @@ gender signal.
   attribution study on the Bias-in-Bios occupation task. We produce
   Integrated Gradients tables stratified by profession and gender, and
   find that indirect contextual tokens carry attribution weights
-  33--287$\times$ higher than explicit gender words, suggesting that
+  33--287$\times$ (across both models) higher than explicit gender words, suggesting that
   bias operates through vocabulary co-occurrence patterns rather than
   direct gender references.
   \item We show that proxy token distributions respond differently to
@@ -712,7 +713,7 @@ faithfulness, consistent with the attributed tokens being functional.
 \textbf{Profession} & \multicolumn{2}{c}{\textbf{DistilBERT}} & \multicolumn{2}{c}{\textbf{RoBERTa}} \\
 & \textbf{U} & \textbf{M} & \textbf{U} & \textbf{M} \\
 \midrule
-Dietitian         & 0.619 & 0.743 & 0.548 & 0.372 \\
+Dietitian         & 0.620 & 0.743 & 0.548 & 0.372 \\
 Nurse             & 0.395 & 0.518 & 0.203 & 0.197 \\
 Psychologist      & 0.356 & 0.378 & 0.232 & 0.252 \\
 Painter           & 0.473 & 0.418 & 0.339 & 0.342 \\
@@ -735,7 +736,7 @@ Full results for all 20 professions are in Appendix~E.}
 
 Faithfulness scores are broadly consistent with the stability analysis.
 Professions with lower shared ratios tend to have higher faithfulness
-(\emph{dietitian}: 0.619, \emph{nurse}: 0.395), while more stable
+(\emph{dietitian}: 0.620, \emph{nurse}: 0.395), while more stable
 professions show lower scores (\emph{professor}: 0.160,
 \emph{attorney}: 0.162). This supports the idea that attribution
 instability identifies professions whose predictions depend on a small,
@@ -749,7 +750,7 @@ Gender-conditioned faithfulness shows a clear asymmetry for
 nurse$|$F = 0.354. Erasing the top-5 tokens for male nurse predictions
 nearly halves model confidence, suggesting that male nurse
 representations are concentrated in a small set of critical tokens.
-The asymmetry also holds under RoBERTa (nurse$|$M = 0.534 versus
+The asymmetry also holds under RoBERTa (nurse$|$M = 0.533 versus
 nurse$|$F = 0.163). Full gender-conditioned faithfulness results for
 all professions with $n{\geq}10$ per gender are in Appendix~D. A
 second notable asymmetry appears for \emph{poet} under DistilBERT
@@ -1808,7 +1809,7 @@ Attorney          & 0.162 & 0.221 & 0.175 & 0.158 \\
 Comedian          & 0.352 & 0.296 & 0.240 & 0.292 \\
 Composer          & 0.373 & 0.467 & 0.228 & 0.329 \\
 Dentist           & 0.353 & 0.390 & 0.271 & 0.228 \\
-Dietitian         & 0.619 & 0.743 & 0.548 & 0.372 \\
+Dietitian         & 0.620 & 0.743 & 0.548 & 0.372 \\
 Filmmaker         & 0.277 & 0.368 & 0.190 & 0.188 \\
 Journalist        & 0.268 & 0.275 & 0.281 & 0.318 \\
 Model             & 0.294 & 0.153 & 0.100 & 0.192 \\
@@ -1901,7 +1902,7 @@ Dentist       & 0.289 &  31 & 0.265 &  84 \\
 Dietitian     & 0.549 &  28 & 0.533 &   2 \\
 Filmmaker     & 0.088 &  20 & 0.244 &  37 \\
 Journalist    & 0.259 &  84 & 0.309 &  68 \\
-Nurse         & 0.163 & 130 & \textbf{0.534} & 16 \\
+Nurse         & 0.163 & 130 & \textbf{0.533} & 16 \\
 Painter       & 0.310 &  28 & 0.367 &  29 \\
 Photographer  & 0.291 &  72 & 0.278 & 131 \\
 Physician     & 0.280 & 174 & 0.184 & 154 \\
@@ -1939,7 +1940,7 @@ reference but should be interpreted with caution.}
 \vspace{4pt}
 {\small The nurse$|$M asymmetry remains the largest gender-conditioned
 faithfulness gap in both unmasked conditions: DistilBERT 0.756
-vs.\ 0.354, RoBERTa 0.534 vs.\ 0.163. A second notable asymmetry
+vs.\ 0.354, RoBERTa 0.533 vs.\ 0.163. A second notable asymmetry
 appears for \emph{poet} under DistilBERT unmasked (0.434 vs.\ 0.200),
 suggesting that male poet predictions are similarly concentrated on
 a small decisive feature set---though it does not persist under
