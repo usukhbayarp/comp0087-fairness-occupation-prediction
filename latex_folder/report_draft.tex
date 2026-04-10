@@ -29,8 +29,12 @@ using the Bias-in-Bios dataset, comparing Pythia generative models
 masked and unmasked conditions.
 Against the common intuition that larger models are fairer, we find that
 zero-shot gender bias \emph{increases} with scale.
-Attribution-based analysis also suggests that explicit gender tokens are
-unlikely to be the main drivers of bias: they carry weights
+Gender masking reduces aggregate Equalized Odds gap in encoder models
+(by 0.017--0.019), but produces backfire effects at the profession level
+in generative models, showing that proxy representations are
+model-architecture-specific.
+Attribution-based analysis further suggests that explicit gender tokens
+are unlikely to be the main drivers of bias: they carry weights
 33--287$\times$ smaller than dominant profession-linked tokens, while
 indirect contextual signals appear to sustain the gender signal even
 after masking.
@@ -497,9 +501,13 @@ disparities persist even after masking, we examine token-level attribution.
 
 We look at which tokens drive occupation predictions and how their
 importance changes under gender masking. The analysis proceeds in three
-steps: attribution stability under masking, identification of which
-token types carry the gender signal, and erasure-based faithfulness
-validation.
+steps: attribution stability under masking (\S\ref{sec:stability}),
+identification of which token types carry the gender signal
+(\S\ref{sec:gender_signal}), and erasure-based faithfulness validation
+(\S\ref{sec:faithfulness_validation}).
+
+\subsubsection*{Step 1: Attribution Stability Under Masking}
+\label{sec:stability}
 
 \begin{table}[h]
 \centering\small
@@ -565,6 +573,9 @@ higher-level clinical vocabulary: \emph{medicine} rises from 166.64 to
 292.25, \emph{patients} (52.72) appears as a new signal, and
 \emph{affiliated} (68.78 unmasked) drops out of the top-5.
 
+\subsubsection*{Step 2: Gender Signal Identification}
+\label{sec:gender_signal}
+
 \begin{table}[h]
 \centering\small
 \setlength{\tabcolsep}{4pt}
@@ -622,8 +633,10 @@ representations benefit more from masking.
 
 \subsubsection*{Qualitative Illustrations}
 
-The following three examples from the DistilBERT unmasked condition
-illustrate the aggregate patterns reported above.
+The following three examples illustrate the aggregate patterns reported
+above. Examples~1 and~3 are drawn from the DistilBERT unmasked
+condition; Example~2 compares the unmasked and masked conditions on the
+same biography to illustrate a prediction flip.
 
 \medskip
 \noindent\textbf{Example~1: Gender asymmetry in attributed tokens
@@ -698,7 +711,8 @@ appear in the top~5, consistent with the view that indirect
 contextual signals, not explicit gender markers, carry the main
 predictive load.
 
-\subsubsection*{Faithfulness Validation}
+\subsubsection*{Step 3: Faithfulness Validation}
+\label{sec:faithfulness_validation}
 
 Integrated Gradients gives correlational evidence of feature
 importance. The top-$K$ erasure test complements this with a
