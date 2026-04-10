@@ -50,25 +50,28 @@ language, and \emph{surgeon} or \emph{software engineer} with
 male-typical patterns. \citet{de-arteaga-etal-2019-bias} showed, using
 the Bias-in-Bios dataset, that scrubbing explicit gender signals does
 not remove these disparities: implicit proxy features survive.
-Yet the identity of these proxy features, which tokens carry the latent
-gender signal, how their role changes under masking, and whether this
-varies with model scale or architecture, remains poorly understood.
+Yet the identity of these proxy features — which tokens are associated
+with the gender signal, how their salience changes under masking, and
+whether this varies with model scale or architecture — remains poorly
+understood.
 
 This paper looks at three aspects of gender bias in occupation
 prediction that have received limited attention: how model
 \emph{capacity} interacts with fairness, how model \emph{type} shapes
-which proxy features are learned, and which specific tokens carry the
-gender signal.
+which proxy features are learned, and which specific tokens are most
+strongly associated with the gender signal.
 
 \paragraph{Contributions.}
 \begin{itemize}
   \item To our knowledge, this is the first systematic token-level
-  attribution study on the Bias-in-Bios occupation task. We produce
-  Integrated Gradients tables stratified by profession and gender, and
-  find that indirect contextual tokens carry attribution weights
-  33--287$\times$ (across both models) higher than explicit gender words, suggesting that
-  bias operates through vocabulary co-occurrence patterns rather than
-  direct gender references.
+  attribution study on the Bias-in-Bios occupation task, providing
+  correlational and limited intervention-based evidence about which
+  proxy tokens are most strongly associated with model predictions. We
+  produce Integrated Gradients tables stratified by profession and
+  gender, finding that indirect contextual tokens have attribution
+  weights 33--287$\times$ higher than explicit gender words, suggesting
+  that gender-correlated vocabulary co-occurrence patterns are a plausible dominant contributor
+   rather than direct gender references.
   \item We show that proxy token distributions respond differently to
   gender masking depending on model type. Masking reduces aggregate EO
   gap in encoders, but produces backfire effects in generative models
@@ -132,10 +135,10 @@ directions from word embeddings (surveyed in
 conceal rather than remove bias, motivating diagnostic analysis of
 which features carry residual signals.
 Our work takes this complementary perspective: rather than proposing a
-debiasing intervention, we characterise the token-level mechanisms
-through which bias operates and persists under masking, providing
-evidence about which proxy signals would need to be targeted for
-debiasing to be effective.
+debiasing intervention, we characterise the token-level attribution
+patterns associated with biased predictions and how they shift under
+masking, providing evidence about which proxy signals are plausibly
+linked to the disparities that debiasing methods would need to target.
 
 % ── 3. DATASET ──────────────────────────────────────────────────
 \section{Dataset and Preprocessing}
@@ -214,10 +217,8 @@ for Pythia, which as a causal language model has no native mask token)
 using a case-insensitive word-boundary regex. Three categories of tokens are masked: pronouns and possessives
 (\emph{he, she, his, her}, etc.), titles and honorifics (\emph{mr,
 mrs, ms, sir, lady}, etc.), and 54 gendered nouns (\emph{father,
-mother, husband, wife, actor, actress}, etc.). We did not mask names,
-as general name-matching rules produce too many false positives and
-names carry biographical content unrelated to gender, which would
-conflate gender-signal removal with loss of informative text.
+mother, husband, wife, actor, actress}, etc.). Names are not masked, as they carry biographical content unrelated
+to gender and reliable name-matching produces too many false positives.
 
 % ── 4. METHODS ──────────────────────────────────────────────────
 \section{Methods}
@@ -290,13 +291,22 @@ Gender-conditioned proxy tables are produced using the same procedure,
 stratified by profession and gender.
 
 \textbf{Faithfulness validation.}
-To check whether the attributed tokens are actually important for the
-prediction, we erase the top-5 tokens from each example's text and
+To check whether the attributed tokens are functionally important for
+the prediction, we erase the top-5 tokens from each example's text and
 re-run the model, measuring the resulting probability drop:
 \begin{equation}
   \text{Faith}(x) = P(\hat{y} \mid x) - P(\hat{y} \mid x_{\text{erased}})
 \end{equation}
 where $\hat{y}$ is the predicted label for example $x$.
+
+\textbf{Interpretive scope.}
+We treat Integrated Gradients as a correlational attribution method,
+not a causal identification tool: high attribution indicates token
+salience under the learned representation, not that the token is a
+root cause of bias. Erasure-based faithfulness provides limited
+interventional support, but because token removal alters the input
+distribution, it is best interpreted as local functional dependence
+rather than proof of a causal mechanism.
 
 % ── 5. EXPERIMENTAL SETUP ───────────────────────────────────────
 \section{Experimental Setup}
@@ -491,15 +501,18 @@ not uniform at the profession level. Pythia-1.4B FT shows backfire
 effects for \emph{teacher}, \emph{poet}, and \emph{painter}, and
 Pythia-410M FT shows a small aggregate increase (0.085 to 0.088).
 FPR gap is consistently much smaller than TPR gap across all models,
-so TPR disparity is the dominant fairness concern. To understand why
-disparities persist even after masking, we examine token-level attribution.
+so TPR disparity is the dominant fairness concern.
+Taken together, these results suggest that fairness interventions
+targeting explicit gender tokens alone are insufficient, as bias
+appears to be distributed across broader contextual co-occurrence
+patterns rather than a small set of removable markers.
 
 \subsection{Proxy Bias Analysis}
 
 We look at which tokens drive occupation predictions and how their
 importance changes under gender masking. The analysis proceeds in three
 steps: attribution stability under masking (\S\ref{sec:stability}),
-identification of which token types carry the gender signal
+identification of which token types are associated with the gender signal
 (\S\ref{sec:gender_signal}), and erasure-based faithfulness validation
 (\S\ref{sec:faithfulness_validation}).
 
@@ -599,13 +612,13 @@ those of dominant profession tokens. In DistilBERT, the highest-ranked
 gender token (\emph{actor}: 1.15) is 48--287$\times$ smaller than the
 top profession tokens (55.53--329.52). In RoBERTa, the highest gender
 token (\emph{mrs}: 2.11) is 33--158$\times$ smaller (profession range:
-70.44--333.32). This suggests that bias operates mainly through
-indirect contextual signals rather than explicit gender references,
-consistent with models exploiting statistical co-occurrences in the
-training corpus \citep{de-arteaga-etal-2019-bias,
+70.44--333.32). This suggests that gender-correlated information is encoded mainly
+through indirect contextual signals rather than explicit gender
+references, consistent with models exploiting statistical
+co-occurrences in the training corpus \citep{de-arteaga-etal-2019-bias,
 gonen-goldberg-2019-lipstick}: gendered role vocabulary, credential
-terminology, and contextual framing carry the gender signal without any
-explicit reference to gender.
+terminology, and contextual framing appear to encode gender-correlated
+information without any explicit reference to gender.
 
 Gender-conditioned analysis shows partial asymmetry.
 Under DistilBERT, nurse$|$F and nurse$|$M both retain 5 shared tokens
@@ -694,10 +707,10 @@ Connecticut.''}
 \noindent Predicted: \emph{physician}~\checkmark\ ---
 top tokens: \emph{medicine} (1.13), \emph{practices} (0.96),
 \emph{hospital} (0.52).
-Clinical role words alone drive the prediction. No gender tokens
+Clinical role words dominate the attributed tokens; no gender tokens
 appear in the top~5, consistent with the view that indirect
-contextual signals, not explicit gender markers, carry the main
-predictive load.
+contextual signals, not explicit gender markers, are most strongly
+associated with the predictive signal.
 
 \subsubsection*{Step 3: Faithfulness Validation}
 \label{sec:faithfulness_validation}
@@ -779,9 +792,10 @@ zero-shot EO gap grows from $\sim$0.09 at 160M to $\sim$0.21 at 1.4B,
 showing that model capacity alone is not a substitute for fine-tuning
 or explicit debiasing. Masking reduces aggregate EO in encoder models
 (by 0.017--0.019) but produces backfire effects at the profession level
-in Pythia. Attribution analysis suggests that bias operates mainly
-through indirect contextual tokens; their importance is model-specific
-and their functional role is supported by erasure faithfulness testing.
+in Pythia. Attribution analysis suggests that gender-correlated information is
+encoded mainly through indirect contextual tokens; their salience is
+model-specific and their functional importance is supported by erasure
+faithfulness testing.
 Gender-conditioned analysis adds a further observation: male nurse
 predictions are concentrated in a critically small feature set, with
 faithfulness nearly double that of female nurse predictions
@@ -792,11 +806,15 @@ Gender labels in Bias-in-Bios are binary and inferred from pronoun
 usage \citep{de-arteaga-etal-2019-bias}, which does not reflect the
 full spectrum of gender identity and constrains fairness evaluation to
 a male/female binary. Attribution is restricted to encoder models.
-Attribution scores are correlational, not causal: erasure-based
-validation gives partial intervention-based support but does not
-establish causality. Integrated Gradients and token erasure reflect
-learned associations and functional importance, not underlying
-generative mechanisms. Per-profession sample sizes are small for rare occupations (comedian
+Attribution scores are correlational, not causal: they show which
+features the trained model appears to rely on, not why those features
+became encoded during training. Our erasure-based faithfulness test
+provides limited interventional evidence, but because token removal
+alters the input distribution and may produce unrealistic texts, the
+resulting confidence drop is best interpreted as evidence of functional
+dependence rather than a definitive causal test. Stronger causal
+claims would require controlled counterfactual interventions, feature
+editing, or causal mediation-style analyses. Per-profession sample sizes are small for rare occupations (comedian
 $n\!=\!27$, dietitian $n\!=\!30$), making per-profession TPR estimates
 unreliable for those classes (binomial SE\,$\approx\!0.23$ for comedian
 with $\sim\!6$ female examples).
@@ -820,6 +838,9 @@ Adding bootstrapped confidence intervals on fairness metrics would
 help distinguish real effects from sampling variance. It would also
 be useful to develop a formal cross-gender proxy bias score that
 combines attribution asymmetry and fairness gaps across professions.
+A natural next step for causal analysis would be controlled
+counterfactual biography editing, representation-level interventions,
+or causal mediation analysis over specific token groups.
 
 \section*{Acknowledgements}
 We thank our teaching assistant Karen Hambardzumyan for his guidance
