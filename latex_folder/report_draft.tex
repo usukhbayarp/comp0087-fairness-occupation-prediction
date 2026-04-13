@@ -259,6 +259,13 @@ $\overline{\text{attr}}(t,p)$ is the mean attribution score.
 We attribute toward the \emph{predicted} label rather than the true
 label throughout, since the goal is to understand what the model relies
 on, not whether it is correct \citep{sundararajan2017axiomatic}.
+Note that gendered pronouns (\emph{he}, \emph{she}, \emph{his},
+\emph{her}, etc.) are included in the Stage~2 stopword list and
+therefore never appear in the aggregated proxy tables, regardless of
+masking condition. The gender signal comparison in
+Table~\ref{tab:gender_tokens} thus reflects only non-pronoun gendered
+vocabulary (titles, gendered nouns). Faithfulness testing is unaffected,
+as it uses the Stage~1 top-$k$ tokens which retain pronouns.
 
 \textbf{Stability analysis.}
 To compare masked and unmasked attribution patterns, we take the
@@ -687,7 +694,7 @@ attributed tokens) for a selected subset of professions.
 U=unmasked; M=masked. Higher = more functionally important tokens
 under erasure. The \textit{Overall} row is the macro-average across
 all 20 professions (equal weight per profession, not per example).
-Full results for all 20 professions are in Appendix~E.}
+Full results for all 20 professions are in Appendix~D.}
 \label{tab:faithfulness}
 \end{table}
 
@@ -711,7 +718,7 @@ male nurse representations are concentrated in a small set of critical
 tokens.
 The asymmetry also holds under RoBERTa (nurse$|$M = 0.533 versus
 nurse$|$F = 0.163). Full gender-conditioned faithfulness results for
-all professions with $n{\geq}10$ per gender are in Appendix~D. A
+all professions with $n{\geq}10$ per gender are in Appendix~E. A
 second notable asymmetry appears for \emph{poet} under DistilBERT
 unmasked (0.434 vs.\ 0.200).
 
@@ -1901,7 +1908,7 @@ Teacher       & 0.225 &  79 & 0.354 &  52 \\
 \normalsize
 {\small Professions where only one gender reaches $n \geq 10$ (comedian$|$M,
 composer$|$M, model$|$F, software engineer$|$M) are omitted; their
-overall faithfulness appears in Appendix~E. Dietitian$|$M ($n{=}3$ in
+overall faithfulness appears in Appendix~D. Dietitian$|$M ($n{=}3$ in
 DU; $n{=}2$ in RU; $n < 10$ in masked conditions) is included for
 reference but should be interpreted with caution.}
 

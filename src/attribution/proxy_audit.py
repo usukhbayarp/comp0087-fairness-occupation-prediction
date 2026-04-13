@@ -83,14 +83,22 @@ def aggregate_proxy_tokens(
     n_rows_missing_group = 0
     n_tokens_seen = 0
     n_tokens_kept = 0
+    n_pred_mismatch = 0
 
     for row in attribution_rows:
         n_rows += 1
 
-        profession = row.get("label_pred_stored")
+        profession = row.get("label_pred_fresh")
+        if profession is None:
+            # fall back to stored prediction for older JSONL files
+            profession = row.get("label_pred_stored")
         if profession is None:
             n_rows_missing_group += 1
             continue
+
+        stored = row.get("label_pred_stored")
+        if stored is not None and stored != profession:
+            n_pred_mismatch += 1
 
         gender = row.get("gender", None)
         top_tokens = row.get("top_tokens", [])
@@ -159,6 +167,7 @@ def aggregate_proxy_tokens(
         print("[WARN] Aggregation produced an empty dataframe.")
         print(f"[INFO] Rows processed: {n_rows}")
         print(f"[INFO] Rows missing profession key: {n_rows_missing_group}")
+        print(f"[INFO] Rows where stored != fresh prediction: {n_pred_mismatch}")
         print(f"[INFO] Tokens seen: {n_tokens_seen}")
         print(f"[INFO] Tokens kept after filtering: {n_tokens_kept}")
         return df
@@ -174,6 +183,7 @@ def aggregate_proxy_tokens(
 
     print(f"[INFO] Rows processed: {n_rows}")
     print(f"[INFO] Rows missing profession key: {n_rows_missing_group}")
+    print(f"[INFO] Rows where stored != fresh prediction: {n_pred_mismatch}")
     print(f"[INFO] Tokens seen: {n_tokens_seen}")
     print(f"[INFO] Tokens kept after filtering: {n_tokens_kept}")
     print(f"[INFO] Aggregated rows: {len(df)}")
