@@ -332,11 +332,19 @@ class imbalance.
 multiclass extensions of Demographic Parity (DP) and Equalized Odds (EO),
 macro-averaged across occupations \citep{hardt2016equality,dwork2012fairness}.
 For binary gender $A\in\{M,F\}$ and label set $\mathcal{C}$:
+{\small
 \begin{align*}
-\Delta\text{DP} &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|P(\hat{Y}{=}c\mid A{=}M)-P(\hat{Y}{=}c\mid A{=}F)\bigr|\\
-\Delta\text{TPR} &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|P(\hat{Y}{=}c\mid Y{=}c,A{=}M)-P(\hat{Y}{=}c\mid Y{=}c,A{=}F)\bigr|\\
-\Delta\text{FPR} &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|P(\hat{Y}{=}c\mid Y{\neq}c,A{=}M)-P(\hat{Y}{=}c\mid Y{\neq}c,A{=}F)\bigr|
-\end{align*}
+\Delta\text{DP}  &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|
+    P(\hat{Y}{=}c\mid A{=}M) - P(\hat{Y}{=}c\mid A{=}F)\bigr|\\[2pt]
+\Delta\text{TPR} &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|
+    P(\hat{Y}{=}c\mid Y{=}c,A{=}M)\\
+    &\phantom{{}=\tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|}
+    {}-P(\hat{Y}{=}c\mid Y{=}c,A{=}F)\bigr|\\[2pt]
+\Delta\text{FPR} &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|
+    P(\hat{Y}{=}c\mid Y{\neq}c,A{=}M)\\
+    &\phantom{{}=\tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|}
+    {}-P(\hat{Y}{=}c\mid Y{\neq}c,A{=}F)\bigr|
+\end{align*}}
 The EO gap is $\max(\Delta\text{TPR},\,\Delta\text{FPR})$.
 
 % ── 6. RESULTS ──────────────────────────────────────────────────
