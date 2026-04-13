@@ -4,7 +4,8 @@ import json
 import glob
 import os
 from sklearn.metrics import f1_score, accuracy_score
-from src.evaluation.fairness import compute_fairness_gaps
+from src.evaluation.fairness import compute_fairness_gaps, calculate_pooled_eo
+from scipy.stats import bootstrap
 
 def load_predictions(file_path):
     """
@@ -126,12 +127,28 @@ def run_evaluation():
         else:
             model_name = f"{raw_name} (Unmasked)"
         
+
+        # Prepare the index array for the sampler
+        indices = np.arange(len(df))
+        
+        # Run the bootstrap
+        res = bootstrap(
+            (indices,), 
+            lambda idx: calculate_pooled_eo(idx, df),
+            n_resamples=1000, 
+            method='BCa', 
+            confidence_level=0.95,
+            vectorized=False
+        )
+
         summary_data.append({
             "model_name":   model_name,
             "macro_f1":     macro_f1,
             "accuracy":     accuracy,
             "dp_diff":      avg_dp,
             "eo_diff":      eo_diff,
+            "eo_ci_low":    res.confidence_interval.low,
+            "eo_ci_high":   res.confidence_interval.high,
             "avg_tpr_gap":  avg_tpr_gap,
             "avg_fpr_gap":  avg_fpr_gap,
         })
