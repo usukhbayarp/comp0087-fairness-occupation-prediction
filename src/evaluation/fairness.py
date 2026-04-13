@@ -76,6 +76,9 @@ BALANCED = ["professor", "physician", "attorney", "photographer", "journalist",
             "psychologist", "teacher", "dentist", "painter", "filmmaker", "poet", "accountant"]
 
 def calculate_pooled_eo(indices, df):
+    """
+    This function is WRONG! E.g. one v all approach even in the pooling
+    """
     # 1. Create the resampled slice
     sample_df = df.iloc[indices]
     category_gaps = []
@@ -91,7 +94,7 @@ def calculate_pooled_eo(indices, df):
             if len(sub) == 0: continue
             
             tpr = (sub['label_true'] == sub['label_pred']).sum() / len(sub)
-            # Simplified FPR: Predicted an occupation in this group incorrectly
+            # INCORRECT FPR CALCULATION
             fp = (sub['label_pred'].isin(occupations)) & (sub['label_pred'] != sub['label_true'])
             fpr = fp.sum() / len(sub)
             
@@ -104,5 +107,65 @@ def calculate_pooled_eo(indices, df):
     
     return np.mean(category_gaps)
 
+# no pooling
+""""
+def calculate_exact_eo_diff(indices, df):
+    # 1. Resample the data
+    sample_df = df.iloc[indices]
+    
+    # 2. Compute the per-occupation fairness gaps exactly as evaluate.py does
+    fairness = compute_fairness_gaps(sample_df)
+    
+    # 3. Extract and average the gaps
+    tpr_gaps = [v["EO_TPR_Gap"] for v in fairness.values()]
+    fpr_gaps = [v["EO_FPR_Gap"] for v in fairness.values()]
+    
+    avg_tpr_gap = np.nanmean(tpr_gaps)
+    avg_fpr_gap = np.nanmean(fpr_gaps)
+    
+    # 4. Return the standard EO difference
+    return max(avg_tpr_gap, avg_fpr_gap)
+"""
     
 
+
+def calculate_exact_eo_diff(indices, df):
+    # 1. Create a copy to avoid warnings and enable fast pre-calculations
+    sample_df = df.iloc[indices].copy()
+    sample_df['is_correct'] = (sample_df['label_true'] == sample_df['label_pred'])
+    
+    # 2. Pre-calculate gender totals (for FPR denominator)
+    gender_totals = sample_df['gender'].value_counts()
+    if len(gender_totals) < 2:
+        return np.nan 
+
+    # 3. TPR calculation: Aggregating is now much faster without the lambda
+    pos_stats = sample_df.groupby(['label_true', 'gender']).agg(
+        actual_pos=('id', 'count'), # Counts how many people are actually in that category.
+        correct=('is_correct', 'sum') # Counts how many people were correctly predicted.
+    ).unstack('gender') # Reshapes the table to have genders as columns, rows are 
+
+    # 4. FPR calculation
+    # how many times the model predicted a specific category for each gender
+    preds_stats = sample_df.groupby(['label_pred', 'gender']).size().unstack('gender') 
+    
+    # 5. Compute Rates
+    # Aligning Corrected/Predicted/Positives (DF vs DF alignment is automatic)
+    tpr = pos_stats['correct'] / pos_stats['actual_pos'] # True Positive Rate: Correct predictions / Actual positives
+    
+    false_positives = preds_stats.reindex(pos_stats.index).fillna(0) - pos_stats['correct'].fillna(0)
+    
+    # FIX: Use rsub to correctly align gender_totals (Series) to columns of actual_pos (DF)
+    actual_negatives = pos_stats['actual_pos'].fillna(0).rsub(gender_totals, axis=1)
+    
+    fpr = false_positives / actual_negatives
+
+    # 6. Calculate Gaps (|M - F|)
+    tpr_gaps = (tpr['M'] - tpr['F']).abs()
+    fpr_gaps = (fpr['M'] - fpr['F']).abs()
+
+    # 7. Final Averages (ignores NaNs for missing jobs/genders)
+    avg_tpr_gap = np.nanmean(tpr_gaps)
+    avg_fpr_gap = np.nanmean(fpr_gaps)
+
+    return max(avg_tpr_gap, avg_fpr_gap)
