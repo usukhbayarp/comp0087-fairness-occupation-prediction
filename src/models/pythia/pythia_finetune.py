@@ -203,7 +203,11 @@ def build_lora_model(
         if use_4bit:
             model = prepare_model_for_kbit_training(model)
 
-        # LoRA targets Pythia's merged QKV projection in every attention layer
+        # LoRA targets Pythia's merged QKV projection in every attention layer.
+        # The freshly-initialised `score` classification head is listed in
+        # modules_to_save so it is trained end-to-end alongside the LoRA
+        # adapters (otherwise it stays at its random init and the model
+        # has to route signal through a random projection).
         lora_cfg = LoraConfig(
             task_type=TaskType.SEQ_CLS,
             r=16,
@@ -211,6 +215,7 @@ def build_lora_model(
             lora_dropout=0.1,
             bias="none",
             target_modules=["query_key_value"],
+            modules_to_save=["score"],
         )
         model = get_peft_model(model, lora_cfg)
         model.print_trainable_parameters()
