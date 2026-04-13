@@ -76,11 +76,10 @@ strongly associated with the gender signal.
   gap in encoders, but produces backfire effects in generative models
   for specific professions, indicating that the learned proxy
   representations are model-specific.
-  \item We conduct a Pythia scaling study (160M--1.4B) and find that
-  zero-shot EO gap more than doubles with scale, and show through a
-  paired masked/unmasked comparison across five models that fine-tuning
-  consistently outperforms zero-shot and few-shot regimes on both
-  performance and fairness.
+  \item We conduct a Pythia scaling study (160M--1.4B) and find that the zero-shot EO gap 
+  more than doubles with scale. Through a paired masked/unmasked comparison, we demonstrate 
+  that while fine-tuning consistently reduces fairness gaps across all scales, it only yields 
+  superior performance over zero-shot regimes once a 1.4B parameter threshold is reached.
 \end{itemize}
 
 % ── 2. RELATED WORK ─────────────────────────────────────────────
@@ -339,7 +338,6 @@ The EO gap is $\max(\Delta\text{TPR},\,\Delta\text{FPR})$.
 Results are based on the 3,000-sample evaluation subset; some variance is expected due to subset size.
 
 \subsection{Task Performance}
-
 \begin{table}[h]
 \centering\small
 \setlength{\tabcolsep}{5pt}
@@ -347,30 +345,30 @@ Results are based on the 3,000-sample evaluation subset; some variance is expect
 \toprule
 \textbf{Model} & \textbf{C.} & \textbf{Acc.} & \textbf{F1} \\
 \midrule
-Pythia-160M FT & U & 0.394 & 0.134 \\
-Pythia-160M FT & M & 0.373 & 0.090 \\
-Pythia-410M FT & U & 0.581 & 0.323 \\
-Pythia-410M FT & M & 0.576 & 0.325 \\
-Pythia-1.4B FT & U & 0.877 & 0.848 \\
-Pythia-1.4B FT & M & 0.877 & 0.852 \\
+Pythia-160M FT           & U & 0.390 & 0.125 \\
+Pythia-160M FT           & M & 0.382 & 0.094 \\
+Pythia-410M FT           & U & 0.581 & 0.323 \\
+Pythia-410M FT           & M & 0.576 & 0.325 \\
+Pythia-1.4B FT           & U & 0.877 & 0.848 \\
+Pythia-1.4B FT           & M & 0.877 & 0.852 \\
 \midrule
-DistilBERT FT  & U & 0.875 & 0.843 \\
-DistilBERT FT  & M & 0.872 & 0.844 \\
-RoBERTa FT     & U & 0.882 & 0.851 \\
-RoBERTa FT     & M & 0.880 & 0.851 \\
+DistilBERT FT            & U & 0.875 & 0.843 \\
+DistilBERT FT            & M & 0.872 & 0.844 \\
+RoBERTa FT               & U & 0.882 & 0.851 \\
+RoBERTa FT               & M & 0.880 & 0.851 \\
 \midrule
-Pythia-160M zero-shot   & U & 0.405 & 0.230 \\
-Pythia-160M zero-shot   & M & 0.400 & 0.223 \\
-Pythia-160M few-shot    & U & 0.241 & 0.202 \\
-Pythia-160M few-shot    & M & 0.249 & 0.206 \\
-Pythia-410M zero-shot   & U & 0.536 & 0.557 \\
-Pythia-410M zero-shot   & M & 0.533 & 0.553 \\
-Pythia-410M few-shot    & U & 0.366 & 0.391 \\
-Pythia-410M few-shot    & M & 0.363 & 0.389 \\
-Pythia-1.4B zero-shot   & U & 0.658 & 0.567 \\
-Pythia-1.4B zero-shot   & M & 0.659 & 0.568 \\
-Pythia-1.4B few-shot    & U & 0.558 & 0.578 \\
-Pythia-1.4B few-shot    & M & 0.558 & 0.577 \\
+Pythia-160M zero-shot    & U & 0.402 & 0.227 \\
+Pythia-160M zero-shot    & M & 0.370 & 0.208 \\
+Pythia-160M few-shot     & U & 0.353 & 0.243 \\
+Pythia-160M few-shot     & M & 0.334 & 0.244 \\
+Pythia-410M zero-shot    & U & 0.531 & 0.554 \\
+Pythia-410M zero-shot    & M & 0.530 & 0.562 \\
+Pythia-410M few-shot     & U & 0.364 & 0.378 \\
+Pythia-410M few-shot     & M & 0.354 & 0.360 \\
+Pythia-1.4B zero-shot    & U & 0.658 & 0.567 \\
+Pythia-1.4B zero-shot    & M & 0.618 & 0.518 \\
+Pythia-1.4B few-shot     & U & 0.512 & 0.518 \\
+Pythia-1.4B few-shot     & M & 0.489 & 0.491 \\
 \bottomrule
 \end{tabular}
 \caption{Task performance results. U=unmasked; M=masked.}
@@ -378,48 +376,43 @@ Pythia-1.4B few-shot    & M & 0.558 & 0.577 \\
 \end{table}
 
 
-Pythia-1.4B fine-tuned reaches Accuracy\,=\,0.877 (masked), close to the
-encoder baselines (RoBERTa 0.880, DistilBERT 0.872). Conversely, the fine-tuned Pythia-160M performs poorly compared to larger models. We believe that its underperformance relative to zero-/few-shot baselines indicates that at smaller scales, LoRA fine-tuning fails to stably learn an effective decision boundary, and is instead more susceptible to insufficient capacity. Zero-shot F1 improves with scale (0.23 at 160M, 0.57 at 1.4B), but
-few-shot hurts performance at smaller scales (410M zero-shot: 0.557
-drops to few-shot: 0.391; 160M: 0.23$\to$0.20) before recovering at 1.4B (0.578), pointing to a minimum
-capacity threshold for few-shot to be effective. Masking has little
-effect on task performance across all models.
+Pythia-1.4B fine-tuned reaches Accuracy,=,0.877 (masked), close to the encoder baselines (RoBERTa 0.880, DistilBERT 0.872). Conversely, the fine-tuned Pythia-160M and Pythia-410M perform poorly compared to larger models. We believe that their severe underperformance relative to zero-shot baselines (e.g., fine-tuning drops 410M F1 from 0.554 to 0.323) indicates that at smaller scales, LoRA fine-tuning fails to stably learn an effective decision boundary, and is instead more susceptible to a performance collapse due to insufficient capacity. Unmasked zero-shot F1 improves steadily with scale (0.23 at 160M, 0.57 at 1.4B). Interestingly, few-shot prompting actually degrades performance at larger scales compared to zero-shot (410M: 0.55$\to$0.38; 1.4B: 0.57$\to$0.51) while offering only marginal gains at 160M (0.23$\to$0.24), suggesting the models struggle to leverage the provided in-context examples for this specific task. Finally, masking has little effect on task performance in the fine-tuned regime.
 
 \subsection{Fairness Results}
 \label{sec:fairness}
 \begin{table}[h]
 \centering\small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{llcccc}
+\begin{tabular}{llccc}
 \toprule
-\textbf{Model} & \textbf{C.} & \textbf{EO} & \textbf{DP} & \textbf{TPR} & \textbf{FPR} \\
+\textbf{Model} & \textbf{C.} & \textbf{EO} & \textbf{DP} & \textbf{EO 95\% CI} \\
 \midrule
-\textbf{RoBERTa FT}     & \textbf{U} & \textbf{0.082} & \textbf{0.024} & \textbf{0.082} & \textbf{0.005} \\
-RoBERTa FT              & M & 0.063 & 0.022 & 0.063 & 0.004 \\
-\textbf{DistilBERT FT}  & \textbf{U} & \textbf{0.088} & \textbf{0.022} & \textbf{0.088} & \textbf{0.004} \\
-DistilBERT FT           & M & 0.071 & 0.022 & 0.071 & 0.004 \\
-\textbf{Pythia-1.4B FT} & \textbf{U} & \textbf{0.086} & \textbf{0.023} & \textbf{0.086} & \textbf{0.004} \\
-Pythia-1.4B FT          & M & 0.080 & 0.022 & 0.080 & 0.003 \\
-\textbf{Pythia-1.4B FS} & \textbf{U} & \textbf{0.121} & \textbf{0.031} & \textbf{0.121} & \textbf{0.016} \\
-Pythia-1.4B FS          & M & 0.124 & 0.031 & 0.124 & 0.016 \\
-\textbf{Pythia-1.4B 0s} & \textbf{U} & \textbf{0.210} & \textbf{0.029} & \textbf{0.210} & \textbf{0.019} \\
-Pythia-1.4B 0s          & M & 0.210 & 0.029 & 0.210 & 0.019 \\
-\textbf{Pythia-410m FT} & \textbf{U} & \textbf{0.085} & \textbf{0.012} & \textbf{0.085} & \textbf{0.006} \\
-Pythia-410m FT          & M & 0.088 & 0.011 & 0.088 & 0.006 \\
-\textbf{Pythia-410m FS} & \textbf{U} & \textbf{0.126} & \textbf{0.021} & \textbf{0.126} & \textbf{0.012} \\
-Pythia-410m FS          & M & 0.128 & 0.020 & 0.128 & 0.011 \\
-\textbf{Pythia-410m 0s} & \textbf{U} & \textbf{0.143} & \textbf{0.037} & \textbf{0.143} & \textbf{0.020} \\
-Pythia-410m 0s          & M & 0.131 & 0.037 & 0.131 & 0.021 \\
-\textbf{Pythia-160m FT} & \textbf{U} & \textbf{0.017} & \textbf{0.001} & \textbf{0.017} & \textbf{0.001} \\
-Pythia-160m FT          & M & 0.003 & 0.002 & 0.003 & 0.002 \\
-\textbf{Pythia-160m FS} & \textbf{U} & \textbf{0.080} & \textbf{0.012} & \textbf{0.080} & \textbf{0.007} \\
-Pythia-160m FS          & M & 0.077 & 0.013 & 0.077 & 0.008 \\
-\textbf{Pythia-160m 0s} & \textbf{U} & \textbf{0.092} & \textbf{0.027} & \textbf{0.092} & \textbf{0.025} \\
-Pythia-160m 0s          & M & 0.092 & 0.027 & 0.092 & 0.024 \\
+\textbf{RoBERTa FT} & \textbf{U} & \textbf{0.082} & \textbf{0.024} & [\textbf{0.051}, \textbf{0.091}] \\
+RoBERTa FT & M & 0.063 & 0.022 & [0.040, 0.062] \\
+\textbf{DistilBERT FT} & \textbf{U} & \textbf{0.088} & \textbf{0.022} & [\textbf{0.053}, \textbf{0.099}] \\
+DistilBERT FT & M & 0.071 & 0.022 & [0.049, 0.072] \\
+\textbf{Pythia-1.4B FT} & \textbf{U} & \textbf{0.086} & \textbf{0.023} & [\textbf{0.056}, \textbf{0.100}] \\
+Pythia-1.4B FT & M & 0.080 & 0.022 & [0.049, 0.087] \\
+\textbf{Pythia-1.4B FS} & \textbf{U} & \textbf{0.120} & \textbf{0.025} & [\textbf{0.074}, \textbf{0.123}] \\
+Pythia-1.4B FS & M & 0.083 & 0.017 & [0.056, 0.074] \\
+\textbf{Pythia-1.4B 0s} & \textbf{U} & \textbf{0.209} & \textbf{0.029} & [\textbf{0.148}, \textbf{0.231}] \\
+Pythia-1.4B 0s & M & 0.134 & 0.014 & [0.087, 0.151] \\
+\textbf{Pythia-410m FT} & \textbf{U} & \textbf{0.085} & \textbf{0.012} & [\textbf{0.051}, \textbf{0.102}] \\
+Pythia-410m FT & M & 0.088 & 0.011 & [0.060, 0.096] \\
+\textbf{Pythia-410m FS} & \textbf{U} & \textbf{0.108} & \textbf{0.019} & [\textbf{0.083}, \textbf{0.101}] \\
+Pythia-410m FS & M & 0.103 & 0.014 & [0.060, 0.114] \\
+\textbf{Pythia-410m 0s} & \textbf{U} & \textbf{0.135} & \textbf{0.038} & [\textbf{0.091}, \textbf{0.141}] \\
+Pythia-410m 0s & M & 0.095 & 0.024 & [0.057, 0.094] \\
+\textbf{Pythia-160m FT} & \textbf{U} & \textbf{0.042} & \textbf{0.012} & [\textbf{0.022}, \textbf{0.053}] \\
+Pythia-160m FT & M & 0.027 & 0.005 & [0.016, 0.031] \\
+\textbf{Pythia-160m FS} & \textbf{U} & \textbf{0.065} & \textbf{0.012} & [\textbf{0.043}, \textbf{0.068}] \\
+Pythia-160m FS & M & 0.069 & 0.009 & [0.050, 0.072] \\
+\textbf{Pythia-160m 0s} & \textbf{U} & \textbf{0.085} & \textbf{0.027} & [\textbf{0.069}, \textbf{0.085}] \\
+Pythia-160m 0s & M & 0.058 & 0.012 & [0.034, 0.060] \\
 \bottomrule
 \end{tabular}
 
-\caption{Fairness metrics per model configuration. EO = Equalized Odds gap; DP = Demographic Parity gap; M/U = masked/unmasked; FT/FS/0s = fine-tuned/few-shot/zero-shot.}
+\caption{Fairness metrics per model configuration. EO = Equalized Odds gap; DP = Demographic Parity gap; M/U = masked/unmasked; FT/FS/0s = fine-tuned/few-shot/zero-shot. EO was always equal to TPR gap. Confidence intervals for EO bounds were calculated using 5000 bootstrap BCa samples.}
 \label{tab:fairness}
 \end{table}
 
