@@ -43,8 +43,7 @@ after masking.
 % ── 1. INTRODUCTION ─────────────────────────────────────────────
 \section{Introduction}
 
-Occupation prediction from biographical text surfaces persistent gender
-stereotypes. Models trained on real-world career data tend to associate
+Gender bias is a pervasive issue in natural language processing (NLP). Models trained on massive text corpora absorb and reproduce gender stereotypes present in the text during both training and output stages, thereby propagating these biases into downstream applications \citep{caliskan-etal-2017-bias}. This problem is particularly influencing in occupation prediction, where model predictions can be skewed by gender biases, aggravating existing occupational disparities. Therefore, occupation prediction is considered as a highly valuable case study for measuring and analyzing bias in NLP. Models trained on real-world career data tend to associate
 professions like \emph{nurse} or \emph{dietitian} with female-typical
 language, and \emph{surgeon} or \emph{software engineer} with
 male-typical patterns. \citet{de-arteaga-etal-2019-bias} showed, using
@@ -55,10 +54,10 @@ with the gender signal, how their salience changes under masking, and
 whether this varies with model scale or architecture — remains poorly
 understood.
 
-This paper looks at three aspects of gender bias in occupation
-prediction that have received limited attention: how model
-\emph{capacity} interacts with fairness, how model \emph{type} shapes
-which proxy features are learned, and which specific tokens are most
+This paper examines three aspects of gender bias in occupation
+prediction that remain relatively underexplored: how model
+\emph{capacity} interacts with fairness, how model \emph{type} shapes 
+the proxy features that are learned, and which specific tokens are most
 strongly associated with the gender signal.
 
 \paragraph{Contributions.}
@@ -124,21 +123,12 @@ token-level attribution patterns, giving an internal view of how models
 redistribute feature importance when gender signals are removed.
 
 \textbf{Debiasing methods.}
-A range of training-time debiasing approaches have been proposed for
-NLP classifiers, including adversarial training to suppress sensitive
-attribute information from learned representations
-\citep{zhao-etal-2018-gender}, data augmentation and re-weighting
-\citep{lu-etal-2020-gender}, and post-hoc projection of gender
-directions from word embeddings (surveyed in
-\citealt{sun-etal-2019-mitigating}).
-\citet{gonen-goldberg-2019-lipstick} showed that such methods often
-conceal rather than remove bias, motivating diagnostic analysis of
-which features carry residual signals.
-Our work takes this complementary perspective: rather than proposing a
-debiasing intervention, we characterise the token-level attribution
-patterns associated with biased predictions and how they shift under
-masking, providing evidence about which proxy signals are plausibly
-linked to the disparities that debiasing methods would need to target.
+Proposed approaches include adversarial training \citep{zhao-etal-2018-gender},
+data augmentation \citep{lu-etal-2020-gender}, and post-hoc embedding projection
+\citep{sun-etal-2019-mitigating}.
+\citet{gonen-goldberg-2019-lipstick} showed such methods often conceal rather
+than remove bias, motivating diagnostic analysis of which features carry
+residual signals --- the complementary perspective we take here.
 
 % ── 3. DATASET ──────────────────────────────────────────────────
 \section{Dataset and Preprocessing}
@@ -234,12 +224,7 @@ by its joint log-probability given the prompt $p$:
 The predicted label is $\hat{y} = \arg\max_{c_k} \log P(c_k \mid p)$.
 
 \subsection{Pythia: Supervised Fine-tuning}
-Pythia is fine-tuned as a sequence classifier (linear head over the
-final hidden state) using LoRA \citep{hu2022lora} on attention
-projections ($r\!=\!16$, $\alpha\!=\!32$, dropout 0.1), lr
-$2\!\times\!10^{-5}$, batch 16, 3 epochs, max length 256; best
-checkpoint selected by dev Macro-F1. QLoRA (4-bit) is used for 1.4B.
-
+Pythia is fine-tuned as a sequence classifier (with a linear head over the final hidden state) using LoRA \citep{hu2022lora} on the attention projections ($r=16$, $\alpha=32$, dropout 0.1). We train for 3 epochs with a batch size of 16 and a max length of 256. The learning rate is $3 \times 10^{-4}$ for Pythia 160M and $2 \times 10^{-5}$ otherwise. Checkpoints are selected by the development set Macro-F1. For the 1.4B variant, 4-bit QLoRA is utilized.
 \subsection{Encoder Baselines: DistilBERT and RoBERTa}
 DistilBERT \citep{sanh2019distilbert} (66M) and RoBERTa-base
 \citep{liu2019roberta} (125M) are fine-tuned as sequence classifiers
@@ -298,23 +283,15 @@ re-run the model, measuring the resulting probability drop:
   \text{Faith}(x) = P(\hat{y} \mid x) - P(\hat{y} \mid x_{\text{erased}})
 \end{equation}
 where $\hat{y}$ is the predicted label for example $x$.
-
-\textbf{Interpretive scope.}
-We treat Integrated Gradients as a correlational attribution method,
-not a causal identification tool: high attribution indicates token
-salience under the learned representation, not that the token is a
-root cause of bias. Erasure-based faithfulness provides limited
-interventional support, but because token removal alters the input
-distribution, it is best interpreted as local functional dependence
-rather than proof of a causal mechanism.
+Attribution scores are correlational: high attribution indicates token
+salience under the learned representation, not causal responsibility.
+Erasure provides limited interventional support but is best read as
+local functional dependence rather than proof of mechanism.
 
 % ── 5. EXPERIMENTAL SETUP ───────────────────────────────────────
 \section{Experimental Setup}
 
-We evaluate five model families across two conditions (masked/unmasked)
-and three regimes (zero-shot, few-shot, fine-tuned), as summarised in
-Table~\ref{tab:configs}. All models are evaluated on the same 3,000-sample
-stratified subset (§3.2). Code and prediction files are available at
+Code and prediction files are available at
 \url{https://github.com/usukhbayarp/comp0087-fairness-occupation-prediction}.
 
 \begin{table}[h]
@@ -348,46 +325,18 @@ class imbalance.
 \textbf{Fairness metrics.} We measure gender disparities using one-vs-rest
 multiclass extensions of Demographic Parity (DP) and Equalized Odds (EO),
 macro-averaged across occupations \citep{hardt2016equality,dwork2012fairness}.
-
-Demographic Parity requires the prediction to be independent of the
-sensitive attribute. We compute the macro-averaged DP gap as:
-
-\vspace{-1em}
-
+For binary gender $A\in\{M,F\}$ and label set $\mathcal{C}$:
 \begin{align*}
-\Delta \text{DP} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid A = M) \\
-&- P(\hat{Y} = c \mid A = F) \Big|
+\Delta\text{DP} &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|P(\hat{Y}{=}c\mid A{=}M)-P(\hat{Y}{=}c\mid A{=}F)\bigr|\\
+\Delta\text{TPR} &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|P(\hat{Y}{=}c\mid Y{=}c,A{=}M)-P(\hat{Y}{=}c\mid Y{=}c,A{=}F)\bigr|\\
+\Delta\text{FPR} &= \tfrac{1}{|\mathcal{C}|}\!\sum_{c}\bigl|P(\hat{Y}{=}c\mid Y{\neq}c,A{=}M)-P(\hat{Y}{=}c\mid Y{\neq}c,A{=}F)\bigr|
 \end{align*}
-
-Equalized Odds requires the prediction to be conditionally independent of
-the sensitive attribute given the true label. We compute the macro-averaged
-TPR gap and FPR gap:
-
-\vspace{-1em}
-
-\begin{align*}
-\Delta \text{TPR} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid Y = c, A = M) \\
-&- P(\hat{Y} = c \mid Y = c, A = F) \Big|
-\end{align*}
-
-\vspace{-1.6em}
-
-\begin{align*}
-\Delta \text{FPR} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \Big| & P(\hat{Y} = c \mid Y \neq c, A = M) \\
-&- P(\hat{Y} = c \mid Y \neq c, A = F) \Big|
-\end{align*}
-
-The final Equalized Odds gap is defined as the maximum of these two
-macro-averaged disparities:
-$$ \text{EO Gap} = \max(\Delta \text{TPR}, \Delta \text{FPR}) $$
+The EO gap is $\max(\Delta\text{TPR},\,\Delta\text{FPR})$.
 
 % ── 6. RESULTS ──────────────────────────────────────────────────
 \section{Results and Discussion}
 
-Results are organised across three dimensions: task performance (§6.1),
-gender fairness (§6.2), and token-level proxy bias analysis (§6.3).
-All results are based on the 3,000-sample evaluation subset and are
-descriptive; some variance is expected due to the subset size.
+Results are based on the 3,000-sample evaluation subset; some variance is expected due to subset size.
 
 \subsection{Task Performance}
 
@@ -398,8 +347,8 @@ descriptive; some variance is expected due to the subset size.
 \toprule
 \textbf{Model} & \textbf{C.} & \textbf{Acc.} & \textbf{F1} \\
 \midrule
-Pythia-160M FT & U & 0.079 & 0.020 \\
-Pythia-160M FT & M & 0.119 & 0.023 \\
+Pythia-160M FT & U & 0.394 & 0.134 \\
+Pythia-160M FT & M & 0.373 & 0.090 \\
 Pythia-410M FT & U & 0.581 & 0.323 \\
 Pythia-410M FT & M & 0.576 & 0.325 \\
 Pythia-1.4B FT & U & 0.877 & 0.848 \\
@@ -430,10 +379,7 @@ Pythia-1.4B few-shot    & M & 0.558 & 0.577 \\
 
 
 Pythia-1.4B fine-tuned reaches Accuracy\,=\,0.877 (masked), close to the
-encoder baselines (RoBERTa 0.880, DistilBERT 0.872). At the other
-extreme, Pythia-160M fine-tuned performs poorly (F1\,$\approx$\,0.02),
-likely due to label-space collapse under LoRA at insufficient capacity.
-Zero-shot F1 improves with scale (0.23 at 160M, 0.57 at 1.4B), but
+encoder baselines (RoBERTa 0.880, DistilBERT 0.872). Conversely, the fine-tuned Pythia-160M performs poorly compared to larger models. We believe that its underperformance relative to zero-/few-shot baselines indicates that at smaller scales, LoRA fine-tuning fails to stably learn an effective decision boundary, and is instead more susceptible to insufficient capacity. Zero-shot F1 improves with scale (0.23 at 160M, 0.57 at 1.4B), but
 few-shot hurts performance at smaller scales (410M zero-shot: 0.557
 drops to few-shot: 0.391; 160M: 0.23$\to$0.20) before recovering at 1.4B (0.578), pointing to a minimum
 capacity threshold for few-shot to be effective. Masking has little
@@ -509,11 +455,10 @@ patterns rather than a small set of removable markers.
 
 \subsection{Proxy Bias Analysis}
 
-We look at which tokens drive occupation predictions and how their
-importance changes under gender masking. The analysis proceeds in three
-steps: attribution stability under masking (\S\ref{sec:stability}),
-identification of which token types are associated with the gender signal
-(\S\ref{sec:gender_signal}), and erasure-based faithfulness validation
+We examine which tokens drive occupation predictions and how their
+importance shifts under masking, via attribution stability
+(\S\ref{sec:stability}), gender signal identification
+(\S\ref{sec:gender_signal}), and erasure faithfulness
 (\S\ref{sec:faithfulness_validation}).
 
 \subsubsection*{Step 1: Attribution Stability Under Masking}
@@ -816,31 +761,21 @@ dependence rather than a definitive causal test. Stronger causal
 claims would require controlled counterfactual interventions, feature
 editing, or causal mediation-style analyses. Per-profession sample sizes are small for rare occupations (comedian
 $n\!=\!27$, dietitian $n\!=\!30$), making per-profession TPR estimates
-unreliable for those classes (binomial SE\,$\approx\!0.23$ for comedian
-with $\sim\!6$ female examples).
-For typical professions (average $n\!\approx\!150$ per profession,
-$\sim\!70$ female and $\sim\!80$ male), the per-profession SE on a TPR
-difference is approximately 0.08; macro-averaging over 20 professions
-reduces the SE of the aggregate EO gap to roughly 0.018.
-This means the observed masked/unmasked EO differences for fine-tuned
-models (0.017--0.019) fall within approximately one standard error of
-the estimator, so those specific differences should be interpreted
-cautiously. By contrast, the larger zero-shot gaps
-($\sim\!0.09$--$0.21$) are well above the noise floor. These
-considerations motivate the confidence-interval work listed under future
-work; masked/unmasked differences are reported descriptively and some
-observed gaps may not survive bootstrap testing.
+unreliable for those classes.
+Macro-averaging over 20 professions gives an aggregate EO standard error
+of $\approx\!0.018$, so the fine-tuned masked/unmasked differences
+(0.017--0.019) should be interpreted cautiously; the larger zero-shot
+gaps ($\sim\!0.09$--$0.21$) are well above this noise floor and some
+fine-tuned differences may not survive bootstrap testing.
 
 \paragraph{Future work.}
 Extending attribution analysis to generative models would provide
 deeper explanations of the fairness disparities observed for Pythia.
 Adding bootstrapped confidence intervals on fairness metrics would
-help distinguish real effects from sampling variance. It would also
-be useful to develop a formal cross-gender proxy bias score that
-combines attribution asymmetry and fairness gaps across professions.
+help distinguish real effects from sampling variance.
 A natural next step for causal analysis would be controlled
-counterfactual biography editing, representation-level interventions,
-or causal mediation analysis over specific token groups.
+counterfactual biography editing or causal mediation analysis over
+specific token groups.
 
 \section*{Acknowledgements}
 We thank our teaching assistant Karen Hambardzumyan for his guidance
