@@ -23,27 +23,30 @@ Scaling, Masking, and Mechanistic Attribution across Model Families}
 
 % ── ABSTRACT ────────────────────────────────────────────────────
 \begin{abstract}
-We study gender bias and proxy feature encoding in occupation prediction
-using the Bias-in-Bios dataset, comparing Pythia generative models
-(160M--1.4B) and encoder classifiers (DistilBERT, RoBERTa) under both
-masked and unmasked conditions.
+We study gender bias in occupation prediction using the Bias-in-Bios
+dataset, comparing Pythia generative models (160M--1.4B) and encoder
+classifiers (DistilBERT, RoBERTa) under masked and unmasked conditions.
 Against the common intuition that larger models are fairer, we find that
-zero-shot gender bias \emph{increases} with scale.
-Gender masking reduces aggregate Equalized Odds gap in encoder models
-(by 0.017--0.019), but produces backfire effects at the profession level
-in generative models, showing that proxy representations are
-model-architecture-specific.
-Attribution-based analysis further suggests that explicit gender tokens
-are unlikely to be the main drivers of bias: they carry weights
-33--287$\times$ smaller than dominant profession-linked tokens, while
-indirect contextual signals appear to sustain the gender signal even
-after masking.
+unsupervised scaling \emph{amplifies} bias.
+Gender masking partially mitigates fairness gaps in encoder models but
+produces backfire effects in generative models, revealing that proxy
+representations are model-specific rather than a universal property of
+the input text.
+Token-level attribution further suggests that indirect contextual signals,
+not explicit gender markers, are the dominant carriers of the gender
+signal --- and that they persist even after masking.
 \end{abstract}
 
 % ── 1. INTRODUCTION ─────────────────────────────────────────────
 \section{Introduction}
 
-Gender bias is a pervasive issue in natural language processing (NLP). Models trained on massive text corpora absorb and reproduce gender stereotypes present in the text during both training and output stages, thereby propagating these biases into downstream applications \citep{caliskan-etal-2017-bias}. This problem is particularly influencing in occupation prediction, where model predictions can be skewed by gender biases, aggravating existing occupational disparities. Therefore, occupation prediction is considered as a highly valuable case study for measuring and analyzing bias in NLP. Models trained on real-world career data tend to associate
+Language models encode and reproduce societal biases present in their
+training data \citep{caliskan-etal-2017-bias}. When deployed in
+high-stakes settings, such biases can translate into systematic
+disparities that disadvantage particular demographic groups.
+
+Occupation prediction is a revealing case study for this problem.
+Models trained on real-world career data tend to associate
 professions like \emph{nurse} or \emph{dietitian} with female-typical
 language, and \emph{surgeon} or \emph{software engineer} with
 male-typical patterns. \citet{de-arteaga-etal-2019-bias} showed, using
@@ -56,30 +59,29 @@ understood.
 
 This paper examines three aspects of gender bias in occupation
 prediction that remain relatively underexplored: how model
-\emph{capacity} interacts with fairness, how model \emph{type} shapes 
+\emph{capacity} interacts with fairness, how model \emph{type} shapes
 the proxy features that are learned, and which specific tokens are most
 strongly associated with the gender signal.
 
 \paragraph{Contributions.}
 \begin{itemize}
-  \item To our knowledge, this is the first systematic token-level
-  attribution study on the Bias-in-Bios occupation task, providing
-  correlational and limited intervention-based evidence about which
-  proxy tokens are most strongly associated with model predictions. We
-  produce Integrated Gradients tables stratified by profession and
-  gender, finding that indirect contextual tokens have attribution
-  weights 33--287$\times$ higher than explicit gender words, suggesting
-  that gender-correlated vocabulary co-occurrence patterns are a plausible dominant contributor
-   rather than direct gender references.
-  \item We show that proxy token distributions respond differently to
-  gender masking depending on model type. Masking reduces aggregate EO
-  gap in encoders, but produces backfire effects in generative models
-  for specific professions, indicating that the learned proxy
-  representations are model-specific.
-  \item We conduct a Pythia scaling study (160M--1.4B) and find that the zero-shot EO gap 
-  more than doubles with scale. Through a paired masked/unmasked comparison, we demonstrate 
-  that while fine-tuning consistently reduces fairness gaps across all scales, it only yields 
-  superior performance over zero-shot regimes once a 1.4B parameter threshold is reached.
+  \item \textbf{Proxy bias is carried by indirect contextual signals,
+  not explicit gender markers.} On the Bias-in-Bios task, gender-correlated
+  contextual tokens dominate attribution scores by a large margin over
+  explicit gender words, while remaining active even after gender masking.
+  To our knowledge, this is the first token-level attribution analysis
+  of this kind on this dataset.
+  \item \textbf{Masking effects are model-specific, not universal.}
+  Gender masking reduces aggregate fairness gaps in encoder models but
+  triggers backfire effects for specific professions in generative models,
+  showing that proxy representations depend on model architecture rather
+  than being a fixed property of the text.
+  \item \textbf{Unsupervised scaling amplifies bias; supervision
+  recovers it.} Across Pythia model sizes (160M--1.4B), zero-shot bias
+  grows substantially with scale, while fine-tuning consistently
+  restores fairness. Both findings hold across masked and unmasked
+  conditions on this dataset, while we believe the pattern of
+  capacity-driven bias amplification could extend to other settings.
 \end{itemize}
 
 % ── 2. RELATED WORK ─────────────────────────────────────────────
@@ -139,6 +141,9 @@ occupational stereotypes and evaluating debiasing methods in NLP.
 Each example consists of a short biography (\texttt{hard\_text}) paired
 with an integer profession label and a binary gender attribute inferred
 from pronoun usage by the original authors (0\,$\to$\,M, 1\,$\to$\,F).
+For example: \textit{``Dr. K. Rama Krishna practices at Pet Park Clinic 
+in Begumpet, Hyderabad. He completed B.V.Sc & A.H from College of Veterinary
+ Science, Rajendranagar, SVVU in 2009.''} (label: \emph{physician}, gender: M).
 The dataset contains 381,807 examples (train 248,141 / dev 38,198 /
 test 95,468), with a near-identical gender split of $\approx\!46.2\%$
 female across all partitions, indicating stratified sampling.
