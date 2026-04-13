@@ -4,7 +4,7 @@ import json
 import glob
 import os
 from sklearn.metrics import f1_score, accuracy_score
-from src.evaluation.fairness import compute_fairness_gaps, calculate_pooled_eo
+from src.evaluation.fairness import compute_fairness_gaps, calculate_exact_eo_diff
 from scipy.stats import bootstrap
 
 def load_predictions(file_path):
@@ -133,12 +133,12 @@ def run_evaluation():
         
         # Run the bootstrap
         res = bootstrap(
-            (indices,), 
-            lambda idx: calculate_pooled_eo(idx, df),
-            n_resamples=1000, 
-            method='BCa', 
-            confidence_level=0.95,
-            vectorized=False
+        (indices,), 
+        lambda idx: calculate_exact_eo_diff(idx, df), # No need to pass all_occ
+        n_resamples=5000, 
+        method='BCa', 
+        confidence_level=0.95,
+        vectorized=False
         )
 
         summary_data.append({
