@@ -27,13 +27,13 @@ We study gender bias in occupation prediction using the Bias-in-Bios
 dataset, comparing Pythia generative models (160M--1.4B) and encoder
 classifiers (DistilBERT, RoBERTa) under masked and unmasked conditions.
 Against the common intuition that larger models are fairer, we find that
-unsupervised scaling \emph{amplifies} bias.
+unsupervised scaling \emph{amplifies} bias in the Pythia family on this task.
 Gender masking partially mitigates fairness gaps in encoder models but
-produces backfire effects in generative models, revealing that proxy
-representations are model-specific rather than a universal property of
+produces backfire effects in generative models, indicating that proxy
+representations may be model-specific rather than a universal property of
 the input text.
 Token-level attribution further suggests that indirect contextual signals,
-not explicit gender markers, are the dominant carriers of the gender
+not explicit gender markers, appear to be the dominant carriers of the gender
 signal --- and that they persist even after masking.
 \end{abstract}
 
@@ -63,9 +63,9 @@ understood.
   not explicit gender markers.} On the Bias-in-Bios task, gender-correlated
   contextual tokens dominate attribution scores by a large margin over
   explicit gender words, while remaining active even after gender masking.
-  To our knowledge, this is the first token-level attribution analysis
-  of this kind on this dataset.
-  \item \textbf{Masking effectiveness depends on training regime, not architecture alone.} Explicit gender masking reduces bias in encoder models and in zero/few-shot generative settings, but proves ineffective—and sometimes harmful—after generative fine-tuning. Attribution stability further shows that proxy representations differ between individual models (e.g.\ DistilBERT vs.\ RoBERTa) even within the same architecture, confirming that proxy structure is model-specific rather than a fixed property of the input text.
+  To our knowledge, this provides one of the first detailed token-level
+  attribution analyses of this kind on this dataset.
+  \item \textbf{Masking effectiveness depends on training regime, not architecture alone.} Explicit gender masking reduces bias in encoder models and in zero/few-shot generative settings, but proves ineffective—and sometimes harmful—after generative fine-tuning. Attribution stability further shows that proxy representations differ between individual models (e.g.\ DistilBERT vs.\ RoBERTa) even within the same architecture, providing evidence that proxy structure may be model-specific rather than a fixed property of the input text.
   \item \textbf{Unsupervised scaling amplifies bias; supervision
   recovers it.} Across Pythia model sizes (160M--1.4B), zero-shot bias
   grows substantially with scale, while fine-tuning consistently
@@ -433,7 +433,7 @@ Pythia-160m 0s & M & 0.058 & 0.012 & 0.058 & 0.009 \\
 \label{fig:scaling_fairness}
 \end{figure}
 
-Fine-tuned models consistently show lower EO gaps than their zero-shot counterparts. Unmasked zero-shot EO grows from $\sim$0.09 at 160M to $\sim$0.21 at 1.4B, showing that unsupervised scaling amplifies stereotypes.
+Fine-tuned models consistently show lower EO gaps than their zero-shot counterparts. Unmasked zero-shot EO grows from $\sim$0.09 at 160M to $\sim$0.21 at 1.4B, showing that unsupervised scaling amplifies bias in the Pythia family on this task.
 
 Crucially, the effectiveness of gender masking depends heavily on the learning regime. We observe a large masking benefit for Pythia in zero-shot and few-shot settings, where masking yields large reductions in the EO gap (e.g., Pythia-1.4B 0s drops from 0.209 to 0.134, Pythia-410M 0s drops from 0.135 to 0.095, and Pythia-1.4B FS drops from 0.120 to 0.083). While zero-shot bias still grows with scale even when masked, the intervention significantly blunts the magnitude of this growth.
 
@@ -725,8 +725,10 @@ performance and fairness. Scaling without supervision amplifies bias:
 zero-shot EO gap grows from $\sim$0.09 at 160M to $\sim$0.21 at 1.4B,
 showing that model capacity alone is not a substitute for fine-tuning
 or explicit debiasing. Masking reduces aggregate EO in encoder models
-(by 0.017--0.019) but produces backfire effects at the profession level
-in Pythia. Attribution analysis suggests that gender-correlated information is
+(by 0.017--0.019), although this effect is close to the estimated
+sampling variability ($\approx\!0.018$) and should be interpreted as a
+weak but consistent trend rather than a robust improvement; masking
+produces backfire effects at the profession level in Pythia. Attribution analysis suggests that gender-correlated information is
 encoded mainly through indirect contextual tokens; their salience is
 model-specific and their functional importance is supported by erasure
 faithfulness testing.
@@ -746,9 +748,9 @@ became encoded during training. Our erasure-based faithfulness test
 provides limited interventional evidence, but because token removal
 alters the input distribution and may produce unrealistic texts, the
 resulting confidence drop is best interpreted as evidence of functional
-dependence rather than a definitive causal test. Stronger causal
-claims would require controlled counterfactual interventions, feature
-editing, or causal mediation-style analyses. Per-profession sample sizes are small for rare occupations (comedian
+dependence rather than a definitive causal test. Strong causal
+claims would require controlled counterfactual interventions,
+which are beyond the scope of this study. Per-profession sample sizes are small for rare occupations (comedian
 $n\!=\!27$, dietitian $n\!=\!30$), making per-profession TPR estimates
 unreliable for those classes.
 Macro-averaging over 20 professions gives an aggregate EO standard error
@@ -760,8 +762,10 @@ fine-tuned differences may not survive bootstrap testing.
 \paragraph{Future work.}
 Extending attribution analysis to generative models would provide
 deeper explanations of the fairness disparities observed for Pythia.
-Adding bootstrapped confidence intervals on fairness metrics would
-help distinguish real effects from sampling variance.
+Developing reliable uncertainty estimates for the EO gap remains
+open: standard bootstrap CIs degrade under the \texttt{max()} operator
+and severe class imbalance, so analytical bounds or
+permutation-based tests may be more appropriate here.
 A natural next step for causal analysis would be controlled
 counterfactual biography editing or causal mediation analysis over
 specific token groups.
