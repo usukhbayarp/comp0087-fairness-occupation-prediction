@@ -57,12 +57,6 @@ with the gender signal, how their salience changes under masking, and
 whether this varies with model scale or architecture — remains poorly
 understood.
 
-This paper examines three aspects of gender bias in occupation
-prediction that remain relatively underexplored: how model
-\emph{capacity} interacts with fairness, how model \emph{type} shapes
-the proxy features that are learned, and which specific tokens are most
-strongly associated with the gender signal.
-
 \paragraph{Contributions.}
 \begin{itemize}
   \item \textbf{Proxy bias is carried by indirect contextual signals,
@@ -98,15 +92,10 @@ using a one-vs-rest multiclass extension macro-averaged over occupations.
 
 \textbf{Attribution methods.}
 \citet{sundararajan2017axiomatic} introduced Integrated Gradients (IG),
-which satisfies completeness and sensitivity axioms, is deterministic,
-and requires only $O(m)$ forward passes for $m$ interpolation steps.
-Compared to LIME \citep{ribeiro2016should}, which can be unstable across
-runs, and KernelSHAP \citep{lundberg2017unified}, which requires many
-model evaluations per example, IG is the standard choice for token-level
-analysis of sequence classifiers \citep{attanasio2022entropy}; we adopt
-it for the same reasons. Attribution methods have been applied to gender
-bias in coreference resolution \citep{attanasio2022entropy}, but their
-use in occupation classification is limited.
+which satisfies completeness and sensitivity axioms and is the standard
+choice for token-level analysis of sequence classifiers
+\citep{attanasio2022entropy}; its application to occupation
+classification is limited.
 
 \textbf{Model scaling and fairness.}
 \citet{bommasani2021opportunities} discusses bias amplification as a risk
@@ -191,11 +180,8 @@ Distribution is consistent across all splits.}
 \subsection{Evaluation Subset}
 All models are evaluated on a \textbf{3,000-sample test subset},
 stratified proportionally by profession from the 95,468-example test
-split. A shared ID list ensures all models are compared on the same
-examples. The subset size was constrained by the computational cost of
-Integrated Gradients, which requires 32 forward passes per example;
-running attribution over the full test set was not feasible within our
-compute budget. Per-profession counts range from 932 (professor) to 27
+split; IG cost (32 forward passes per example) precluded the full test set.
+Per-profession counts range from 932 (professor) to 27
 (comedian), so results for rare occupations should be read with caution.
 
 \subsection{Gender Masking}
