@@ -4,7 +4,7 @@ import json
 import glob
 import os
 from sklearn.metrics import f1_score, accuracy_score
-from src.evaluation.fairness import compute_fairness_gaps, calculate_pooled_eo
+from src.evaluation.fairness import compute_fairness_gaps, calculate_exact_eo_diff
 from scipy.stats import bootstrap
 
 def load_predictions(file_path):
@@ -133,24 +133,27 @@ def run_evaluation():
         
         # Run the bootstrap
         res = bootstrap(
-            (indices,), 
-            lambda idx: calculate_pooled_eo(idx, df),
-            n_resamples=1000, 
-            method='BCa', 
-            confidence_level=0.95,
-            vectorized=False
+        (indices,), 
+        lambda idx: calculate_exact_eo_diff(idx, df), # No need to pass all_occ
+        n_resamples=5000, 
+        method='BCa', 
+        confidence_level=0.95,
+        vectorized=False
         )
 
+        eo_diff_pooled = calculate_exact_eo_diff(np.arange(len(df)), df)
+
         summary_data.append({
-            "model_name":   model_name,
-            "macro_f1":     macro_f1,
-            "accuracy":     accuracy,
-            "dp_diff":      avg_dp,
-            "eo_diff":      eo_diff,
-            "eo_ci_low":    res.confidence_interval.low,
-            "eo_ci_high":   res.confidence_interval.high,
-            "avg_tpr_gap":  avg_tpr_gap,
-            "avg_fpr_gap":  avg_fpr_gap,
+            "model_name":           model_name,
+            "macro_f1":             macro_f1,
+            "accuracy":             accuracy,
+            "dp_diff":              avg_dp,
+            "eo_diff":              eo_diff,
+            "eo_diff_pooled":       eo_diff_pooled,
+            "eo_ci_low":            res.confidence_interval.low,
+            "eo_ci_high":           res.confidence_interval.high,
+            "avg_tpr_gap":          avg_tpr_gap,
+            "avg_fpr_gap":          avg_fpr_gap,
         })
         
         # per-occupation gaps for detailed analysis
