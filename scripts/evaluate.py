@@ -141,16 +141,19 @@ def run_evaluation():
         vectorized=False
         )
 
+        eo_diff_pooled = calculate_exact_eo_diff(np.arange(len(df)), df)
+
         summary_data.append({
-            "model_name":   model_name,
-            "macro_f1":     macro_f1,
-            "accuracy":     accuracy,
-            "dp_diff":      avg_dp,
-            "eo_diff":      eo_diff,
-            "eo_ci_low":    res.confidence_interval.low,
-            "eo_ci_high":   res.confidence_interval.high,
-            "avg_tpr_gap":  avg_tpr_gap,
-            "avg_fpr_gap":  avg_fpr_gap,
+            "model_name":           model_name,
+            "macro_f1":             macro_f1,
+            "accuracy":             accuracy,
+            "dp_diff":              avg_dp,
+            "eo_diff":              eo_diff,
+            "eo_diff_pooled":       eo_diff_pooled,
+            "eo_ci_low":            res.confidence_interval.low,
+            "eo_ci_high":           res.confidence_interval.high,
+            "avg_tpr_gap":          avg_tpr_gap,
+            "avg_fpr_gap":          avg_fpr_gap,
         })
         
         # per-occupation gaps for detailed analysis
