@@ -13,38 +13,48 @@ NUM_SAMPLES=3000
 SAMPLING_METHOD="stratified"
 SEED=42
 
-# Arrays of models and regimes to iterate over
+# Arrays of models, regimes, and masking to iterate over
 MODELS=("160m" "410m" "1.4b")
 REGIMES=("zeroshot" "fewshot")
+MASKING_FLAGS=("" "--apply_masking")
 
 echo "Starting Pythia evaluation..."
 echo "Configuration: $NUM_SAMPLES samples ($SAMPLING_METHOD), Max Tokens=$MAX_TOKENS"
 
 for model in "${MODELS[@]}"; do
     for regime in "${REGIMES[@]}"; do
-        echo "----------------------------------------------------"
-        echo "Evaluating Model: Pythia-${model} | Regime: ${regime}"
-        echo "----------------------------------------------------"
-        
-        # We adjust batch size slightly depending on model size to prevent OOM
-        # 32 for smaller models, 16 for 1.4b
-        BATCH_SIZE=32
-        if [ "$model" == "1.4b" ]; then
-            BATCH_SIZE=16
-        fi
-        
-        python src/models/pythia/pythia_zerofew.py \
-            --model_size "$model" \
-            --regime "$regime" \
-            --data_path "$DATA_PATH" \
-            --output_dir "$OUTPUT_DIR" \
-            --batch_size "$BATCH_SIZE" \
-            --num_samples "$NUM_SAMPLES" \
-            --sampling_method "$SAMPLING_METHOD" \
-            --seed "$SEED" \
-            --max_tokens "$MAX_TOKENS" \
-            --match_ids_from "results/pythia/preds_pythia_1.4b_fewshot.jsonl"
+        for masking_flag in "${MASKING_FLAGS[@]}"; do
             
+            # Label for display
+            if [ -z "$masking_flag" ]; then
+                masking_label="unmasked"
+            else
+                masking_label="masked"
+            fi
+
+            echo "----------------------------------------------------"
+            echo "Model: Pythia-${model} | Regime: ${regime} | Masking: ${masking_label}"
+            echo "----------------------------------------------------"
+            
+            # Adjust batch size
+            BATCH_SIZE=32
+            if [ "$model" == "1.4b" ]; then
+                BATCH_SIZE=16
+            fi
+            
+            python src/models/pythia/pythia_zerofew.py \
+                --model_size "$model" \
+                --regime "$regime" \
+                --data_path "$DATA_PATH" \
+                --output_dir "$OUTPUT_DIR" \
+                --batch_size "$BATCH_SIZE" \
+                --num_samples "$NUM_SAMPLES" \
+                --sampling_method "$SAMPLING_METHOD" \
+                --seed "$SEED" \
+                --max_tokens "$MAX_TOKENS" \
+                --match_ids_from "results/pythia/preds_pythia_1.4b_fewshot.jsonl" \
+                $masking_flag
+        done
     done
 done
 

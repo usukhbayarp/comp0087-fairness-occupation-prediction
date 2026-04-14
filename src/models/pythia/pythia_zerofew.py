@@ -160,19 +160,22 @@ def main():
         print(f"Sampled {len(data)} items using {args.sampling_method} sampling.")
     
     os.makedirs(args.output_dir, exist_ok=True)
-    output_filename = os.path.join(args.output_dir, f"preds_pythia_{args.model_size}_{args.regime}.jsonl")
+    masking_status = "masked" if args.apply_masking else "unmasked"
+    output_filename = os.path.join(args.output_dir, f"preds_pythia_{args.model_size}_{args.regime}_{masking_status}.jsonl")
     
     print(f"Running batched inference (batch_size={args.batch_size}) on {len(data)} examples.")
     with open(output_filename, "w", encoding='utf-8') as out_f:
         for i in tqdm(range(0, len(data), args.batch_size)):
             batch_items = data[i:i + args.batch_size]
             prompts = []
+            batch_texts = []
             for item in batch_items:
                 text = item.get("masked_text", item.get("text", "")) # checks for masked_text first
                 if args.apply_masking:
                     text = mask_gendered_language(text)
                 prompt = format_prompt(text, regime=args.regime, apply_masking=args.apply_masking)
                 prompts.append(prompt)
+                batch_texts.append(text)
                 
             # Compute log likelihoods for each candidate across the batch
             batch_scores_by_candidate = []
@@ -193,13 +196,15 @@ def main():
                 conf = probs[best_idx].item()
                 score_val = batch_scores[j][best_idx]
                 
+                masking_status = "masked" if args.apply_masking else "unmasked"
                 pred_record = {
                     "id": item.get("id", ""),
+                    "text": batch_texts[j],
                     "label_true": item.get("label", ""),
                     "label_pred": label_pred,
                     "gender": item.get("gender", ""),
                     "model": f"pythia-{args.model_size}",
-                    "regime": args.regime,
+                    "regime": f"{args.regime}_{masking_status}",
                     "score": score_val,
                     "conf": conf
                 }
