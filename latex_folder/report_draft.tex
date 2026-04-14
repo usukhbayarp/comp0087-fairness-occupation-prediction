@@ -435,7 +435,7 @@ Pythia-160m 0s & M & 0.058 & 0.012 & 0.058 & 0.009 \\
 
 Fine-tuned models consistently show lower EO gaps than their zero-shot counterparts. Unmasked zero-shot EO grows from $\sim$0.09 at 160M to $\sim$0.21 at 1.4B, showing that unsupervised scaling amplifies bias in the Pythia family on this task.
 
-Crucially, the effectiveness of gender masking depends heavily on the learning regime. We observe a large masking benefit for Pythia in zero-shot and few-shot settings, where masking yields large reductions in the EO gap (e.g., Pythia-1.4B 0s drops from 0.209 to 0.134, Pythia-410M 0s drops from 0.135 to 0.095, and Pythia-1.4B FS drops from 0.120 to 0.083). While zero-shot bias still grows with scale even when masked, the intervention significantly blunts the magnitude of this growth.
+Crucially, the effectiveness of gender masking depends heavily on the learning regime. We observe a large masking benefit for Pythia in zero-shot and few-shot settings (e.g., Pythia-1.4B 0s: 0.209$\to$0.134; Pythia-410M 0s: 0.135$\to$0.095; Pythia-1.4B FS: 0.120$\to$0.083), though zero-shot bias still grows with scale even when masked.
 
 In contrast, masking produces a comparatively smaller difference for the fine-tuned encoder models (RoBERTa: 0.082 to 0.063; DistilBERT: 0.088 to 0.071). Furthermore, at the fine-tuned level for Pythia, masking produces backfire effects at the profession level (e.g., for \emph{teacher}, \emph{poet}, and \emph{painter}), with Pythia-410M FT showing a small aggregate increase in bias (0.085 to 0.088).
 
@@ -692,12 +692,8 @@ Professions with the highest faithfulness (\emph{dietitian}: 0.620,
 \emph{nurse}: 0.395) tend to have lower stability ratios than the most
 stable professions (\emph{professor}: ratio 0.82, faithfulness 0.160),
 suggesting that unstable proxy representations co-occur with more
-concentrated, load-bearing token sets. This supports the idea that
-attribution instability identifies professions whose predictions depend
-on a small, critical set of tokens. One notable outlier is \emph{model} under
-RoBERTa unmasked, which achieves the lowest faithfulness of all 20
-professions (0.100), suggesting its predictions are spread across many
-weakly-attributing tokens rather than a small decisive set.
+concentrated, load-bearing token sets. This supports the view that attribution instability identifies
+professions whose predictions depend on a small, critical token set.
 
 Gender-conditioned faithfulness shows a clear asymmetry for
 \emph{nurse} under DistilBERT: nurse$|$M = 0.756 versus
@@ -712,10 +708,8 @@ second notable asymmetry appears for \emph{poet} under DistilBERT
 unmasked (0.434 vs.\ 0.200).
 
 Masking increases overall faithfulness for both models (DistilBERT:
-+0.034; RoBERTa: +0.006). This suggests that once gender signals are
-removed, the remaining tokens carry more of the predictive load,
-consistent with the model concentrating on a smaller, more critical
-feature set.
++0.034; RoBERTa: +0.006), suggesting the remaining tokens absorb more
+predictive load once gender signals are removed.
 
 % ── 7. CONCLUSION ───────────────────────────────────────────────
 \section{Conclusion}
@@ -753,11 +747,9 @@ claims would require controlled counterfactual interventions,
 which are beyond the scope of this study. Per-profession sample sizes are small for rare occupations (comedian
 $n\!=\!27$, dietitian $n\!=\!30$), making per-profession TPR estimates
 unreliable for those classes.
-Macro-averaging over 20 professions gives an aggregate EO standard error
-of $\approx\!0.018$, so the fine-tuned masked/unmasked differences
-(0.017--0.019) should be interpreted cautiously; the larger zero-shot
-gaps ($\sim\!0.09$--$0.21$) are well above this noise floor and some
-fine-tuned differences may not survive bootstrap testing.
+Macro-averaging gives an aggregate EO standard error of $\approx\!0.018$;
+the larger zero-shot gaps ($\sim\!0.09$--$0.21$) are well above this
+noise floor, while fine-tuned differences remain close to it.
 
 \paragraph{Future work.}
 Extending attribution analysis to generative models would provide
