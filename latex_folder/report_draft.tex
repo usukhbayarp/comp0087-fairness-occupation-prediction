@@ -113,7 +113,7 @@ data augmentation \citep{lu-etal-2020-gender}, and post-hoc embedding projection
 \citep{sun-etal-2019-mitigating}.
 \citet{gonen-goldberg-2019-lipstick} showed such methods often conceal rather
 than remove bias, motivating diagnostic analysis of which features carry
-residual signals --- the complementary perspective we take here.
+residual signals.
 
 % ── 3. DATASET ──────────────────────────────────────────────────
 \section{Dataset and Preprocessing}
@@ -274,10 +274,7 @@ Gender-conditioned proxy tables are produced using the same procedure,
 stratified by profession and gender.
 
 \textbf{Faithfulness validation.}
-To check whether the attributed tokens are functionally important for
-the prediction, we replace the top-5 attributed tokens in each example's
-text with \texttt{[MASK]} (using word-boundary regex substitution) and
-re-run the model, measuring the resulting probability drop:
+To check whether attributed tokens are load-bearing, we replace the top-5 in each example's text with \texttt{[MASK]} and re-run the model, measuring the probability drop:
 \begin{equation}
   \text{Faith}(x) = P(\hat{y} \mid x) - P(\hat{y} \mid x_{\text{erased}})
 \end{equation}
@@ -439,13 +436,14 @@ Pythia-160m 0s & M & 0.058 & 0.012 & 0.058 & 0.009 \\
 \label{fig:scaling_fairness}
 \end{figure}
 
-Fine-tuned models consistently show lower EO gaps than their zero-shot counterparts. Unmasked zero-shot EO grows from $\sim$0.09 at 160M to $\sim$0.21 at 1.4B, showing that unsupervised scaling amplifies bias in the Pythia family on this task.
+Fine-tuned models consistently show lower EO gaps than their zero-shot counterparts. Unmasked zero-shot EO grows from $\sim$0.09 at 160M to $\sim$0.21 at 1.4B, showing that unsupervised scaling amplifies bias in the Pythia family.
 
 Crucially, the effectiveness of gender masking depends heavily on the learning regime. We observe a large masking benefit for Pythia in zero-shot and few-shot settings (e.g., Pythia-1.4B 0s: 0.209$\to$0.134; Pythia-410M 0s: 0.135$\to$0.095; Pythia-1.4B FS: 0.120$\to$0.083), though zero-shot bias still grows with scale even when masked.
 
 In contrast, masking produces a comparatively smaller difference for the fine-tuned encoder models (RoBERTa: 0.082 to 0.063; DistilBERT: 0.088 to 0.071). Furthermore, at the fine-tuned level for Pythia, masking produces backfire effects at the profession level (e.g., for \emph{teacher}, \emph{poet}, and \emph{painter}), with Pythia-410M FT showing a small aggregate increase in bias (0.085 to 0.088).
 
 Finally, the FPR gap is consistently much smaller than the TPR gap across all models, so TPR disparity remains the dominant fairness concern. Taken together, masking successfully disrupts bias in raw pre-trained representations (zero/few-shot), but remains insufficient once a model is explicitly fine-tuned.
+Per-occupation fairness metrics for all professions and models are shown in Appendix~C.
 
 
 \subsection{Proxy Bias Analysis}
@@ -509,10 +507,11 @@ model-specific, not simply a function of training data.
 Label leakage is expected (profession names frequently appear in top-$K$);
 the informative signal lies in secondary token shifts.
 Under DistilBERT, \emph{nurse}: \emph{practitioner} drops 26.51$\to$11.18
-and \emph{graduated} drops 19.11$\to$1.47 after masking, while
+and \emph{graduated} drops 19.11$\to$0 (disappears entirely) after masking, while
 \emph{especially} (15.52) gains weight.
 Under RoBERTa, \emph{physician}: \emph{medicine} rises 166.64$\to$292.25
-and \emph{patients} (52.72) appears as a new signal.
+and \emph{patients} gains prominence (24.34$\to$52.72), entering the top-5.
+Detailed per-profession token distributions are provided in Appendix~A.
 
 \subsubsection*{Step 2: Gender Signal Identification}
 \label{sec:gender_signal}
@@ -542,7 +541,8 @@ RoBERTa & \emph{research} & profession & 333.32 \\
 \end{tabular}
 \caption{Attribution weight of gender tokens vs.\ dominant profession tokens,
 within each model. Gender tokens appear in both models but with substantially
-smaller weights than profession tokens.}
+smaller weights than profession tokens.
+These aggregated scores are derived from the per-profession token distributions reported in Appendix~A.}
 \label{tab:gender_tokens}
 \end{table}
 
@@ -684,7 +684,7 @@ attributed tokens) for a selected subset of professions.
 U=unmasked; M=masked. Higher = more functionally important tokens
 under erasure. The \textit{Overall} row is the macro-average across
 all 20 professions (equal weight per profession, not per example).
-Full results for all 20 professions are in Appendix~D.}
+Full results for all 20 professions are provided in Appendix~D.}
 \label{tab:faithfulness}
 \end{table}
 
@@ -700,7 +700,7 @@ Gender-conditioned faithfulness shows a clear asymmetry for \emph{nurse}:
 DistilBERT nurse$|$M = 0.756 vs.\ nurse$|$F = 0.354; RoBERTa
 nurse$|$M = 0.533 vs.\ nurse$|$F = 0.163, indicating that male nurse
 representations are concentrated in a smaller critical token set.
-Full results are in Appendix~E; a second notable asymmetry appears for
+Full gender-conditioned faithfulness results are provided in Appendix~E; a second notable asymmetry appears for
 \emph{poet} under DistilBERT unmasked (0.434 vs.\ 0.200).
 
 Masking increases overall faithfulness for both models (DistilBERT:
@@ -721,8 +721,9 @@ gender information still influences internal representations even when
 predictions remain unchanged.
 Profession-level sensitivity varies: \emph{nurse} (16.3\% / 13.1\%),
 \emph{surgeon} (13.3\% / 13.0\%), and \emph{comedian} (11.1\% / 16.0\%)
-show the highest flip rates, while \emph{composer}, \emph{dentist}, and
-\emph{filmmaker} show zero flips across both models.
+show the highest flip rates, while \emph{composer} and \emph{dentist}
+show zero flips across both models; \emph{filmmaker} shows zero flips for
+DistilBERT but 5.6\% for RoBERTa.
 Masked conditions are excluded: masking replaces all pronouns with
 \texttt{[MASK]} prior to inference, leaving no tokens to swap.
 
@@ -750,17 +751,15 @@ faithfulness nearly double that of female nurse predictions
 \paragraph{Limitations.}
 Gender labels in Bias-in-Bios are binary and inferred from pronoun
 usage \citep{de-arteaga-etal-2019-bias}, which does not reflect the
-full spectrum of gender identity and constrains fairness evaluation to
-a male/female binary. Attribution is restricted to encoder classifiers; IG requires a fixed class-logit target, which does not directly apply to autoregressive Pythia without non-trivial adaptation.
-Names were not masked; since names are gender-correlated, they may act as direct signals rather than proxies. Attribution findings therefore reflect proxy patterns among non-name tokens, and indirect-signal claims should be understood with this caveat.
+full spectrum of gender identity. Attribution is restricted to encoder classifiers; IG requires a fixed class-logit target, which does not directly apply to autoregressive Pythia without non-trivial adaptation.
+Names were not masked; since names are gender-correlated, they may act as direct signals rather than proxies. Attribution findings thus reflect proxy patterns among non-name tokens.
 Attribution scores are correlational, not causal: they show which
 features the trained model appears to rely on, not why those features
 became encoded during training. Our erasure-based faithfulness test and counterfactual pronoun swap
 provide limited interventional evidence; because token removal alters
 the input distribution and pronoun swaps leave non-pronominal gender
 signals intact, results are best interpreted as evidence of functional
-dependence rather than definitive causal tests. Stronger causal claims
-would require full causal mediation analysis. Per-profession sample sizes are small for rare occupations (comedian
+dependence rather than definitive causal tests. Per-profession sample sizes are small for rare occupations (comedian
 $n\!=\!27$, dietitian $n\!=\!30$), making per-profession TPR estimates
 unreliable for those classes.
 Macro-averaging gives an aggregate EO standard error of $\approx\!0.018$;
@@ -768,15 +767,12 @@ the larger zero-shot gaps ($\sim\!0.09$--$0.21$) are well above this
 noise floor, while fine-tuned differences remain close to it.
 
 \paragraph{Future work.}
-Extending attribution analysis to generative models would provide
-deeper explanations of the fairness disparities observed for Pythia.
+Extending attribution analysis to generative models would explain Pythia's fairness disparities more directly.
 Developing reliable uncertainty estimates for the EO gap remains
 open: standard bootstrap CIs degrade under the \texttt{max()} operator
 and severe class imbalance, so analytical bounds or
 permutation-based tests may be more appropriate here.
-Extending counterfactual analysis beyond pronouns to other lexical
-token groups, or applying causal mediation analysis, would provide
-stronger causal evidence than pronoun swap alone.
+Extending counterfactual analysis to other lexical groups, or applying causal mediation, would provide stronger causal evidence.
 
 \section*{Acknowledgements}
 We thank our teaching assistant Karen Hambardzumyan for his guidance
