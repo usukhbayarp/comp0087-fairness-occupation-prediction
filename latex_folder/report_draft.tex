@@ -452,8 +452,9 @@ Finally, the FPR gap is consistently much smaller than the TPR gap across all mo
 We examine which tokens drive occupation predictions and how their
 importance shifts under masking, via attribution stability
 (\S\ref{sec:stability}), gender signal identification
-(\S\ref{sec:gender_signal}), and erasure faithfulness
-(\S\ref{sec:faithfulness_validation}).
+(\S\ref{sec:gender_signal}), erasure faithfulness
+(\S\ref{sec:faithfulness_validation}), and counterfactual pronoun swap
+(\S\ref{sec:cf_swap}).
 
 \subsubsection*{Step 1: Attribution Stability Under Masking}
 \label{sec:stability}
@@ -716,6 +717,22 @@ Masking increases overall faithfulness for both models (DistilBERT:
 +0.034; RoBERTa: +0.006), suggesting the remaining tokens absorb more
 predictive load once gender signals are removed.
 
+\subsubsection*{Step 4: Counterfactual Pronoun Swap}
+\label{sec:cf_swap}
+
+To provide limited interventional evidence, we counterfactually swap all
+gendered pronouns in each biography (M$\to$F or F$\to$M) and measure
+whether the predicted occupation changes. Overall flip rates are low:
+3.5\% for DistilBERT and 3.9\% for RoBERTa (mean confidence drop: 0.009
+and 0.011 respectively), consistent with the attribution finding that
+explicit pronouns are not the dominant predictive signal.
+Profession-level sensitivity varies: \emph{nurse} (16.3\% / 13.1\%),
+\emph{surgeon} (13.3\% / 13.0\%), and \emph{comedian} (11.1\% / 16.0\%)
+show the highest flip rates, while \emph{composer}, \emph{dentist}, and
+\emph{filmmaker} show zero flips across both models.
+Masked conditions are excluded: masking replaces all pronouns with
+\texttt{[MASK]} prior to inference, leaving no tokens to swap.
+
 % ── 7. CONCLUSION ───────────────────────────────────────────────
 \section{Conclusion}
 
@@ -730,7 +747,8 @@ weak but consistent trend rather than a robust improvement; masking
 produces backfire effects at the profession level in Pythia. Attribution analysis suggests that gender-correlated information is
 encoded mainly through indirect contextual tokens; their salience is
 model-specific and their functional importance is supported by erasure
-faithfulness testing.
+faithfulness testing and counterfactual pronoun swap (overall flip rate:
+3.5--3.9\%).
 Gender-conditioned analysis adds a further observation: male nurse
 predictions are concentrated in a critically small feature set, with
 faithfulness nearly double that of female nurse predictions
@@ -744,13 +762,12 @@ a male/female binary. Attribution is restricted to encoder models.
 Names were not masked (reliable name--gender matching produces too many false positives and names carry legitimate biographical content); however, since names are gender-correlated, they may act as direct gender signals rather than proxies. The attribution findings therefore capture proxy patterns among non-name tokens, and the claim that proxy bias is carried by indirect contextual signals should be understood with this caveat.
 Attribution scores are correlational, not causal: they show which
 features the trained model appears to rely on, not why those features
-became encoded during training. Our erasure-based faithfulness test
-provides limited interventional evidence, but because token removal
-alters the input distribution and may produce unrealistic texts, the
-resulting confidence drop is best interpreted as evidence of functional
-dependence rather than a definitive causal test. Strong causal
-claims would require controlled counterfactual interventions,
-which are beyond the scope of this study. Per-profession sample sizes are small for rare occupations (comedian
+became encoded during training. Our erasure-based faithfulness test and counterfactual pronoun swap
+provide limited interventional evidence; because token removal alters
+the input distribution and pronoun swaps leave non-pronominal gender
+signals intact, results are best interpreted as evidence of functional
+dependence rather than definitive causal tests. Stronger causal claims
+would require full causal mediation analysis. Per-profession sample sizes are small for rare occupations (comedian
 $n\!=\!27$, dietitian $n\!=\!30$), making per-profession TPR estimates
 unreliable for those classes.
 Macro-averaging gives an aggregate EO standard error of $\approx\!0.018$;
@@ -764,9 +781,9 @@ Developing reliable uncertainty estimates for the EO gap remains
 open: standard bootstrap CIs degrade under the \texttt{max()} operator
 and severe class imbalance, so analytical bounds or
 permutation-based tests may be more appropriate here.
-A natural next step for causal analysis would be controlled
-counterfactual biography editing or causal mediation analysis over
-specific token groups.
+Extending counterfactual analysis beyond pronouns to other lexical
+token groups, or applying causal mediation analysis, would provide
+stronger causal evidence than pronoun swap alone.
 
 \section*{Acknowledgements}
 We thank our teaching assistant Karen Hambardzumyan for his guidance

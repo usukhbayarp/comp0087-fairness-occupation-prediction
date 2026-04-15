@@ -106,6 +106,44 @@ Core file:
 
 ---
 
+## 6. Counterfactual Pronoun Swap (Causal Intervention)
+
+Measure how much occupation predictions depend directly on gendered
+pronouns by swapping them counterfactually (M→F or F→M) while leaving
+all other text unchanged.
+
+**Input:**
+- Prediction JSONL (fields: `id`, `text`, `label_pred`, `gender`)
+- Fine-tuned encoder checkpoint
+
+**Method:**
+- For each biography, swap gender-matched pronouns and titles:
+  - Male bios: `he→she`, `him→her`, `his→her`, `himself→herself`, `mr→ms`
+  - Female bios: `she→he`, `her→his`, `hers→his`, `herself→himself`, `ms/mrs→mr`
+- Case is preserved for each individual match (Title, UPPER, lower)
+- Re-run model on swapped text with a single forward pass
+- Record whether the predicted occupation flips
+
+**Note on ambiguity:** `her` is mapped uniformly to `his` regardless of
+grammatical role (object vs possessive), following standard practice in
+the counterfactual data augmentation literature. Examples where no
+pronouns are found are skipped.
+
+**Output:**
+- Per-example: stored label, fresh original label (from this checkpoint),
+  stored/fresh agreement flag, swapped label, flip flag, n tokens swapped,
+  probability of original class on original text, probability of original
+  class after swap, probability drop
+- `_by_profession.csv`: flip rate, mean probability after swap, mean
+  probability drop per profession (grouped by fresh original label)
+- `_by_profession_gender.csv`: same metrics split by profession × gender
+
+Core files:
+- `src/attribution/counterfactual_swap.py`
+- `scripts/run_counterfactual_swap.py`
+
+---
+
 # File Structure
 
 ## Scripts
@@ -125,6 +163,9 @@ Core file:
 - `scripts/erasure_faithfulness.py`  
   Runs erasure-based faithfulness evaluation.
 
+- `scripts/run_counterfactual_swap.py`  
+  Runs counterfactual pronoun swap experiment.
+
 ---
 
 ## Source Code
@@ -134,6 +175,9 @@ Core file:
 
 - `src/attribution/proxy_audit.py`  
   Token aggregation and filtering.
+
+- `src/attribution/counterfactual_swap.py`  
+  Counterfactual pronoun swap logic and experiment runner.
 
 - `src/attribution/token_utils.py`  
   Subword merging and token processing.
@@ -166,6 +210,13 @@ A fine-tuned encoder model (e.g., DistilBERT, RoBERTa).
 The same checkpoint should be used consistently across:
 - attribution
 - erasure faithfulness
+- counterfactual swap
+
+**Important:** the prediction JSONL supplied to the counterfactual swap script
+must have been produced by the same checkpoint passed to `--model_path`.
+If they differ, flip rates are unreliable. The script reports a
+`Stored==fresh agree` rate as a sanity check; values below ~95% suggest
+a checkpoint/JSONL mismatch.
 
 ---
 
@@ -393,6 +444,36 @@ python -m scripts.erasure_faithfulness \
   --max_length 256
 ```
 
+## Step 6 — Counterfactual Pronoun Swap
+
+Takes the raw **prediction JSONL** (not attribution JSONL) as input.
+
+> **Only run on unmasked conditions.** Masked prediction JSONLs have all
+> gendered pronouns already replaced with `[MASK]`, so there are no tokens
+> to swap and the script will skip all examples and produce no output.
+
+### DistilBERT unmasked
+
+```bash
+python -m scripts.run_counterfactual_swap \
+  --input_jsonl results/predictions/distilbert_unmasked.jsonl \
+  --model_path checkpoints/distilbert_unmasked \
+  --output_csv results/counterfactual/distilbert_unmasked.csv \
+  --max_length 256
+```
+
+### RoBERTa unmasked
+
+```bash
+python -m scripts.run_counterfactual_swap \
+  --input_jsonl results/predictions/roberta_unmasked.jsonl \
+  --model_path checkpoints/roberta_unmasked \
+  --output_csv results/counterfactual/roberta_unmasked.csv \
+  --max_length 256
+```
+
+---
+
 ## Reproducibility Notes
 - Run all commands from the repository root.
 - Ensure input JSONL files are consistent and validated.
@@ -404,6 +485,10 @@ python -m scripts.erasure_faithfulness \
 - Attribution scores reflect associations, not causal effects.
 - Erasure faithfulness provides a useful validation signal, but remains an approximation.
 - Masking may reduce explicit gender tokens while leaving other proxy features active.
+- Counterfactual swap flip rates provide limited interventional evidence:
+  a low flip rate suggests proxy tokens (not explicit pronouns) drive predictions,
+  consistent with the IG attribution analysis. Results should be interpreted
+  alongside the masked/unmasked EO gap comparison.
 
 ## Output Structure
 
@@ -413,6 +498,7 @@ results/
   proxy/
   compare/
   faithfulness/
+  counterfactual/
 ```
 
 ## Summary
