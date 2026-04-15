@@ -69,8 +69,8 @@ understood.
   recovers it.} Across Pythia model sizes (160M--1.4B), zero-shot bias
   grows substantially with scale, while fine-tuning consistently
   restores fairness. Both findings hold across masked and unmasked
-  conditions on this dataset, while we believe the pattern of
-  capacity-driven bias amplification could extend to other settings.
+  conditions on this dataset, this suggests the pattern of
+  capacity-driven bias amplification may extend to other settings.
 \end{itemize}
 
 % ── 2. RELATED WORK ─────────────────────────────────────────────
@@ -552,8 +552,8 @@ those of dominant profession tokens. In DistilBERT, the highest-ranked
 gender token (\emph{actor}: 1.15) is 48--287$\times$ smaller than the
 top profession tokens (55.53--329.52). In RoBERTa, the highest gender
 token (\emph{mrs}: 2.11) is 33--158$\times$ smaller (profession range:
-70.44--333.32). This suggests that gender-correlated information is encoded mainly
-through indirect contextual signals rather than explicit gender
+70.44--333.32). This suggests that gender-correlated information appears to be encoded
+primarily through indirect contextual signals rather than explicit gender
 references, consistent with models exploiting statistical
 co-occurrences in the training corpus \citep{de-arteaga-etal-2019-bias,
 gonen-goldberg-2019-lipstick}: gendered role vocabulary, credential
@@ -726,6 +726,9 @@ whether the predicted occupation changes. Overall flip rates are low:
 3.5\% for DistilBERT and 3.9\% for RoBERTa (mean confidence drop: 0.009
 and 0.011 respectively), consistent with the attribution finding that
 explicit pronouns are not the dominant predictive signal.
+However, the consistent drop in prediction confidence suggests that
+gender information still influences internal representations even when
+predictions remain unchanged.
 Profession-level sensitivity varies: \emph{nurse} (16.3\% / 13.1\%),
 \emph{surgeon} (13.3\% / 13.0\%), and \emph{comedian} (11.1\% / 16.0\%)
 show the highest flip rates, while \emph{composer}, \emph{dentist}, and
@@ -745,7 +748,7 @@ or explicit debiasing. Masking reduces aggregate EO in encoder models
 sampling variability ($\approx\!0.018$) and should be interpreted as a
 weak but consistent trend rather than a robust improvement; masking
 produces backfire effects at the profession level in Pythia. Attribution analysis suggests that gender-correlated information is
-encoded mainly through indirect contextual tokens; their salience is
+appears to be encoded primarily through indirect contextual tokens; their salience is
 model-specific and their functional importance is supported by erasure
 faithfulness testing and counterfactual pronoun swap (overall flip rate:
 3.5--3.9\%).
