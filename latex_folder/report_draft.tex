@@ -11,7 +11,7 @@
 \usepackage{amssymb}
 
 \title{\textbf{Fairness and Proxy Bias in Occupation Prediction:}\\
-Scaling, Masking, and Mechanistic Attribution across Model Families}
+Scaling, Masking, and Token-level Attribution across Model Families}
 
 \author{Usukhbayar Purevdorj \And Yitong Kong \And Kirill Kamakaev
 \AND Giulio Zhu \And Kian Makela \And Ambrose Yang
@@ -33,7 +33,7 @@ produces backfire effects in generative models, indicating that proxy
 representations may be model-specific rather than a universal property of
 the input text.
 Token-level attribution further suggests that indirect contextual signals,
-not explicit gender markers, appear to be the dominant carriers of the gender
+not solely explicit gender markers, appear to be the dominant carriers of the gender
 signal --- and that they persist even after masking.
 \end{abstract}
 
@@ -54,18 +54,17 @@ the Bias-in-Bios dataset, that scrubbing explicit gender signals does
 not remove these disparities: implicit proxy features survive.
 Yet the identity of these proxy features — which tokens are associated
 with the gender signal, how their salience changes under masking, and
-whether this varies with model scale or architecture — remains poorly
+whether this varies with model scale or model type — remains poorly
 understood.
 
 \paragraph{Contributions.}
 \begin{itemize}
-  \item \textbf{Proxy bias is carried by indirect contextual signals,
-  not explicit gender markers.} On the Bias-in-Bios task, gender-correlated
+  \item \textbf{Proxy bias is not solely driven by explicit gender markers.} On the Bias-in-Bios task, gender-correlated
   contextual tokens dominate attribution scores by a large margin over
   explicit gender words, while remaining active even after gender masking.
   To our knowledge, this provides one of the first detailed token-level
   attribution analyses of this kind on this dataset.
-  \item \textbf{Masking effectiveness depends on training regime, not architecture alone.} Explicit gender masking reduces bias in encoder models and in zero/few-shot generative settings, but proves ineffective—and sometimes harmful—after generative fine-tuning. Attribution stability further shows that proxy representations differ between individual models (e.g.\ DistilBERT vs.\ RoBERTa) even within the same architecture, providing evidence that proxy structure may be model-specific rather than a fixed property of the input text.
+  \item \textbf{Masking effectiveness depends on training regime, not architecture alone.} Explicit gender masking reduces bias in encoder models and in zero/few-shot generative settings, but proves ineffective—and sometimes harmful—after generative fine-tuning. Attribution stability further shows that proxy representations differ between individual models (e.g.\ DistilBERT vs.\ RoBERTa) even between closely related encoder models, providing evidence that proxy structure may be model-specific rather than a fixed property of the input text.
   \item \textbf{Unsupervised scaling amplifies bias; supervision
   recovers it.} Across Pythia model sizes (160M--1.4B), zero-shot bias
   grows substantially with scale, while fine-tuning consistently
@@ -129,6 +128,12 @@ from pronoun usage by the original authors (0\,$\to$\,M, 1\,$\to$\,F).
 For example: \textit{``Dr. K. Rama Krishna practices at Pet Park Clinic 
 in Begumpet, Hyderabad. He completed B.V.Sc & A.H from College of Veterinary
  Science, Rajendranagar, SVVU in 2009.''} (label: \emph{physician}, gender: M).
+In practice, models may produce biased outputs on similar inputs.
+For instance, a biography describing caregiving activities may be predicted as
+\emph{nurse} when written with female-associated language, but as \emph{physician}
+when similar qualifications are expressed with male-associated language.
+This illustrates how learned associations, rather than qualifications alone,
+can influence predictions.
 The dataset contains 381,807 examples (train 248,141 / dev 38,198 /
 test 95,468), with a near-identical gender split of $\approx\!46.2\%$
 female across all partitions, indicating stratified sampling.
@@ -643,7 +648,7 @@ top tokens: \emph{medicine} (1.13), \emph{practices} (0.96),
 \emph{hospital} (0.52).
 Clinical role words dominate the attributed tokens; no gender tokens
 appear in the top~5, consistent with the view that indirect
-contextual signals, not explicit gender markers, are most strongly
+contextual signals, not solely explicit gender markers, are most strongly
 associated with the predictive signal.
 
 \subsubsection*{Step 3: Faithfulness Validation}
@@ -736,6 +741,7 @@ Gender labels in Bias-in-Bios are binary and inferred from pronoun
 usage \citep{de-arteaga-etal-2019-bias}, which does not reflect the
 full spectrum of gender identity and constrains fairness evaluation to
 a male/female binary. Attribution is restricted to encoder models.
+Names were not masked (reliable name--gender matching produces too many false positives and names carry legitimate biographical content); however, since names are gender-correlated, they may act as direct gender signals rather than proxies. The attribution findings therefore capture proxy patterns among non-name tokens, and the claim that proxy bias is carried by indirect contextual signals should be understood with this caveat.
 Attribution scores are correlational, not causal: they show which
 features the trained model appears to rely on, not why those features
 became encoded during training. Our erasure-based faithfulness test
