@@ -383,7 +383,7 @@ Pythia-1.4B few-shot     & M & 0.489 & 0.491 \\
 \end{table}
 
 
-Pythia-1.4B fine-tuned reaches Accuracy = 0.877 (masked), close to the encoder baselines (RoBERTa 0.880, DistilBERT 0.872). Conversely, the fine-tuned Pythia-160M and Pythia-410M perform poorly compared to larger models. We believe that their severe underperformance relative to zero-shot baselines (e.g., fine-tuning drops 410M F1 from 0.554 to 0.323) indicates that at smaller scales, LoRA fine-tuning fails to stably learn an effective decision boundary, and is instead more susceptible to a performance collapse due to insufficient capacity. Unmasked zero-shot F1 improves steadily with scale (0.23 at 160M, 0.57 at 1.4B). Interestingly, few-shot prompting actually degrades performance at larger scales compared to zero-shot (410M: 0.55$\to$0.38; 1.4B: 0.57$\to$0.51) while offering only marginal gains at 160M (0.23$\to$0.24), suggesting the models struggle to leverage the provided in-context examples for this specific task. Finally, masking has little effect on task performance in the fine-tuned regime.
+Pythia-1.4B fine-tuned reaches Accuracy = 0.877, close to the encoder baselines (RoBERTa 0.880, DistilBERT 0.872). Smaller fine-tuned Pythia models underperform their zero-shot counterparts (e.g., 410M F1: 0.554$\to$0.323), suggesting insufficient capacity for stable LoRA fine-tuning. Zero-shot F1 improves with scale (0.23$\to$0.57, 160M$\to$1.4B); few-shot degrades at larger scales (410M: 0.55$\to$0.38; 1.4B: 0.57$\to$0.51), suggesting difficulty leveraging in-context examples. Masking has little effect on task performance in the fine-tuned regime.
 
 \subsection{Fairness Results}
 \label{sec:fairness}
@@ -444,7 +444,7 @@ Crucially, the effectiveness of gender masking depends heavily on the learning r
 
 In contrast, masking produces a comparatively smaller difference for the fine-tuned encoder models (RoBERTa: 0.082 to 0.063; DistilBERT: 0.088 to 0.071). Furthermore, at the fine-tuned level for Pythia, masking produces backfire effects at the profession level (e.g., for \emph{teacher}, \emph{poet}, and \emph{painter}), with Pythia-410M FT showing a small aggregate increase in bias (0.085 to 0.088).
 
-Finally, the FPR gap is consistently much smaller than the TPR gap across all models, so TPR disparity remains the dominant fairness concern. Taken together, these results present a nuanced picture: while masking explicit gender tokens successfully disrupts bias when relying on raw, pre-trained representations (zero/few-shot), it is still non-zero, and insufficient once a model is explicitly fine-tuned. During fine-tuning, bias appears to redistribute across broader contextual co-occurrence patterns, rendering the simple removal of explicit markers ineffective.
+Finally, the FPR gap is consistently much smaller than the TPR gap across all models, so TPR disparity remains the dominant fairness concern. Taken together, masking successfully disrupts bias in raw pre-trained representations (zero/few-shot), but remains insufficient once a model is explicitly fine-tuned.
 
 
 \subsection{Proxy Bias Analysis}
@@ -505,14 +505,13 @@ identical top-10 tokens across masked and unmasked conditions. These
 cross-profession reversals suggest that proxy stability is
 model-specific, not simply a function of training data.
 
-We also observe label leakage: the profession name frequently appears
-among the top-$K$ attributed tokens. This is expected; the informative
-signal lies in how attribution shifts for secondary tokens.
-For DistilBERT on \emph{nurse}, \emph{practitioner} drops from 26.51
-to 11.18 and \emph{graduated} from 19.11 to 1.47 after masking, while
-\emph{hospital} (8.96) and \emph{especially} (15.52) gain weight.
-For RoBERTa on \emph{physician}, \emph{medicine} rises from 166.64 to
-292.25 and \emph{patients} (52.72) appears as a new signal.
+Label leakage is expected (profession names frequently appear in top-$K$);
+the informative signal lies in secondary token shifts.
+Under DistilBERT, \emph{nurse}: \emph{practitioner} drops 26.51$\to$11.18
+and \emph{graduated} drops 19.11$\to$1.47 after masking, while
+\emph{especially} (15.52) gains weight.
+Under RoBERTa, \emph{physician}: \emph{medicine} rises 166.64$\to$292.25
+and \emph{patients} (52.72) appears as a new signal.
 
 \subsubsection*{Step 2: Gender Signal Identification}
 \label{sec:gender_signal}
@@ -573,11 +572,6 @@ masking, suggesting that professions with less stable proxy
 representations benefit more from masking.
 
 \subsubsection*{Qualitative Illustrations}
-
-The following three examples illustrate the aggregate patterns reported
-above. Examples~1 and~3 are drawn from the DistilBERT unmasked
-condition; Example~2 compares the unmasked and masked conditions on the
-same biography to illustrate a prediction flip.
 
 \medskip
 \noindent\textbf{Example~1: Gender asymmetry in attributed tokens
@@ -701,17 +695,12 @@ suggesting that unstable proxy representations co-occur with more
 concentrated, load-bearing token sets. This supports the view that attribution instability identifies
 professions whose predictions depend on a small, critical token set.
 
-Gender-conditioned faithfulness shows a clear asymmetry for
-\emph{nurse} under DistilBERT: nurse$|$M = 0.756 versus
-nurse$|$F = 0.354. Erasing the top-5 tokens for male nurse predictions reduces model
-confidence by approximately 80\% (from 0.96 to 0.20), suggesting that
-male nurse representations are concentrated in a small set of critical
-tokens.
-The asymmetry also holds under RoBERTa (nurse$|$M = 0.533 versus
-nurse$|$F = 0.163). Full gender-conditioned faithfulness results for
-all professions with $n{\geq}10$ per gender are in Appendix~E. A
-second notable asymmetry appears for \emph{poet} under DistilBERT
-unmasked (0.434 vs.\ 0.200).
+Gender-conditioned faithfulness shows a clear asymmetry for \emph{nurse}:
+DistilBERT nurse$|$M = 0.756 vs.\ nurse$|$F = 0.354; RoBERTa
+nurse$|$M = 0.533 vs.\ nurse$|$F = 0.163, indicating that male nurse
+representations are concentrated in a smaller critical token set.
+Full results are in Appendix~E; a second notable asymmetry appears for
+\emph{poet} under DistilBERT unmasked (0.434 vs.\ 0.200).
 
 Masking increases overall faithfulness for both models (DistilBERT:
 +0.034; RoBERTa: +0.006), suggesting the remaining tokens absorb more
@@ -747,7 +736,7 @@ or explicit debiasing. Masking reduces aggregate EO in encoder models
 (by 0.017--0.019), although this effect is close to the estimated
 sampling variability ($\approx\!0.018$) and should be interpreted as a
 weak but consistent trend rather than a robust improvement; masking
-produces backfire effects at the profession level in Pythia. Attribution analysis suggests that gender-correlated information is
+produces backfire effects at the profession level in Pythia. Attribution analysis suggests that gender-correlated information
 appears to be encoded primarily through indirect contextual tokens; their salience is
 model-specific and their functional importance is supported by erasure
 faithfulness testing and counterfactual pronoun swap (overall flip rate:
@@ -762,7 +751,7 @@ Gender labels in Bias-in-Bios are binary and inferred from pronoun
 usage \citep{de-arteaga-etal-2019-bias}, which does not reflect the
 full spectrum of gender identity and constrains fairness evaluation to
 a male/female binary. Attribution is restricted to encoder models.
-Names were not masked (reliable name--gender matching produces too many false positives and names carry legitimate biographical content); however, since names are gender-correlated, they may act as direct gender signals rather than proxies. The attribution findings therefore capture proxy patterns among non-name tokens, and the claim that proxy bias is carried by indirect contextual signals should be understood with this caveat.
+Names were not masked; since names are gender-correlated, they may act as direct signals rather than proxies. Attribution findings therefore reflect proxy patterns among non-name tokens, and indirect-signal claims should be understood with this caveat.
 Attribution scores are correlational, not causal: they show which
 features the trained model appears to rely on, not why those features
 became encoded during training. Our erasure-based faithfulness test and counterfactual pronoun swap
