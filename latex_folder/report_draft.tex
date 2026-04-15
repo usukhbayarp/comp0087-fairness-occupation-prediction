@@ -28,10 +28,10 @@ dataset, comparing Pythia generative models (160M--1.4B) and encoder
 classifiers (DistilBERT, RoBERTa) under masked and unmasked conditions.
 Against the common intuition that larger models are fairer, we find that
 unsupervised scaling \emph{amplifies} bias in the Pythia family on this task.
-Gender masking partially mitigates fairness gaps in encoder models but
-produces backfire effects in generative models, indicating that proxy
-representations may be model-specific rather than a universal property of
-the input text.
+Gender masking may reduce fairness gaps in encoder models, though the
+effect is small and close to sampling variability; it produces backfire
+effects in generative models, indicating that proxy representations may
+be model-specific rather than a universal property of the input text.
 Token-level attribution further suggests that indirect contextual signals,
 not solely explicit gender markers, appear to be the dominant carriers of the gender
 signal --- and that they persist even after masking.
@@ -275,7 +275,8 @@ stratified by profession and gender.
 
 \textbf{Faithfulness validation.}
 To check whether the attributed tokens are functionally important for
-the prediction, we erase the top-5 tokens from each example's text and
+the prediction, we replace the top-5 attributed tokens in each example's
+text with \texttt{[MASK]} (using word-boundary regex substitution) and
 re-run the model, measuring the resulting probability drop:
 \begin{equation}
   \text{Faith}(x) = P(\hat{y} \mid x) - P(\hat{y} \mid x_{\text{erased}})
@@ -750,7 +751,7 @@ faithfulness nearly double that of female nurse predictions
 Gender labels in Bias-in-Bios are binary and inferred from pronoun
 usage \citep{de-arteaga-etal-2019-bias}, which does not reflect the
 full spectrum of gender identity and constrains fairness evaluation to
-a male/female binary. Attribution is restricted to encoder models.
+a male/female binary. Attribution is restricted to encoder classifiers; IG requires a fixed class-logit target, which does not directly apply to autoregressive Pythia without non-trivial adaptation.
 Names were not masked; since names are gender-correlated, they may act as direct signals rather than proxies. Attribution findings therefore reflect proxy patterns among non-name tokens, and indirect-signal claims should be understood with this caveat.
 Attribution scores are correlational, not causal: they show which
 features the trained model appears to rely on, not why those features
