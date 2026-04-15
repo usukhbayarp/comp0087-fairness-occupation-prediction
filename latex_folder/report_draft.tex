@@ -714,8 +714,7 @@ To provide limited interventional evidence, we counterfactually swap all
 gendered pronouns in each biography (M$\to$F or F$\to$M) and measure
 whether the predicted occupation changes. Overall flip rates are low:
 3.5\% for DistilBERT and 3.9\% for RoBERTa (mean confidence drop: 0.009
-and 0.011 respectively), consistent with the attribution finding that
-explicit pronouns are not the dominant predictive signal.
+and 0.011 respectively), confirming that explicit gender tokens are not the primary drivers of predictions and reinforcing the proxy-based explanation.
 However, the consistent drop in prediction confidence suggests that
 gender information still influences internal representations even when
 predictions remain unchanged.
@@ -753,9 +752,7 @@ Gender labels in Bias-in-Bios are binary and inferred from pronoun
 usage \citep{de-arteaga-etal-2019-bias}, which does not reflect the
 full spectrum of gender identity. Attribution is restricted to encoder classifiers; IG requires a fixed class-logit target, which does not directly apply to autoregressive Pythia without non-trivial adaptation.
 Names were not masked; since names are gender-correlated, they may act as direct signals rather than proxies. Attribution findings thus reflect proxy patterns among non-name tokens.
-Attribution scores are correlational, not causal: they show which
-features the trained model appears to rely on, not why those features
-became encoded during training. Our erasure-based faithfulness test and counterfactual pronoun swap
+Attribution scores are correlational, not causal, indicating statistical reliance rather than causal determination of model behaviour. Our erasure-based faithfulness test and counterfactual pronoun swap
 provide limited interventional evidence; because token removal alters
 the input distribution and pronoun swaps leave non-pronominal gender
 signals intact, results are best interpreted as evidence of functional
