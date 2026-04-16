@@ -20,9 +20,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 # Known ambiguity: 'her' serves both as object pronoun ("I saw her") and
 # possessive determiner ("her book").  We map both uniformly to 'his',
 # following standard practice in the counterfactual data augmentation
-# literature (Lu et al., 2020).  This limitation should be noted when
-# interpreting results.
-#
+# literature.
 # Note: \bmr\b already matches "Mr" in "Mr." (word boundary exists before ".")
 # so the dotted variants mr./mrs./ms. are redundant and omitted.
 
