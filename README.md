@@ -5,11 +5,13 @@ The project investigates **fairness, proxy bias, and model scaling effects** in 
 
 Our primary focus is on comparing models of different capacities—particularly within the **Pythia model family**—across **zero-shot, few-shot, and fine-tuned** settings, and evaluating whether increased model size leads to improved fairness or merely conceals bias.
 
+Beyond aggregate fairness metrics, we apply **gradient-based attribution** (Integrated Gradients) to identify which tokens drive occupation predictions, how proxy token importance shifts under gender masking, and whether these signals are functionally load-bearing—validated through erasure faithfulness testing and counterfactual pronoun swap experiments.
+
 ---
 
 ## Repository Structure
 
-Based on our coding split tasks, the repository is organized (or should be organized) to cleanly separate datasets from code and results. 
+The repository is organized to cleanly separate datasets, code, and results.
 
 ```text
 |-- data/                          # Only data artifacts and metrics (Part 1)
@@ -24,7 +26,12 @@ Based on our coding split tasks, the repository is organized (or should be organ
 |   |-- predictions/               # JSONL files for encoder and masked/unmasked predictions (Part 4)
 |   |-- pythia/                    # Zero-shot and few-shot Pythia predictions (Part 2)
 |   |-- pythia_finetuned/          # Fine-tuned Pythia predictions (masked and unmasked) (Part 3)
-|   |-- tables/                    # CSV results: summary_results.csv, detailed_fairness.csv, proxy_words_by_profession.csv (Parts 5-6)
+|   |-- attribution/               # Token-level attribution JSONL files (Part 6)
+|   |-- proxy/                     # Aggregated proxy-token CSVs per profession (Part 6)
+|   |-- compare/                   # Masked vs. unmasked comparison and summary CSVs (Part 6)
+|   |-- faithfulness/              # Erasure faithfulness scores (Part 6)
+|   |-- counterfactual/            # Counterfactual pronoun-swap results (Part 6)
+|   |-- tables/                    # CSV results: summary_results.csv, detailed_fairness.csv (Parts 5)
 |   |-- figures/                   # Visualizations (Part 5)
 |       |-- Correlation Plots/     # Sub-folders for bias analysis
 |           |-- Amplification/     # Gender Ratio vs. EO Gap correlation plots
@@ -37,8 +44,14 @@ Based on our coding split tasks, the repository is organized (or should be organ
 |
 |-- scripts/                       # Entry-point scripts for running pipelines
 |   |-- evaluate.py                # Single command evaluation harness (Part 5)
-|   |-- export_dataset_jsonl.py    # Exports the dataset to JSONL format for the next steps. (Part 1-2)
-|   |-- make_dataset_stats.py      # Computes statistics about the dataset. (Part 1)
+|   |-- export_dataset_jsonl.py    # Exports the dataset to JSONL format (Part 1-2)
+|   |-- make_dataset_stats.py      # Computes statistics about the dataset (Part 1)
+|   |-- run_attribution_encoder.py # Runs Integrated Gradients attribution (Part 6)
+|   |-- run_proxy_audit.py         # Aggregates top tokens into proxy tables (Part 6)
+|   |-- compare_masked_unmasked_proxies.py  # Compares proxy patterns across regimes (Part 6)
+|   |-- summarize_proxy_results.py # Produces final proxy summaries (Part 6)
+|   |-- erasure_faithfulness.py    # Erasure-based faithfulness validation (Part 6)
+|   |-- run_counterfactual_swap.py # Counterfactual pronoun swap experiment (Part 6)
 |
 |-- src/                           # Reusable source code modules
 |   |-- data/                      # data.py, masking.py (Part 1)
@@ -46,7 +59,8 @@ Based on our coding split tasks, the repository is organized (or should be organ
 |   |   |-- pythia/                # prompts.py, pythia_zerofew.py, pythia_finetune.py, pythia_eval.py (Parts 2-3)
 |   |   |-- encoders/              # train_encoder.py, eval_encoder.py (Part 4)
 |   |-- evaluation/                # Implementation of fairness, plots (Part 5)
-|   |-- attribution/               # attribution_encoder.py, proxy_audit.py, erasure_faithfulness.py (Part 6)
+|   |-- attribution/               # attribution_encoder.py, token_utils.py, proxy_audit.py,
+|   |                              #   counterfactual_swap.py (Part 6)
 ```
 
 Each subdirectory contains a `README.md` describing its purpose in more detail.
@@ -88,6 +102,7 @@ pip install torch torchvision torchaudio
 ## Execution Guide
 
 ### Part 1: Data Pipeline
+> See [src/data/README.md](src/data/README.md) for full details.
 
 Export the unmasked and masked datasets to JSONL (Top-20 occupations):
 
@@ -109,9 +124,11 @@ Compute dataset statistics:
 python scripts/make_dataset_stats.py
 ```
 
-Outputs are saved to `data/processed/` (JSONL splits) and `data/stats/` (statistics and plots). Check `src/data/README.md` for more information.
+Outputs are saved to `data/processed/` (JSONL splits) and `data/stats/` (statistics and plots).
 
 ### Part 2: Pythia Zero-shot / Few-shot Inference
+> See [src/models/pythia/README.md](src/models/pythia/README.md) for full details.
+
 To generate predictions for Pythia evaluating on the text prompts, run:
 ```bash
 bash scripts/run_pythia_zerofew.sh
@@ -119,15 +136,16 @@ bash scripts/run_pythia_zerofew.sh
 The results will be securely serialized to `results/pythia`.
 
 ### Part 3: Pythia Finetuned Inference
+> See [src/models/pythia/README_finetuned.md](src/models/pythia/README_finetuned.md) for full details.
 
 Export dataset:
 
-```
+```bash
 python src/models/pythia/export_finetune.py --output_dir processed --top_n 20
 ```
 
 Finetuning:
-```
+```bash
 python src/models/pythia/pythia_finetune.py \
     --model_size 160m \
     --train_batch_size 64 \
@@ -136,7 +154,7 @@ python src/models/pythia/pythia_finetune.py \
 ```
 
 Evaluation:
-```
+```bash
 python src/models/pythia/pythia_eval.py \
     --model_size 160m \
     --checkpoint_dir checkpoints/pythia-160m/best \
@@ -145,9 +163,10 @@ python src/models/pythia/pythia_eval.py \
     --batch_size 64
 ```
 
-Results will be stored in ` results/pythia_finetuned`. Check ` src/models/pythia/README_finetuned.md` for more information.
+Results will be stored in `results/pythia_finetuned`.
 
 ### Part 4: Encoder-based Models (DistilBERT & RoBERTa)
+> See [src/models/encoders/README.md](src/models/encoders/README.md) for full details.
 
 Train encoder models (DistilBERT and RoBERTa) on both unmasked and masked data regimes:
 
@@ -188,9 +207,10 @@ python -m src.models.encoders.eval_encoder \
     --out_jsonl results/predictions/roberta_masked.jsonl
 ```
 
-Results will be stored in `results/predictions/`. Check `src/models/encoders/README.md` for more information.
+Results will be stored in `results/predictions/`.
 
 ### Part 5: Fairness Evaluation & Visualisation
+> See [src/evaluation/README.md](src/evaluation/README.md) for full details.
 
 Run the evaluation harness to compute fairness metrics (Demographic Parity, Equal Opportunity gaps) across all models:
 
@@ -204,9 +224,10 @@ Generate plots (Pareto frontier, scaling laws, job bias comparison, correlation 
 python -m src.evaluation.plots
 ```
 
-Results will be stored in `results/tables/` and `results/figures/`. Check `src/evaluation/README.md` for more information.
+Results will be stored in `results/tables/` and `results/figures/`.
 
 ### Part 6: Attribution & Proxy Bias Analysis
+> See [src/attribution/README.md](src/attribution/README.md) for full commands and details.
 
 **Step 1 — Attribution (run for both unmasked and masked):**
 
@@ -287,4 +308,4 @@ python -m scripts.run_counterfactual_swap \
   --max_length 256
 ```
 
-Repeat all steps above for RoBERTa (`roberta_unmasked` / `roberta_masked`). Results will be stored in `results/attribution/`, `results/proxy/`, `results/compare/`, `results/faithfulness/`, and `results/counterfactual/`. Check `src/attribution/README.md` for full commands and details.
+Repeat all steps above for RoBERTa (`roberta_unmasked` / `roberta_masked`). Results will be stored in `results/attribution/`, `results/proxy/`, `results/compare/`, `results/faithfulness/`, and `results/counterfactual/`.

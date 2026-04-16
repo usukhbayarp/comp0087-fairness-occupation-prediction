@@ -36,4 +36,3 @@ There are a couple of requirements that can make your life easier:
 ```bash
 bash ./scripts/run_pythia_zerofew.sh
 ```
-More detail can be found in [README](../../../README.md) at **Execution Guide**
