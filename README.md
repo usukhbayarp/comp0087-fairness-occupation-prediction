@@ -88,12 +88,28 @@ pip install torch torchvision torchaudio
 ## Execution Guide
 
 ### Part 1: Data Pipeline
-To export the dataset to JSONL format and compute statistics, run:
+
+Export the unmasked and masked datasets to JSONL (Top-20 occupations):
+
 ```bash
-python scripts/export_dataset_jsonl.py
+# Unmasked (baseline)
+python -m scripts.export_dataset_jsonl \
+    --top_n 20 \
+    --output_dir data/processed/unmasked
+
+# Masked (gender-controlled)
+python -m scripts.export_dataset_jsonl \
+    --top_n 20 --mask_gender \
+    --output_dir data/processed/masked
+```
+
+Compute dataset statistics:
+
+```bash
 python scripts/make_dataset_stats.py
 ```
-This will produce outputs in `data/processed` and `data/stats`.
+
+Outputs are saved to `data/processed/` (JSONL splits) and `data/stats/` (statistics and plots). Check `src/data/README.md` for more information.
 
 ### Part 2: Pythia Zero-shot / Few-shot Inference
 To generate predictions for Pythia evaluating on the text prompts, run:
@@ -173,3 +189,102 @@ python -m src.models.encoders.eval_encoder \
 ```
 
 Results will be stored in `results/predictions/`. Check `src/models/encoders/README.md` for more information.
+
+### Part 5: Fairness Evaluation & Visualisation
+
+Run the evaluation harness to compute fairness metrics (Demographic Parity, Equal Opportunity gaps) across all models:
+
+```bash
+python -m scripts.evaluate
+```
+
+Generate plots (Pareto frontier, scaling laws, job bias comparison, correlation plots):
+
+```bash
+python -m src.evaluation.plots
+```
+
+Results will be stored in `results/tables/` and `results/figures/`. Check `src/evaluation/README.md` for more information.
+
+### Part 6: Attribution & Proxy Bias Analysis
+
+**Step 1 — Attribution (run for both unmasked and masked):**
+
+```bash
+python -m scripts.run_attribution_encoder \
+  --input_jsonl results/predictions/distilbert_unmasked.jsonl \
+  --model_path checkpoints/distilbert_unmasked \
+  --output_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
+  --limit 3000 --max_length 256 --n_steps 32 --top_k 5
+
+python -m scripts.run_attribution_encoder \
+  --input_jsonl results/predictions/distilbert_masked.jsonl \
+  --model_path checkpoints/distilbert_masked \
+  --output_jsonl results/attribution/distilbert_masked_attr.jsonl \
+  --limit 3000 --max_length 256 --n_steps 32 --top_k 5
+```
+
+**Step 2 — Proxy aggregation (run for both unmasked and masked):**
+
+```bash
+python -m scripts.run_proxy_audit \
+  --input_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
+  --output_csv results/proxy/distilbert_unmasked_profession.csv \
+  --output_gender_csv results/proxy/distilbert_unmasked_profession_gender.csv \
+  --top_n_print 10 --min_token_len 3 --min_count 1 --min_doc_freq 1
+
+python -m scripts.run_proxy_audit \
+  --input_jsonl results/attribution/distilbert_masked_attr.jsonl \
+  --output_csv results/proxy/distilbert_masked_profession.csv \
+  --output_gender_csv results/proxy/distilbert_masked_profession_gender.csv \
+  --top_n_print 10 --min_token_len 3 --min_count 1 --min_doc_freq 1
+```
+
+**Step 3 — Masked vs unmasked comparison (requires both sides from Steps 1-2):**
+
+```bash
+python -m scripts.compare_masked_unmasked_proxies \
+  --masked_csv results/proxy/distilbert_masked_profession.csv \
+  --unmasked_csv results/proxy/distilbert_unmasked_profession.csv \
+  --out_summary_csv results/compare/distilbert_summary.csv \
+  --out_token_shift_csv results/compare/distilbert_token_shift.csv \
+  --out_gender_token_csv results/compare/distilbert_gender_tokens.csv \
+  --masked_gender_csv results/proxy/distilbert_masked_profession_gender.csv \
+  --unmasked_gender_csv results/proxy/distilbert_unmasked_profession_gender.csv \
+  --out_gender_conditioned_summary_csv results/compare/distilbert_gender_summary.csv \
+  --top_n 10
+```
+
+**Step 4 — Summarization:**
+
+```bash
+python -m scripts.summarize_proxy_results \
+  --model_name distilbert \
+  --summary_csv results/compare/distilbert_summary.csv \
+  --token_shift_csv results/compare/distilbert_token_shift.csv \
+  --profession_gender_summary_csv results/compare/distilbert_gender_summary.csv \
+  --gender_tokens_csv results/compare/distilbert_gender_tokens.csv \
+  --out_dir results/compare/distilbert_final
+```
+
+**Step 5 — Erasure faithfulness validation:**
+
+```bash
+python -m scripts.erasure_faithfulness \
+  --input_jsonl results/attribution/distilbert_unmasked_attr.jsonl \
+  --model_path checkpoints/distilbert_unmasked \
+  --output_csv results/faithfulness/distilbert_unmasked.csv \
+  --top_k_erase 5 --max_length 256
+```
+
+**Step 6 — Counterfactual pronoun swap (unmasked only):**
+
+```bash
+python -m scripts.run_counterfactual_swap \
+  --input_jsonl results/predictions/distilbert_unmasked.jsonl \
+  --model_path checkpoints/distilbert_unmasked \
+  --output_csv results/counterfactual/distilbert_unmasked.csv \
+  --max_length 256
+```
+
+Repeat all steps above for RoBERTa (`roberta_unmasked` / `roberta_masked`). Results will be stored in `results/attribution/`, `results/proxy/`, `results/compare/`, `results/faithfulness/`, and `results/counterfactual/`. Check `src/attribution/README.md` for full commands and details.
