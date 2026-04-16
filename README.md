@@ -224,6 +224,26 @@ Generate plots (Pareto frontier, scaling laws, job bias comparison, correlation 
 python -m src.evaluation.plots
 ```
 
+**Visualization Tools Used:**
+We use `matplotlib` and `seaborn` as our core visualization tools to generate the analytical dashboard. The plots automatically adjust aesthetics (e.g. bold labels, log scales, custom markers) to meet rigorous publication standards.
+
+An example snippet of the tool usage for plotting the Pareto frontier using `seaborn`:
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Define custom styling for methodology and conditions
+sns.scatterplot(
+    data=df, x="eo_diff", y="macro_f1", 
+    hue="Method", palette=method_palette,
+    style="Condition", markers=condition_markers,
+    s=250, alpha=0.9, ax=ax
+)
+ax.legend(loc='lower right', fontsize=18, frameon=True, shadow=True)
+plt.savefig('results/figures/pareto_frontier.png', dpi=300)
+```
+Note: Microsoft PowerPoint is additionally used occasionally for manually adjusting label placements on specific final artifact variants (e.g. `pareto_frontier_labelled.png`).
+
 Results will be stored in `results/tables/` and `results/figures/`.
 
 ### Part 6: Attribution & Proxy Bias Analysis
