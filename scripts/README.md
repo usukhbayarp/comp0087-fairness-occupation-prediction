@@ -3,7 +3,12 @@ This directory contains the entry-point scripts for running the data processing,
 
 # Script Structure
 
-- `make_dataset_stats.py`: Computes statistics about the dataset. (Part 1)
-- `export_dataset_jsonl.py`: Exports the dataset to JSONL format in order to be used in the next steps. (Part 1-2)
-- `evaluate.py`: Evaluates the models on the dataset covering DP and EO gaps across all valid `results/predictions` and `results/pythia*` jsonls. (Part 5)
-- `run_pythia_eval.sh`: Computes the predictions for Pythia models (160m-1.4b) in zero-shot and few-shot regimes, results saved in `./results/pythia` directory. (Part 2)
+- `make_dataset_stats.py`: Computes statistics about the dataset.
+- `export_dataset_jsonl.py`: Exports the dataset to JSONL format in order to be used in the next steps.
+- `evaluate.py`: Evaluates the models on the dataset covering DP and EO gaps across all valid `results/predictions` and `results/pythia*` jsonls.
+- `run_attribution_encoder.py`: Runs Integrated Gradients attribution.
+- `run_proxy_audit.py`: Aggregates top tokens into proxy tables.
+- `compare_masked_unmasked_proxies.py`: Compares proxy patterns across regimes.
+- `summarize_proxy_results.py`: Produces final proxy summaries.
+- `erasure_faithfulness.py`: Erasure-based faithfulness validation.
+- `run_counterfactual_swap.py`: Counterfactual pronoun swap experiment.

@@ -46,6 +46,7 @@ The repository is organized to cleanly separate datasets, code, and results.
 |   |-- evaluate.py                # Single command evaluation harness (Part 5)
 |   |-- export_dataset_jsonl.py    # Exports the dataset to JSONL format (Part 1-2)
 |   |-- make_dataset_stats.py      # Computes statistics about the dataset (Part 1)
+|   |-- run_pythia_zerofew.sh      # Evaluates Pythia in zero/few-shot bounds (Part 2)
 |   |-- run_attribution_encoder.py # Runs Integrated Gradients attribution (Part 6)
 |   |-- run_proxy_audit.py         # Aggregates top tokens into proxy tables (Part 6)
 |   |-- compare_masked_unmasked_proxies.py  # Compares proxy patterns across regimes (Part 6)
@@ -56,7 +57,7 @@ The repository is organized to cleanly separate datasets, code, and results.
 |-- src/                           # Reusable source code modules
 |   |-- data/                      # data.py, masking.py (Part 1)
 |   |-- models/
-|   |   |-- pythia/                # prompts.py, pythia_zerofew.py, pythia_finetune.py, pythia_eval.py (Parts 2-3)
+|   |   |-- pythia/                # prompts.py, pythia_zerofew.py, export_finetune.py, pythia_finetune.py, pythia_eval.py (Parts 2-3)
 |   |   |-- encoders/              # train_encoder.py, eval_encoder.py (Part 4)
 |   |-- evaluation/                # Implementation of fairness, plots (Part 5)
 |   |-- attribution/               # attribution_encoder.py, token_utils.py, proxy_audit.py,

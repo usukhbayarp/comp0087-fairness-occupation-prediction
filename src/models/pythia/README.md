@@ -14,7 +14,7 @@ The script calculates the probability of each occupational candidate label for a
 4. Finally, a softmax is applied over all candidate scores to get pseudo-probabilities, and the highest scoring candidate is selected as the prediction.
 
 ### Sampling Technique
-The dataset contains over 38,000 datapoints in the test set, which made the inference time extremely long (for 3070 NVidia it took me 2s per datapoint, which estimates to 76k seconds for the entire dataset). To mitigate this, the script bounds the evaluation to a subset of **3000 downsampled rows**. 
+The dataset contains over 90,000 datapoints in the test set, which made the inference time extremely long (for 3070 NVidia it took me 2s per datapoint, which estimates to 76k seconds for the entire dataset). To mitigate this, the script bounds the evaluation to a subset of **3000 downsampled rows**. 
 It utilizes **Stratified Proportional Sampling** based on the profession labels. This guarantees that the smaller 3000-row dataset maintains the exact same percentage distribution of occupations as the original, much larger test set, preventing representation skew while saving immense amounts of computation time.
 
 ### Batch Size & Memory Management
