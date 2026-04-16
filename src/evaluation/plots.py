@@ -106,8 +106,7 @@ def plot_pareto(df):
     ax.set_ylabel("Macro-F1 Score", fontsize=20)
     ax.tick_params(axis='both', labelsize=22)
 
-    if ax.get_legend() is not None:
-        ax.get_legend().remove()
+    ax.legend(loc='lower right', fontsize=18, frameon=True, shadow=True)
     
     plt.tight_layout()
     plt.savefig('results/figures/pareto_frontier.png', dpi=300)
@@ -203,8 +202,7 @@ def plot_scaling(df):
     plt.xlabel("Model Parameters", fontsize=20)
     plt.ylabel("Avg EO Gap", fontsize=20)
     plt.tick_params(axis='both', labelsize=22)
-    if plt.gca().get_legend() is not None:
-        plt.gca().get_legend().remove()
+    plt.legend(loc='upper left', fontsize=18, frameon=True, shadow=True)
     plt.tight_layout()
     plt.savefig('results/figures/scaling_fairness.png', dpi=300)
     plt.close()

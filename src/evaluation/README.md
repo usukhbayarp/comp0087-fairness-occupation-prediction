@@ -34,6 +34,26 @@ Computes both predictive performance (Macro-F1, Accuracy) and bias signals acros
 
 Takes canonical CSV tables and produces aesthetic metric dashboards demonstrating the limits of mitigating interventions natively.
 
+**Visualization Tools Used:**
+The pipeline relies on `matplotlib` and `seaborn` for defining custom color palettes, markers, and generating the various charts (pareto frontiers, scatter correlation plots, scaling laws). 
+
+**Code Snippet Example (`plots.py`):**
+```python
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Generating log-scaled line plots for fairness scaling
+plt.figure(figsize=(16, 12))
+sns.lineplot(
+    data=scaling_df, x="Size_Num", y='eo_diff', 
+    hue="Method", style="Condition", 
+    markers=True, markersize=10
+)
+plt.xscale('log')
+plt.legend(loc='upper left', fontsize=18, frameon=True, shadow=True)
+plt.savefig('results/figures/scaling_fairness.png', dpi=300)
+```
+
 **Outputs:**
 
 - **Pareto Frontier (Unlabelled)** (`pareto_frontier.png`): Plotting model configurations mapping Macro-F1 against the Equalized Odds Gap.
